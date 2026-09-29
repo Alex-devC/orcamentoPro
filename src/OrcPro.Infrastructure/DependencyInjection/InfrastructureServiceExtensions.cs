@@ -1,4 +1,4 @@
-﻿using OrcPro.Application.Interfaces.Repositories;
+using OrcPro.Application.Interfaces.Repositories;
 using OrcPro.Application.Interfaces.Services;
 using OrcPro.Application.Services;
 using OrcPro.Infrastructure.Persistence;
@@ -19,8 +19,8 @@ public static class InfrastructureServiceExtensions
         // Configure DbContext with the appropriate database provider
         services.AddDbContext<OrcProDbContext>(builder =>
         {
-            var configurator = DatabaseProviderConfiguratorFactory.ObterConfigurador(options.Provider);
-            configurator.Configure(builder, options.ConnectionString);
+            var provider = DatabaseProviderFactory.Create(options.Provider);
+            provider.Configure(builder, options.ConnectionString);
         });
 
         // Repositories
