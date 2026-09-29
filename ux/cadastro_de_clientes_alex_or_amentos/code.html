@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {"darkMode":"class","theme":{"extend":{"colors":{"error":"#ba1a1a","on-secondary-fixed-variant":"#004b73","on-primary-container":"#7a92b7","tertiary-fixed-dim":"#b9c7e4","on-secondary-container":"#004368","tertiary-fixed":"#d6e3ff","outline":"#74777f","on-tertiary-container":"#8391ad","inverse-on-surface":"#eff1f4","surface":"#f7f9fc","primary-fixed":"#d4e3ff","error-container":"#ffdad6","secondary-fixed-dim":"#93ccff","tertiary-container":"#1c2a41","on-error-container":"#93000a","on-primary-fixed-variant":"#304869","on-tertiary":"#ffffff","surface-bright":"#f7f9fc","tertiary":"#06152b","surface-variant":"#e0e3e6","on-secondary-fixed":"#001d31","on-primary-fixed":"#001c3a","surface-dim":"#d8dadd","secondary-fixed":"#cce5ff","secondary":"#006398","on-error":"#ffffff","inverse-surface":"#2d3133","outline-variant":"#c4c6cf","background":"#f7f9fc","on-surface-variant":"#43474e","surface-container-low":"#f2f4f7","surface-container-high":"#e6e8eb","surface-container-lowest":"#ffffff","primary-fixed-dim":"#b0c8f0","on-tertiary-fixed":"#0d1c32","primary-container":"#0f2a4a","on-tertiary-fixed-variant":"#39475f","on-background":"#191c1e","on-primary":"#ffffff","surface-tint":"#485f82","surface-container":"#eceef1","secondary-container":"#49b3fe","primary":"#00152f","surface-container-highest":"#e0e3e6","on-surface":"#191c1e","inverse-primary":"#b0c8f0","on-secondary":"#ffffff"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-sm":"0.25rem","space-xs":"0.125rem","margin":"0.5rem","space-lg":"0.75rem","space-md":"0.5rem","space-xl":"1rem","gutter":"0.5rem"},"fontFamily":{"headline-lg":["Inter"],"body-lg":["Inter"],"headline-md":["Inter"],"body-sm":["Inter"],"headline-sm":["Inter"],"label-sm":["Inter"],"label-lg":["Inter"],"body-md":["Inter"],"label-md":["Inter"]},"fontSize":{"headline-lg":["20px",{"lineHeight":"26px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-lg":["13px",{"lineHeight":"18px","fontWeight":"500"}],"headline-md":["16px",{"lineHeight":"22px","letterSpacing":"-0.005em","fontWeight":"600"}],"body-sm":["11px",{"lineHeight":"14px","fontWeight":"400"}],"headline-sm":["14px",{"lineHeight":"18px","fontWeight":"600"}],"label-sm":["10px",{"lineHeight":"12px","letterSpacing":"0.03em","fontWeight":"600"}],"label-lg":["12px",{"lineHeight":"16px","fontWeight":"600"}],"body-md":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-md":["11px",{"lineHeight":"14px","fontWeight":"500"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased select-none"><header class="fixed top-0 left-0 right-0 z-50 flex flex-col bg-surface-container-lowest"><div class="h-8 bg-primary text-on-primary flex items-center justify-between px-space-md"><div class="flex items-center gap-space-md"><img alt="logo.png" class="h-4 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WKU7RB-6xC6ka68F1bRcPQCg8J5Aa-H3dI9-evrUkWDEoq1qYiCTltHYQCyLZi_iXMgXiNPW-0IgyQIcI_HmUUqYmclawdXcNk6b6gfyF_plUaaqXpsT1VgCJ2Wm-4u85jiWoz3ljq-gHf-2NB1muEVKTZ6i_f7Rkut8t8LIhgUI_1E-RMX6ezIXiCE358VK3ganUIFHsNM-UutmzPtVnUGyw9L-UAfPA1g_nmo5fFb03EXnVCepQBheOrUORG81zY8_sOLIG6"/><span class="font-label-md text-label-md text-primary-fixed tracking-wide">ALEX Orçamentos v2.6 - ALEX T.I. Tecnologia e Assistência [Base de Dados: Produção]</span></div><div class="flex items-center gap-space-sm"><div class="w-6 h-6 rounded-full bg-secondary flex items-center justify-center"><span class="material-symbols-outlined text-on-secondary text-[14px]">person</span></div><div class="flex items-center ml-space-md"><button class="w-8 h-8 flex items-center justify-center hover:bg-primary-container text-on-primary transition-colors" title="Minimizar" type="button"><span class="material-symbols-outlined text-[14px]">minimize</span></button><button class="w-8 h-8 flex items-center justify-center hover:bg-primary-container text-on-primary transition-colors" title="Maximizar" type="button"><span class="material-symbols-outlined text-[14px]">crop_square</span></button><button class="w-8 h-8 flex items-center justify-center hover:bg-error hover:text-on-error text-on-primary transition-colors" title="Fechar" type="button"><span class="material-symbols-outlined text-[14px]">close</span></button></div></div></div><div class="h-7 bg-surface-container-high px-space-md flex items-end gap-space-xs"><nav class="flex items-center gap-space-xs h-full" data-active-classes="bg-surface-container-lowest text-secondary font-label-md"><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="painel-principal" href="#">ARQUIVO</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="gestao-orcamentos" href="#">ORÇAMENTOS</a><a aria-current="page" class="px-space-lg py-space-xs transition-colors bg-surface-container-lowest text-secondary font-label-md" data-path="cadastros-gerais" href="#">CADASTROS</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="central-relatorios" href="#">RELATÓRIOS</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="sistema-configuracoes" href="#">SISTEMA</a></nav></div><div class="h-16 bg-surface-container-lowest flex items-center px-space-md gap-space-md overflow-x-auto shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-sm h-full py-space-xs"><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">post_add</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Novo Doc</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">save</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Salvar</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">picture_as_pdf</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Gerar PDF</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">print</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Imprimir</span></div></div><div class="w-px h-10 bg-surface-variant"></div><div class="flex items-center gap-space-sm h-full py-space-xs"><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-primary text-[20px]">person_add</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">+ Cliente</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-primary text-[20px]">inventory_2</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">+ Item</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-primary text-[20px]">handyman</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">+ Serviço</span></div></div><div class="w-px h-10 bg-surface-variant"></div><div class="flex items-center gap-space-sm h-full py-space-xs"><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">sync</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Recarregar</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">settings</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Ajustes</span></div></div></div></header><aside class="fixed left-0 top-[124px] bottom-6 w-60 bg-surface-container-low z-40 flex flex-col p-space-md"><div class="mb-space-md px-space-sm flex items-center justify-between"><span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">Navegação do Módulo</span><span class="material-symbols-outlined text-[16px] text-on-surface-variant">dock_to_left</span></div><nav class="flex-1 flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-label-md"><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="painel-principal" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">desktop_windows</span>Visão Geral</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="gestao-orcamentos" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">receipt_long</span>Orçamentos Ativos</a><a aria-current="page" class="flex items-center px-space-md py-space-sm rounded transition-all bg-primary-container text-on-primary-container font-label-md" data-path="cadastros-gerais" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">database</span>Bases Cadastrais</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="central-relatorios" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">monitoring</span>Relatórios Gerenciais</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="sistema-configuracoes" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">admin_panel_settings</span>Administração & BD</a></nav><div class="mt-auto p-space-sm bg-surface-container rounded"><div class="flex items-center gap-space-xs text-secondary"><span class="w-2 h-2 rounded-full bg-secondary-container"></span><span class="font-label-sm text-label-sm font-semibold">PostgreSQL Operacional</span></div><span class="font-body-sm text-body-sm text-on-surface-variant block mt-space-xs">Latência de Rede: 1ms</span></div></aside><div class="pl-60"><main class="w-full pt-[124px] pb-6 bg-surface min-h-screen px-space-md"><div class="flex flex-col w-full">
+<!-- Top Header & Screen Actions -->
+<div class="bg-surface-container-lowest shadow-sm px-space-md py-space-sm mb-space-sm">
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-8 h-8 rounded bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">groups</span>
+</div>
+<div>
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline-md text-headline-md text-on-surface">Clientes</h1>
+<span class="bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm px-space-sm py-0.5 rounded">Módulo Base</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Gerencie os clientes cadastrados e consulte o histórico comercial</p>
+</div>
+</div>
+<!-- Action deck buttons -->
+<div class="flex items-center flex-wrap gap-space-xs">
+<button class="h-[28px] px-space-md bg-secondary text-on-secondary hover:bg-on-secondary-container font-label-lg text-label-lg rounded flex items-center gap-space-xs transition-colors shadow-sm" id="btn-novo" type="button">
+<span class="material-symbols-outlined text-[16px]">person_add</span>
+<span>+ Novo Cliente <span class="text-secondary-fixed-dim text-label-sm">(F2)</span></span>
+</button>
+<button class="h-[28px] px-space-md bg-surface-container text-on-surface hover:bg-surface-container-high font-label-lg text-label-lg rounded flex items-center gap-space-xs transition-colors" id="btn-editar" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary">edit</span>
+<span>Editar <span class="text-on-surface-variant text-label-sm">(F3)</span></span>
+</button>
+<button class="h-[28px] px-space-md bg-surface-container text-on-surface hover:bg-error-container hover:text-on-error-container font-label-lg text-label-lg rounded flex items-center gap-space-xs transition-colors" id="btn-excluir" type="button">
+<span class="material-symbols-outlined text-[16px] text-error">delete</span>
+<span>Excluir <span class="text-on-surface-variant text-label-sm">(Del)</span></span>
+</button>
+<button class="h-[28px] px-space-md bg-surface-container text-on-surface hover:bg-surface-container-high font-label-lg text-label-lg rounded flex items-center gap-space-xs transition-colors" id="btn-atualizar" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary">refresh</span>
+<span>Atualizar <span class="text-on-surface-variant text-label-sm">(F5)</span></span>
+</button>
+<div class="w-px h-5 bg-surface-variant mx-space-xs"></div>
+<button class="h-[28px] px-space-md bg-surface-container text-on-surface hover:bg-surface-container-high font-label-lg text-label-lg rounded flex items-center gap-space-xs transition-colors" id="btn-exportar" type="button">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">table_view</span>
+<span>Exportar Excel <span class="text-on-surface-variant text-label-sm">(Ctrl+E)</span></span>
+</button>
+</div>
+</div>
+</div>
+<!-- Integrated Filters & Quick Search Bar -->
+<div class="bg-surface-container-lowest shadow-sm px-space-md py-space-xs mb-space-sm">
+<div class="flex flex-wrap items-center gap-space-sm">
+<div class="flex-1 min-w-[280px] relative">
+<span class="material-symbols-outlined absolute left-2 top-1.5 text-[16px] text-on-surface-variant pointer-events-none">search</span>
+<input class="w-full h-[26px] pl-7 pr-space-md bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-secondary transition-all placeholder:text-on-surface-variant" id="input-busca" placeholder="Pesquisar cliente por nome, CNPJ, telefone, cidade..." type="text"/>
+</div>
+<div class="flex items-center gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap" for="filtro-status">Status:</label>
+<select class="h-[26px] px-space-sm bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="filtro-status">
+<option value="todos">Todos</option>
+<option selected="" value="ativos">Ativos</option>
+<option value="inativos">Inativos</option>
+</select>
+</div>
+<div class="flex items-center gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap" for="filtro-tipo">Tipo:</label>
+<select class="h-[26px] px-space-sm bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="filtro-tipo">
+<option value="todos">Todos</option>
+<option value="pj">Pessoa Jurídica</option>
+<option value="pf">Pessoa Física</option>
+</select>
+</div>
+<div class="flex items-center gap-space-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap" for="filtro-cidade">Cidade:</label>
+<select class="h-[26px] px-space-sm bg-surface-container-low text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="filtro-cidade">
+<option value="todas">Todas as cidades</option>
+<option value="sp">São Paulo</option>
+<option value="campinas">Campinas</option>
+<option value="santo-andre">Santo André</option>
+<option value="guarulhos">Guarulhos</option>
+<option value="sbc">São Bernardo do Campo</option>
+</select>
+</div>
+<button class="h-[26px] px-space-sm bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm rounded flex items-center gap-space-xs transition-colors" id="btn-limpar-filtros" type="button">
+<span class="material-symbols-outlined text-[14px]">filter_alt_off</span>
+<span>Limpar Filtros</span>
+</button>
+<div class="ml-auto flex items-center gap-space-sm">
+<div class="flex items-center gap-1 bg-surface-container-low px-space-sm py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px] text-secondary">database</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Índice: <strong class="text-on-surface">PK_CLI_ID</strong></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Split Canvas: DataGrid (Top) + Detail Form (Bottom) -->
+<div class="flex flex-col gap-space-sm w-full">
+<!-- Grid Card Container -->
+<div class="bg-surface-container-lowest shadow-sm flex flex-col overflow-hidden">
+<!-- DataGrid Control Ribbon Strip -->
+<div class="bg-surface-container-low px-space-md py-1 flex items-center justify-between">
+<div class="flex items-center gap-space-md">
+<span class="font-label-lg text-label-lg text-primary uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">table_rows</span>
+            Listagem de Registros
+          </span>
+<div class="h-3 w-px bg-surface-variant"></div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Duplo-clique para edição em linha | Clique direito para atalhos</span>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant">
+<span class="font-label-sm text-label-sm bg-surface-container px-space-sm py-0.5 rounded">Ordenação Ativa: Código (DESC)</span>
+</div>
+</div>
+<!-- Grid Table -->
+<div class="overflow-x-auto max-h-[300px] select-none" id="grid-container">
+<table class="w-full text-left font-body-sm text-body-sm border-collapse">
+<thead class="bg-surface-container-high text-on-surface sticky top-0 z-10 font-label-sm text-label-sm tracking-wider uppercase">
+<tr class="h-[28px]">
+<th class="px-space-md font-semibold cursor-pointer hover:bg-surface-container-highest transition-colors">
+<div class="flex items-center gap-1">Código <span class="material-symbols-outlined text-[13px] text-secondary">arrow_drop_down</span></div>
+</th>
+<th class="px-space-md font-semibold cursor-pointer hover:bg-surface-container-highest transition-colors">
+<div class="flex items-center gap-1">Nome / Razão Social <span class="material-symbols-outlined text-[13px] opacity-40">unfold_more</span></div>
+</th>
+<th class="px-space-md font-semibold">CPF / CNPJ</th>
+<th class="px-space-md font-semibold">Telefone</th>
+<th class="px-space-md font-semibold cursor-pointer hover:bg-surface-container-highest transition-colors">
+<div class="flex items-center gap-1">Cidade <span class="material-symbols-outlined text-[13px] opacity-40">unfold_more</span></div>
+</th>
+<th class="px-space-md font-semibold text-center w-14">UF</th>
+<th class="px-space-md font-semibold text-center w-24">Status</th>
+<th class="px-space-md font-semibold text-right w-36">Último Orçamento</th>
+</tr>
+</thead>
+<tbody class="text-on-surface font-body-sm text-body-sm">
+<!-- Row 1 (Selected) -->
+<tr class="cliente-row h-[28px] bg-secondary-fixed/40 text-on-secondary-fixed hover:bg-secondary-fixed/60 cursor-pointer font-medium transition-colors" data-client-id="CLI-00104">
+<td class="px-space-md font-mono text-body-sm flex items-center gap-1 h-[28px]">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>CLI-00104</span>
+</td>
+<td class="px-space-md">Cond. Clube Moradia Jardim do Cedro</td>
+<td class="px-space-md font-mono">12.345.678/0001-90</td>
+<td class="px-space-md font-mono">(11) 98765-4321</td>
+<td class="px-space-md">São Paulo</td>
+<td class="px-space-md text-center">SP</td>
+<td class="px-space-md text-center">
+<span class="inline-flex items-center justify-center h-[20px] px-space-sm bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm rounded-full">Ativo</span>
+</td>
+<td class="px-space-md text-right font-mono">#0754/2026</td>
+</tr>
+<!-- Row 2 -->
+<tr class="cliente-row h-[28px] bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-colors" data-client-id="CLI-00103">
+<td class="px-space-md font-mono text-body-sm">CLI-00103</td>
+<td class="px-space-md">Clinica Odonto Vida Ltda</td>
+<td class="px-space-md font-mono">23.456.789/0001-12</td>
+<td class="px-space-md font-mono">(11) 3456-7890</td>
+<td class="px-space-md">Santo André</td>
+<td class="px-space-md text-center">SP</td>
+<td class="px-space-md text-center">
+<span class="inline-flex items-center justify-center h-[20px] px-space-sm bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm rounded-full">Ativo</span>
+</td>
+<td class="px-space-md text-right font-mono">#0753/2026</td>
+</tr>
+<!-- Row 3 -->
+<tr class="cliente-row h-[28px] bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors" data-client-id="CLI-00102">
+<td class="px-space-md font-mono text-body-sm">CLI-00102</td>
+<td class="px-space-md">Logística Silva & Filhos ME</td>
+<td class="px-space-md font-mono">34.567.890/0001-23</td>
+<td class="px-space-md font-mono">(11) 4567-8901</td>
+<td class="px-space-md">Guarulhos</td>
+<td class="px-space-md text-center">SP</td>
+<td class="px-space-md text-center">
+<span class="inline-flex items-center justify-center h-[20px] px-space-sm bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm rounded-full">Ativo</span>
+</td>
+<td class="px-space-md text-right font-mono">#0752/2026</td>
+</tr>
+<!-- Row 4 -->
+<tr class="cliente-row h-[28px] bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-colors" data-client-id="CLI-00101">
+<td class="px-space-md font-mono text-body-sm">CLI-00101</td>
+<td class="px-space-md">Roberto Carlos de Almeida</td>
+<td class="px-space-md font-mono">321.654.987-00</td>
+<td class="px-space-md font-mono">(11) 97654-3210</td>
+<td class="px-space-md">São Paulo</td>
+<td class="px-space-md text-center">SP</td>
+<td class="px-space-md text-center">
+<span class="inline-flex items-center justify-center h-[20px] px-space-sm bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm rounded-full">Ativo</span>
+</td>
+<td class="px-space-md text-right font-mono">#0742/2026</td>
+</tr>
+<!-- Row 5 -->
+<tr class="cliente-row h-[28px] bg-surface-container-low hover:bg-surface-container cursor-pointer transition-colors opacity-80" data-client-id="CLI-00100">
+<td class="px-space-md font-mono text-body-sm">CLI-00100</td>
+<td class="px-space-md">Tech Solutions Informática Ltda</td>
+<td class="px-space-md font-mono">45.678.901/0001-34</td>
+<td class="px-space-md font-mono">(19) 3234-5678</td>
+<td class="px-space-md">Campinas</td>
+<td class="px-space-md text-center">SP</td>
+<td class="px-space-md text-center">
+<span class="inline-flex items-center justify-center h-[20px] px-space-sm bg-surface-variant text-on-surface-variant font-label-sm text-label-sm rounded-full">Inativo</span>
+</td>
+<td class="px-space-md text-right font-mono">#0749/2026</td>
+</tr>
+<!-- Row 6 -->
+<tr class="cliente-row h-[28px] bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-colors" data-client-id="CLI-00099">
+<td class="px-space-md font-mono text-body-sm">CLI-00099</td>
+<td class="px-space-md">Padaria Pão de Ouro Eireli</td>
+<td class="px-space-md font-mono">56.789.012/0001-45</td>
+<td class="px-space-md font-mono">(11) 2345-6789</td>
+<td class="px-space-md">São Bernardo</td>
+<td class="px-space-md text-center">SP</td>
+<td class="px-space-md text-center">
+<span class="inline-flex items-center justify-center h-[20px] px-space-sm bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm rounded-full">Ativo</span>
+</td>
+<td class="px-space-md text-right font-mono">#0748/2026</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- DataGrid Footer / Pagination -->
+<div class="h-[28px] bg-surface-container px-space-md flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<div class="flex items-center gap-space-md">
+<span>Registros: <strong class="text-on-surface">148 cadastrados</strong></span>
+<div class="h-3 w-px bg-surface-variant"></div>
+<span class="text-secondary font-medium">Selecionado: <strong id="lbl-selecionado">CLI-00104 - Cond. Clube Moradia Jardim do Cedro</strong></span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span>Página 1 de 15</span>
+<div class="flex items-center ml-space-sm">
+<button class="w-5 h-5 flex items-center justify-center bg-surface-container-lowest hover:bg-surface-container-high rounded text-on-surface" type="button">
+<span class="material-symbols-outlined text-[14px]">first_page</span>
+</button>
+<button class="w-5 h-5 flex items-center justify-center bg-surface-container-lowest hover:bg-surface-container-high rounded text-on-surface" type="button">
+<span class="material-symbols-outlined text-[14px]">chevron_left</span>
+</button>
+<span class="px-space-sm font-semibold text-secondary">1</span>
+<button class="w-5 h-5 flex items-center justify-center bg-surface-container-lowest hover:bg-surface-container-high rounded text-on-surface" type="button">
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+<button class="w-5 h-5 flex items-center justify-center bg-surface-container-lowest hover:bg-surface-container-high rounded text-on-surface" type="button">
+<span class="material-symbols-outlined text-[14px]">last_page</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Visual Simulated Context Menu Popover (Desktop Hint) -->
+<div class="bg-surface-container-low px-space-md py-1 rounded flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm" id="context-banner">
+<div class="flex items-center gap-space-md">
+<span class="flex items-center gap-1 text-secondary font-semibold">
+<span class="material-symbols-outlined text-[14px]">mouse</span> Operações de Registro:
+        </span>
+<button class="hover:text-primary transition-colors flex items-center gap-1" onclick="alert('Histórico de 8 orçamentos aberto.');" type="button">
+<span class="material-symbols-outlined text-[13px]">history</span> Abrir Histórico de Orçamentos
+        </button>
+<span>•</span>
+<button class="hover:text-primary transition-colors flex items-center gap-1" onclick="alert('Cliente copiado para área de transferência.');" type="button">
+<span class="material-symbols-outlined text-[13px]">content_copy</span> Copiar CNPJ
+        </button>
+<span>•</span>
+<button class="hover:text-primary transition-colors flex items-center gap-1" onclick="alert('Disparando cliente de e-mail padrão.');" type="button">
+<span class="material-symbols-outlined text-[13px]">mail</span> Enviar E-mail
+        </button>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+<span>Registro Liberado para Edição Concorrente</span>
+</div>
+</div>
+<!-- Form Section (Windows GroupBox Architecture) -->
+<div class="bg-surface-container-lowest shadow-sm p-space-md">
+<div class="flex items-center justify-between pb-space-xs mb-space-sm bg-surface-container-low px-space-md py-1 rounded">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary">badge</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Ficha Cadastral do Cliente</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">| Modo: <strong class="text-secondary font-medium">Edição de Registro Existente</strong></span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sincronizado via RPC-PostgreSQL</span>
+</div>
+</div>
+<form class="flex flex-col gap-space-md" id="form-cliente" onsubmit="event.preventDefault();">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- GRUPO DADOS PRINCIPAIS -->
+<fieldset class="lg:col-span-6 bg-surface-container-low p-space-md rounded flex flex-col gap-space-sm">
+<legend class="font-label-md text-label-md text-primary font-semibold px-space-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">folder_shared</span>
+              DADOS PRINCIPAIS
+            </legend>
+<!-- Tipo Pessoa Radio -->
+<div class="flex items-center gap-space-xl py-0.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Tipo de Pessoa:</span>
+<label class="flex items-center gap-space-xs font-body-sm text-body-sm cursor-pointer">
+<input checked="" class="accent-secondary h-3.5 w-3.5" name="tipo_pessoa" type="radio" value="pj"/>
+<span class="font-semibold text-on-surface">Pessoa Jurídica</span>
+</label>
+<label class="flex items-center gap-space-xs font-body-sm text-body-sm cursor-pointer">
+<input class="accent-secondary h-3.5 w-3.5" name="tipo_pessoa" type="radio" value="pf"/>
+<span>Pessoa Física</span>
+</label>
+</div>
+<!-- Razão Social -->
+<div class="flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-razao">Nome / Razão Social <span class="text-error">*</span></label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-razao" required="" type="text" value="Cond. Clube Moradia Jardim do Cedro"/>
+</div>
+<!-- Nome Fantasia -->
+<div class="flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-fantasia">Nome Fantasia / Apelido</label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-fantasia" type="text" value="Residencial Jardim do Cedro"/>
+</div>
+<!-- Documentos: CNPJ + IE -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-cnpj">CPF / CNPJ <span class="text-error">*</span></label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-mono font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-cnpj" required="" type="text" value="12.345.678/0001-90"/>
+</div>
+<div class="flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-ie">Inscrição Estadual / RG</label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-mono font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-ie" type="text" value="ISENTO"/>
+</div>
+</div>
+</fieldset>
+<!-- GRUPO CONTATO -->
+<fieldset class="lg:col-span-6 bg-surface-container-low p-space-md rounded flex flex-col gap-space-sm">
+<legend class="font-label-md text-label-md text-primary font-semibold px-space-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">contact_phone</span>
+              CONTATO & COMUNICAÇÃO
+            </legend>
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-tel">Telefone Comercial</label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-mono font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-tel" type="text" value="(11) 3321-0000"/>
+</div>
+<div class="flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-cel">Celular / WhatsApp <span class="text-error">*</span></label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-mono font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-cel" required="" type="text" value="(11) 98765-4321"/>
+</div>
+</div>
+<!-- E-mail Principal -->
+<div class="flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-email">E-mail Principal para Envio de Orçamentos <span class="text-error">*</span></label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-1 text-[16px] text-on-surface-variant pointer-events-none">mail</span>
+<input class="w-full h-[26px] pl-7 pr-space-md bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-email" required="" type="email" value="administracao@jardimdocedro.com.br"/>
+</div>
+</div>
+<!-- E-mail Financeiro Opcional -->
+<div class="flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-email-fin">E-mail Cobrança / Financeiro (Opcional)</label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-email-fin" type="email" value="financeiro@jardimdocedro.com.br"/>
+</div>
+<div class="flex items-center gap-space-sm pt-1">
+<input checked="" class="accent-secondary h-3.5 w-3.5" id="chk-whatsapp-notif" type="checkbox"/>
+<label class="font-body-sm text-body-sm text-on-surface cursor-pointer" for="chk-whatsapp-notif">Enviar alerta automático via WhatsApp na aprovação do orçamento</label>
+</div>
+</fieldset>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md">
+<!-- GRUPO ENDEREÇO -->
+<fieldset class="lg:col-span-8 bg-surface-container-low p-space-md rounded flex flex-col gap-space-sm">
+<legend class="font-label-md text-label-md text-primary font-semibold px-space-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">pin_drop</span>
+              ENDEREÇO
+            </legend>
+<!-- CEP + Botão Busca + Logradouro -->
+<div class="grid grid-cols-12 gap-space-sm items-end">
+<div class="col-span-4 flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-cep">CEP <span class="text-error">*</span></label>
+<div class="flex gap-space-xs">
+<input class="w-full h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-mono font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-cep" type="text" value="04538-133"/>
+<button class="h-[26px] px-space-sm bg-surface-container hover:bg-surface-container-high rounded text-on-surface flex items-center" title="Consultar CEP via ViaCEP" type="button">
+<span class="material-symbols-outlined text-[14px]">search</span>
+</button>
+</div>
+</div>
+<div class="col-span-8 flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-logradouro">Endereço (Logradouro) <span class="text-error">*</span></label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-logradouro" required="" type="text" value="Avenida Brigadeiro Faria Lima"/>
+</div>
+</div>
+<!-- Número + Complemento + Bairro -->
+<div class="grid grid-cols-12 gap-space-sm">
+<div class="col-span-3 flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-numero">Número <span class="text-error">*</span></label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-numero" required="" type="text" value="2391"/>
+</div>
+<div class="col-span-4 flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-complemento">Complemento</label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-complemento" type="text" value="Bloco B - Portaria Central"/>
+</div>
+<div class="col-span-5 flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-bairro">Bairro <span class="text-error">*</span></label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-bairro" required="" type="text" value="Itaim Bibi"/>
+</div>
+</div>
+<!-- Cidade + Estado -->
+<div class="grid grid-cols-12 gap-space-sm">
+<div class="col-span-9 flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-cidade">Cidade <span class="text-error">*</span></label>
+<input class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="txt-cidade" required="" type="text" value="São Paulo"/>
+</div>
+<div class="col-span-3 flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="sel-uf">Estado (UF) <span class="text-error">*</span></label>
+<select class="h-[26px] px-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary" id="sel-uf">
+<option selected="" value="SP">SP</option>
+<option value="RJ">RJ</option>
+<option value="MG">MG</option>
+<option value="PR">PR</option>
+<option value="SC">SC</option>
+<option value="RS">RS</option>
+</select>
+</div>
+</div>
+</fieldset>
+<!-- GRUPO OBSERVAÇÕES -->
+<fieldset class="lg:col-span-4 bg-surface-container-low p-space-md rounded flex flex-col gap-space-sm">
+<legend class="font-label-md text-label-md text-primary font-semibold px-space-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">notes</span>
+              OBSERVAÇÕES COMERCIAIS & TÉCNICAS
+            </legend>
+<div class="flex-1 flex flex-col gap-0.5">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="txt-obs">Notas internas e restrições de acesso ao local:</label>
+<textarea class="w-full flex-1 p-space-sm bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded outline-none focus:ring-1 focus:ring-secondary resize-none" id="txt-obs" placeholder="Ex: Entrada pela doca 2 com crachá de visitante. A/C Zelador Sr. Milton. Horário de barulho apenas das 09h às 17h." rows="5">Acesso de prestadores liberado apenas com aviso prévio na portaria social. Manutenção de servidores deve ocorrer preferencialmente aos sábados de manhã.</textarea>
+</div>
+</fieldset>
+</div>
+<!-- Form Action Bar -->
+<div class="bg-surface-container-low px-space-md py-space-sm rounded flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-md">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">history_edu</span>
+              Última alteração: 24/02/2026 14:18 por <strong>alex.santos</strong>
+</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="h-[28px] px-space-md bg-surface-container text-on-surface hover:bg-surface-container-high font-label-lg text-label-lg rounded flex items-center gap-space-xs transition-colors" id="btn-cancelar" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+<span>Cancelar <span class="text-on-surface-variant text-label-sm">(Esc)</span></span>
+</button>
+<button class="h-[28px] px-space-md bg-surface-container text-on-surface hover:bg-surface-container-high font-label-lg text-label-lg rounded flex items-center gap-space-xs transition-colors" id="btn-salvar-novo" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary">save_as</span>
+<span>Salvar e Novo <span class="text-on-surface-variant text-label-sm">(Ctrl+N)</span></span>
+</button>
+<button class="h-[28px] px-space-xl bg-secondary text-on-secondary hover:bg-on-secondary-container font-label-lg text-label-lg rounded flex items-center gap-space-xs transition-colors shadow-sm" id="btn-salvar" type="button">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+<span>Salvar <span class="text-secondary-fixed-dim text-label-sm">(Ctrl+S)</span></span>
+</button>
+</div>
+</div>
+</form>
+</div>
+</div>
+</div>
+<script>
+  // High efficiency keyboard shortcuts and WPF row selection simulation
+  (function () {
+    const rows = document.querySelectorAll('.cliente-row');
+    const lblSelecionado = document.getElementById('lbl-selecionado');
+    const txtRazao = document.getElementById('txt-razao');
+    const txtCnpj = document.getElementById('txt-cnpj');
+    const txtCel = document.getElementById('txt-cel');
+    const txtCidade = document.getElementById('txt-cidade');
+
+    const clientDataStore = {
+      'CLI-00104': {
+        razao: 'Cond. Clube Moradia Jardim do Cedro',
+        fantasia: 'Residencial Jardim do Cedro',
+        cnpj: '12.345.678/0001-90',
+        ie: 'ISENTO',
+        tel: '(11) 3321-0000',
+        cel: '(11) 98765-4321',
+        email: 'administracao@jardimdocedro.com.br',
+        cep: '04538-133',
+        logradouro: 'Avenida Brigadeiro Faria Lima',
+        numero: '2391',
+        bairro: 'Itaim Bibi',
+        cidade: 'São Paulo',
+        uf: 'SP',
+        obs: 'Acesso de prestadores liberado apenas com aviso prévio na portaria social.'
+      },
+      'CLI-00103': {
+        razao: 'Clinica Odonto Vida Ltda',
+        fantasia: 'Odonto Vida Especialidades',
+        cnpj: '23.456.789/0001-12',
+        ie: '123.456.789.110',
+        tel: '(11) 3456-7890',
+        cel: '(11) 97777-1234',
+        email: 'contato@odontovida.com.br',
+        cep: '09015-100',
+        logradouro: 'Rua das Figueiras',
+        numero: '450',
+        bairro: 'Jardim',
+        cidade: 'Santo André',
+        uf: 'SP',
+        obs: 'Equipamentos de raio-x digital na rede local do consultório 3.'
+      },
+      'CLI-00102': {
+        razao: 'Logística Silva & Filhos ME',
+        fantasia: 'Silva Express Log',
+        cnpj: '34.567.890/0001-23',
+        ie: '987.654.321.000',
+        tel: '(11) 4567-8901',
+        cel: '(11) 96666-4321',
+        email: 'operacoes@silvalog.com.br',
+        cep: '07110-000',
+        logradouro: 'Avenida Monteiro Lobato',
+        numero: '1200',
+        bairro: 'Macedo',
+        cidade: 'Guarulhos',
+        uf: 'SP',
+        obs: 'Empresa funciona 24 horas. Contrato de chamados de emergência NBD.'
+      },
+      'CLI-00101': {
+        razao: 'Roberto Carlos de Almeida',
+        fantasia: 'Consultoria Almeida TI',
+        cnpj: '321.654.987-00',
+        ie: 'Não Contribuinte',
+        tel: '(11) 97654-3210',
+        cel: '(11) 97654-3210',
+        email: 'roberto.almeida@gmail.com',
+        cep: '01310-200',
+        logradouro: 'Avenida Paulista',
+        numero: '1000',
+        bairro: 'Bela Vista',
+        cidade: 'São Paulo',
+        uf: 'SP',
+        obs: 'Pessoa física com atendimento remoto prioritário.'
+      },
+      'CLI-00100': {
+        razao: 'Tech Solutions Informática Ltda',
+        fantasia: 'TechSol Campinas',
+        cnpj: '45.678.901/0001-34',
+        ie: '244.111.222.333',
+        tel: '(19) 3234-5678',
+        cel: '(19) 98888-5678',
+        email: 'diretoria@techsol.com.br',
+        cep: '13010-111',
+        logradouro: 'Rua Barão de Jaguara',
+        numero: '890',
+        bairro: 'Centro',
+        cidade: 'Campinas',
+        uf: 'SP',
+        obs: 'Cliente atualmente inativo. Reativação condicionada à regularização financeira.'
+      },
+      'CLI-00099': {
+        razao: 'Padaria Pão de Ouro Eireli',
+        fantasia: 'Pão de Ouro Padaria e Confeitaria',
+        cnpj: '56.789.012/0001-45',
+        ie: '344.555.666.777',
+        tel: '(11) 2345-6789',
+        cel: '(11) 95555-6789',
+        email: 'gerencia@paodeouro.com.br',
+        cep: '09750-000',
+        logradouro: 'Rua Marechal Deodoro',
+        numero: '512',
+        bairro: 'Centro',
+        cidade: 'São Bernardo',
+        uf: 'SP',
+        obs: 'Contrato de suporte para 4 terminais PDV touchscreen.'
+      }
+    };
+
+    function selectRow(selectedRow) {
+      rows.forEach(r => {
+        r.classList.remove('bg-secondary-fixed/40', 'text-on-secondary-fixed', 'font-medium');
+        const dot = r.querySelector('span.rounded-full');
+        if (dot) dot.remove();
+      });
+
+      selectedRow.classList.add('bg-secondary-fixed/40', 'text-on-secondary-fixed', 'font-medium');
+      const firstCol = selectedRow.cells[0];
+      if (!firstCol.querySelector('span.rounded-full')) {
+        const dot = document.createElement('span');
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-secondary inline-block mr-1';
+        firstCol.prepend(dot);
+      }
+
+      const id = selectedRow.getAttribute('data-client-id');
+      const data = clientDataStore[id];
+      if (data) {
+        lblSelecionado.textContent = id + ' - ' + data.razao;
+        txtRazao.value = data.razao;
+        txtCnpj.value = data.cnpj;
+        txtCel.value = data.cel;
+        txtCidade.value = data.cidade;
+        document.getElementById('txt-fantasia').value = data.fantasia;
+        document.getElementById('txt-ie').value = data.ie;
+        document.getElementById('txt-tel').value = data.tel;
+        document.getElementById('txt-email').value = data.email;
+        document.getElementById('txt-cep').value = data.cep;
+        document.getElementById('txt-logradouro').value = data.logradouro;
+        document.getElementById('txt-numero').value = data.numero;
+        document.getElementById('txt-bairro').value = data.bairro;
+        document.getElementById('sel-uf').value = data.uf;
+        document.getElementById('txt-obs').value = data.obs;
+      }
+    }
+
+    rows.forEach(row => {
+      row.addEventListener('click', function () {
+        selectRow(this);
+      });
+      row.addEventListener('dblclick', function () {
+        selectRow(this);
+        txtRazao.focus();
+        txtRazao.select();
+      });
+    });
+
+    // F-Keys and shortcut listener standard for Windows desktop software
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'F2') {
+        e.preventDefault();
+        limparFormularioParaNovo();
+      } else if (e.key === 'F3') {
+        e.preventDefault();
+        txtRazao.focus();
+        txtRazao.select();
+      } else if (e.key === 'F5') {
+        e.preventDefault();
+        feedbackNotificacao('Lista de clientes atualizada com o servidor local.');
+      } else if (e.ctrlKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        feedbackNotificacao('Cliente gravado com sucesso no banco de dados!');
+      } else if (e.ctrlKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        feedbackNotificacao('Exportando grade de clientes para Excel (.XLSX)...');
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        document.getElementById('input-busca').focus();
+      }
+    });
+
+    function limparFormularioParaNovo() {
+      lblSelecionado.textContent = '[NOVO REGISTRO - NÃO SALVO]';
+      document.getElementById('form-cliente').reset();
+      txtRazao.focus();
+      feedbackNotificacao('Modo de Inserção iniciado (F2). Preencha os campos obrigatórios.');
+    }
+
+    function feedbackNotificacao(msg) {
+      const banner = document.getElementById('context-banner');
+      const prev = banner.innerHTML;
+      banner.innerHTML = '<div class="flex items-center gap-space-sm text-secondary font-semibold"><span class="material-symbols-outlined text-[16px]">check_circle</span>' + msg + '</div>';
+      setTimeout(() => {
+        banner.innerHTML = prev;
+      }, 3000);
+    }
+
+    // Action deck buttons binding
+    document.getElementById('btn-novo').addEventListener('click', limparFormularioParaNovo);
+    document.getElementById('btn-salvar').addEventListener('click', function () {
+      feedbackNotificacao('Dados salvos com sucesso.');
+    });
+    document.getElementById('btn-salvar-novo').addEventListener('click', function () {
+      feedbackNotificacao('Registro gravado. Pronto para novo cadastro.');
+      limparFormularioParaNovo();
+    });
+    document.getElementById('btn-atualizar').addEventListener('click', function () {
+      feedbackNotificacao('Bases de clientes recarregadas com sucesso.');
+    });
+    document.getElementById('btn-exportar').addEventListener('click', function () {
+      feedbackNotificacao('Planilha Excel gerada na pasta C:\\AlexTI\\Export\\Clientes.xlsx');
+    });
+    document.getElementById('btn-limpar-filtros').addEventListener('click', function () {
+      document.getElementById('input-busca').value = '';
+      document.getElementById('filtro-status').value = 'todos';
+      document.getElementById('filtro-tipo').value = 'todos';
+      document.getElementById('filtro-cidade').value = 'todas';
+      feedbackNotificacao('Filtros redefinidos para a visão global.');
+    });
+  })();
+</script></main></div><footer class="fixed bottom-0 left-0 right-0 h-6 bg-primary-container text-on-primary-container z-50 flex items-center justify-between px-space-md font-body-sm text-body-sm"><div class="flex items-center gap-space-md"><span>Pronto</span><div class="w-px h-3 bg-tertiary-container"></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary-container"></span><span>Conectado (PostgreSQL Local)</span></div><div class="w-px h-3 bg-tertiary-container"></div><span>Usuário: Alex (Administrador)</span><div class="w-px h-3 bg-tertiary-container"></div><span>Filial: ALEX T.I. Matriz</span></div><div class="flex items-center gap-space-md"><span>CAPS</span><span>NUM</span><div class="w-px h-3 bg-tertiary-container"></div><span>100%</span><div class="w-px h-3 bg-tertiary-container"></div><span>v2.6.4</span></div></footer></body></html>

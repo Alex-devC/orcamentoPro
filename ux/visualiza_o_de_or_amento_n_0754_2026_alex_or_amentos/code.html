@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {"darkMode":"class","theme":{"extend":{"colors":{"error":"#ba1a1a","on-secondary-fixed-variant":"#004b73","on-primary-container":"#7a92b7","tertiary-fixed-dim":"#b9c7e4","on-secondary-container":"#004368","tertiary-fixed":"#d6e3ff","outline":"#74777f","on-tertiary-container":"#8391ad","inverse-on-surface":"#eff1f4","surface":"#f7f9fc","primary-fixed":"#d4e3ff","error-container":"#ffdad6","secondary-fixed-dim":"#93ccff","tertiary-container":"#1c2a41","on-error-container":"#93000a","on-primary-fixed-variant":"#304869","on-tertiary":"#ffffff","surface-bright":"#f7f9fc","tertiary":"#06152b","surface-variant":"#e0e3e6","on-secondary-fixed":"#001d31","on-primary-fixed":"#001c3a","surface-dim":"#d8dadd","secondary-fixed":"#cce5ff","secondary":"#006398","on-error":"#ffffff","inverse-surface":"#2d3133","outline-variant":"#c4c6cf","background":"#f7f9fc","on-surface-variant":"#43474e","surface-container-low":"#f2f4f7","surface-container-high":"#e6e8eb","surface-container-lowest":"#ffffff","primary-fixed-dim":"#b0c8f0","on-tertiary-fixed":"#0d1c32","primary-container":"#0f2a4a","on-tertiary-fixed-variant":"#39475f","on-background":"#191c1e","on-primary":"#ffffff","surface-tint":"#485f82","surface-container":"#eceef1","secondary-container":"#49b3fe","primary":"#00152f","surface-container-highest":"#e0e3e6","on-surface":"#191c1e","inverse-primary":"#b0c8f0","on-secondary":"#ffffff"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-sm":"0.25rem","space-xs":"0.125rem","margin":"0.5rem","space-lg":"0.75rem","space-md":"0.5rem","space-xl":"1rem","gutter":"0.5rem"},"fontFamily":{"headline-lg":["Inter"],"body-lg":["Inter"],"headline-md":["Inter"],"body-sm":["Inter"],"headline-sm":["Inter"],"label-sm":["Inter"],"label-lg":["Inter"],"body-md":["Inter"],"label-md":["Inter"]},"fontSize":{"headline-lg":["20px",{"lineHeight":"26px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-lg":["13px",{"lineHeight":"18px","fontWeight":"500"}],"headline-md":["16px",{"lineHeight":"22px","letterSpacing":"-0.005em","fontWeight":"600"}],"body-sm":["11px",{"lineHeight":"14px","fontWeight":"400"}],"headline-sm":["14px",{"lineHeight":"18px","fontWeight":"600"}],"label-sm":["10px",{"lineHeight":"12px","letterSpacing":"0.03em","fontWeight":"600"}],"label-lg":["12px",{"lineHeight":"16px","fontWeight":"600"}],"body-md":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-md":["11px",{"lineHeight":"14px","fontWeight":"500"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased select-none"><header class="fixed top-0 left-0 right-0 z-50 flex flex-col bg-surface-container-lowest"><div class="h-8 bg-primary text-on-primary flex items-center justify-between px-space-md"><div class="flex items-center gap-space-md"><img alt="logo.png" class="h-4 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WKU7RB-6xC6ka68F1bRcPQCg8J5Aa-H3dI9-evrUkWDEoq1qYiCTltHYQCyLZi_iXMgXiNPW-0IgyQIcI_HmUUqYmclawdXcNk6b6gfyF_plUaaqXpsT1VgCJ2Wm-4u85jiWoz3ljq-gHf-2NB1muEVKTZ6i_f7Rkut8t8LIhgUI_1E-RMX6ezIXiCE358VK3ganUIFHsNM-UutmzPtVnUGyw9L-UAfPA1g_nmo5fFb03EXnVCepQBheOrUORG81zY8_sOLIG6"/><span class="font-label-md text-label-md text-primary-fixed tracking-wide">ALEX Orçamentos v2.6 - ALEX T.I. Tecnologia e Assistência [Base de Dados: Produção]</span></div><div class="flex items-center gap-space-sm"><div class="w-6 h-6 rounded-full bg-secondary flex items-center justify-center"><span class="material-symbols-outlined text-on-secondary text-[14px]">person</span></div><div class="flex items-center ml-space-md"><button class="w-8 h-8 flex items-center justify-center hover:bg-primary-container text-on-primary transition-colors" title="Minimizar" type="button"><span class="material-symbols-outlined text-[14px]">minimize</span></button><button class="w-8 h-8 flex items-center justify-center hover:bg-primary-container text-on-primary transition-colors" title="Maximizar" type="button"><span class="material-symbols-outlined text-[14px]">crop_square</span></button><button class="w-8 h-8 flex items-center justify-center hover:bg-error hover:text-on-error text-on-primary transition-colors" title="Fechar" type="button"><span class="material-symbols-outlined text-[14px]">close</span></button></div></div></div><div class="h-7 bg-surface-container-high px-space-md flex items-end gap-space-xs"><nav class="flex items-center gap-space-xs h-full" data-active-classes="bg-surface-container-lowest text-secondary font-label-md"><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="painel-principal" href="#">ARQUIVO</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="gestao-orcamentos" href="#">ORÇAMENTOS</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="cadastros-gerais" href="#">CADASTROS</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="central-relatorios" href="#">RELATÓRIOS</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="sistema-configuracoes" href="#">SISTEMA</a></nav></div><div class="h-16 bg-surface-container-lowest flex items-center px-space-md gap-space-md overflow-x-auto shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-sm h-full py-space-xs"><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">post_add</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Novo Doc</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">save</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Salvar</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">picture_as_pdf</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Gerar PDF</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">print</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Imprimir</span></div></div><div class="w-px h-10 bg-surface-variant"></div><div class="flex items-center gap-space-sm h-full py-space-xs"><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-primary text-[20px]">person_add</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">+ Cliente</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-primary text-[20px]">inventory_2</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">+ Item</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-primary text-[20px]">handyman</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">+ Serviço</span></div></div><div class="w-px h-10 bg-surface-variant"></div><div class="flex items-center gap-space-sm h-full py-space-xs"><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">sync</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Recarregar</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">settings</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Ajustes</span></div></div></div></header><aside class="fixed left-0 top-[124px] bottom-6 w-60 bg-surface-container-low z-40 flex flex-col p-space-md"><div class="mb-space-md px-space-sm flex items-center justify-between"><span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">Navegação do Módulo</span><span class="material-symbols-outlined text-[16px] text-on-surface-variant">dock_to_left</span></div><nav class="flex-1 flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-label-md"><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="painel-principal" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">desktop_windows</span>Visão Geral</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="gestao-orcamentos" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">receipt_long</span>Orçamentos Ativos</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="cadastros-gerais" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">database</span>Bases Cadastrais</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="central-relatorios" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">monitoring</span>Relatórios Gerenciais</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="sistema-configuracoes" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">admin_panel_settings</span>Administração & BD</a></nav><div class="mt-auto p-space-sm bg-surface-container rounded"><div class="flex items-center gap-space-xs text-secondary"><span class="w-2 h-2 rounded-full bg-secondary-container"></span><span class="font-label-sm text-label-sm font-semibold">PostgreSQL Operacional</span></div><span class="font-body-sm text-body-sm text-on-surface-variant block mt-space-xs">Latência de Rede: 1ms</span></div></aside><div class="pl-60"><main class="w-full pt-[124px] pb-6 bg-surface min-h-screen px-space-md"><div class="flex flex-col w-full">
+<!-- Desktop Sub-Toolbar / Action Deck for Print & Export Preview -->
+<div class="w-full bg-surface-container-lowest shadow-sm flex flex-col mb-space-md">
+<!-- Header Context Bar -->
+<div class="flex flex-wrap items-center justify-between px-space-xl py-space-sm bg-surface-container-low">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs text-primary">
+<span class="material-symbols-outlined text-secondary text-[22px]">print_connect</span>
+<span class="font-headline-sm text-headline-sm uppercase tracking-tight">Visualizador de Impressão & Exportação</span>
+</div>
+<span class="text-outline-variant font-body-sm">|</span>
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-md text-headline-md text-primary">Orçamento Nº 0754/2026</span>
+<span class="bg-secondary-fixed text-on-secondary-fixed-variant px-space-md py-0.5 rounded-full font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            Aguardando Aprovação
+          </span>
+</div>
+</div>
+<div class="flex items-center gap-space-xl text-on-surface-variant font-body-sm text-body-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[15px] text-outline">apartment</span>
+<span class="text-on-surface font-label-md">COND. CLUBE MORADIA JARDIM DO CEDRO</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[15px] text-outline">calendar_month</span>
+<span>Emissão: <strong class="text-on-surface font-label-md">22/09/2026</strong></span>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[15px] text-outline">hourglass_top</span>
+<span>Validade: <strong class="text-on-surface font-label-md">15 dias (07/10/2026)</strong></span>
+</div>
+</div>
+</div>
+<!-- Toolbar Command Buttons -->
+<div class="flex flex-wrap items-center justify-between px-space-xl py-space-sm gap-space-md">
+<!-- Main Actions -->
+<div class="flex items-center gap-space-xs">
+<button class="flex items-center gap-space-xs px-space-lg py-1.5 bg-secondary hover:bg-on-secondary-container text-on-secondary rounded font-label-lg text-label-lg transition-colors shadow-sm" id="btn-gerar-pdf" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+<span>Gerar PDF</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-lg py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded font-label-lg text-label-lg transition-colors" id="btn-imprimir" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary">print</span>
+<span>Imprimir (Ctrl+P)</span>
+</button>
+<div class="w-px h-6 bg-surface-variant mx-space-xs"></div>
+<button class="flex items-center gap-space-xs px-space-md py-1.5 bg-surface-container-lowest hover:bg-surface-container-high text-on-surface rounded font-label-md text-label-md transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary">mail</span>
+<span>E-mail</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-1.5 bg-surface-container-lowest hover:bg-surface-container-high text-on-surface rounded font-label-md text-label-md transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary">chat</span>
+<span>WhatsApp</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-1.5 bg-surface-container-lowest hover:bg-surface-container-high text-on-surface rounded font-label-md text-label-md transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary">edit_note</span>
+<span>Editar Itens</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-1.5 bg-surface-container-lowest hover:bg-surface-container-high text-on-surface rounded font-label-md text-label-md transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-outline">content_copy</span>
+<span>Clonar</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-1.5 bg-surface-container-lowest hover:bg-surface-container-high text-on-surface rounded font-label-md text-label-md transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-outline">published_with_changes</span>
+<span>Alterar Status...</span>
+</button>
+</div>
+<!-- Preview Zoom Controls -->
+<div class="flex items-center gap-space-xs bg-surface-container-low px-space-sm py-1 rounded">
+<button class="w-7 h-7 flex items-center justify-center hover:bg-surface-container-high text-on-surface rounded" id="zoom-out" title="Reduzir Zoom" type="button">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<div class="relative">
+<select class="h-7 bg-surface-container-lowest font-label-sm text-label-sm text-on-surface px-space-md rounded cursor-pointer appearance-none pr-6 focus:outline-none" id="zoom-select">
+<option value="0.85">85%</option>
+<option selected="" value="1">100% (A4 Real)</option>
+<option value="1.15">115%</option>
+<option value="1.25">Ajustar à Largura</option>
+</select>
+<span class="material-symbols-outlined text-[14px] text-outline absolute right-1.5 top-1.5 pointer-events-none">expand_more</span>
+</div>
+<button class="w-7 h-7 flex items-center justify-center hover:bg-surface-container-high text-on-surface rounded" id="zoom-in" title="Aumentar Zoom" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+<div class="w-px h-5 bg-surface-variant mx-space-xs"></div>
+<button class="h-7 px-space-sm flex items-center gap-1 hover:bg-surface-container-high text-on-surface-variant rounded font-label-sm text-label-sm" title="Duas Páginas" type="button">
+<span class="material-symbols-outlined text-[16px]">auto_stories</span>
+<span>Duas Páginas</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Document Work Area / Canvas Background -->
+<div class="w-full flex justify-center items-start overflow-x-auto py-space-xl px-space-md bg-surface-variant/40 min-h-[960px]">
+<!-- Realistic Physical A4 Page Container (210mm x 297mm proportions) -->
+<div class="w-[820px] bg-surface-container-lowest shadow-2xl p-[36px] flex flex-col justify-between transition-transform duration-200 origin-top" id="folha-a4-viewport">
+<!-- Top Section of A4 Sheet -->
+<div class="flex flex-col w-full">
+<!-- 1. Cabeçalho do Emitente & Dados do Orçamento -->
+<div class="flex items-start justify-between pb-space-lg bg-surface-container-lowest">
+<!-- Logo & Empresa Info -->
+<div class="flex items-start gap-space-lg max-w-[500px]">
+<img alt="ALEX T.I. Logo" class="w-32 h-auto object-contain shrink-0 pt-1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3N9jjdzzNNqpdmt1tBBw1AM9H1wsS51LhQrMYphRkLU0JDlBIQkgrLi6wknaf3xQAS-oqsSOhgoW3FZU0FfeJnGlLvghMKet-RYWDm2MsKGXMbs4KZKIVshT34bobspV1QK7Qu8EYvWc877zzsGLTT_jVsZuUNVe8fPpdf-7LZSzpB2lHNW8InlGJhgyzf2GoszOKAgpEpBY6AGIDFH7fd-Egusp5y-Ptj8UN3zVaJTdPQ4iozO6pz-E3rTkf867keg"/>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-primary tracking-tight font-bold">ALEX T.I. TECNOLOGIA E ASSISTÊNCIA LTDA</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">CNPJ: 28.942.115/0001-83 | Insc. Estadual: 114.892.441.112</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Rua das Palmeiras, 450 - Sala 32 - Jardim Bela Vista - São Paulo/SP</span>
+<div class="flex items-center gap-space-md font-body-sm text-body-sm text-on-surface-variant mt-1">
+<span>Tel: (11) 3892-1200</span>
+<span>•</span>
+<span>WhatsApp: (11) 98844-5500</span>
+</div>
+<span class="font-body-sm text-body-sm text-secondary font-medium">contato@alexti.com.br</span>
+</div>
+</div>
+<!-- Bloco Destacado: Orçamento Comercial Metadados -->
+<div class="w-56 p-space-md bg-surface-container-low rounded flex flex-col shadow-sm">
+<div class="flex items-center justify-between pb-space-xs bg-surface-container-high px-space-sm py-1 rounded-t">
+<span class="font-label-sm text-label-sm font-bold uppercase tracking-wider text-primary">Proposta Comercial</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">T.I. / REDES</span>
+</div>
+<div class="flex flex-col px-space-sm pt-space-xs gap-1">
+<div class="flex justify-between items-baseline">
+<span class="font-label-sm text-label-sm text-outline uppercase">Número:</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">0754/2026</span>
+</div>
+<div class="flex justify-between items-baseline">
+<span class="font-label-sm text-label-sm text-outline uppercase">Emissão:</span>
+<span class="font-body-sm text-body-sm text-on-surface">22/09/2026</span>
+</div>
+<div class="flex justify-between items-baseline">
+<span class="font-label-sm text-label-sm text-outline uppercase">Validade:</span>
+<span class="font-body-sm text-body-sm text-primary font-semibold">07/10/2026</span>
+</div>
+<div class="flex justify-between items-baseline pt-1">
+<span class="font-label-sm text-label-sm text-outline uppercase">Técnico:</span>
+<span class="font-body-sm text-body-sm text-on-surface font-medium truncate max-w-[110px]" title="Alex Pereira (Sênior)">Alex Pereira</span>
+</div>
+</div>
+</div>
+</div>
+<div class="w-full h-0.5 bg-primary mt-space-sm mb-space-md"></div>
+<!-- 2. Dados do Cliente / Destinatário -->
+<div class="w-full bg-surface-container-lowest mb-space-lg">
+<div class="bg-surface-container-high px-space-md py-1 flex items-center justify-between rounded-t">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">person</span>
+              Dados do Destinatário / Contratante
+            </span>
+<span class="font-label-sm text-label-sm text-outline">Código Cliente: CLI-0883</span>
+</div>
+<div class="p-space-md bg-surface-container-lowest grid grid-cols-12 gap-x-space-md gap-y-1.5 shadow-sm rounded-b">
+<div class="col-span-8 flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">Razão Social / Nome Fantasia</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">CONDOMÍNIO CLUBE MORADIA JARDIM DO CEDRO</span>
+</div>
+<div class="col-span-4 flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">CNPJ / CPF</span>
+<span class="font-body-md text-body-md text-on-surface font-mono">12.345.678/0001-90 (Isento)</span>
+</div>
+<div class="col-span-8 flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">Endereço de Atendimento</span>
+<span class="font-body-md text-body-md text-on-surface">Av. dos Eucaliptos, 1200 - Bloco C - Morumbi - São Paulo / SP - CEP 05678-000</span>
+</div>
+<div class="col-span-4 flex flex-col">
+<span class="font-label-sm text-label-sm text-outline uppercase">Contato & E-mail</span>
+<span class="font-body-md text-body-md text-on-surface">Síndico Roberto / Mariana (Adm)</span>
+<span class="font-body-sm text-body-sm text-secondary">adm@moradiajardim.com.br | (11) 98765-4321</span>
+</div>
+</div>
+</div>
+<!-- 3. Tabela de Peças & Materiais -->
+<div class="w-full mb-space-lg">
+<div class="bg-primary px-space-md py-1.5 flex items-center justify-between rounded-t">
+<span class="font-label-md text-label-md uppercase tracking-wider font-bold text-on-primary flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary-container">inventory_2</span>
+              1. Relação de Peças, Componentes e Materiais
+            </span>
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider">Garantia Balcão 12 Meses</span>
+</div>
+<table class="w-full text-left font-body-sm text-body-sm bg-surface-container-lowest">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase">
+<th class="py-1 px-space-sm w-10 text-center">Item</th>
+<th class="py-1 px-space-sm w-24">Código</th>
+<th class="py-1 px-space-md">Descrição Detalhada do Material / Equipamento</th>
+<th class="py-1 px-space-sm w-12 text-center">Qtd</th>
+<th class="py-1 px-space-sm w-14 text-center">Unid</th>
+<th class="py-1 px-space-md w-24 text-right">Unitário</th>
+<th class="py-1 px-space-md w-28 text-right">Total</th>
+</tr>
+</thead>
+<tbody class="divide-none text-on-surface">
+<!-- Item 1 -->
+<tr class="hover:bg-surface-container-low bg-surface-container-lowest">
+<td class="py-1.5 px-space-sm text-center font-mono text-outline">01</td>
+<td class="py-1.5 px-space-sm font-mono text-primary font-semibold">MAT-0089</td>
+<td class="py-1.5 px-space-md font-medium">Conversor de mídia PAR A/B Gigalan 10/100/1000 Monomodo 20km</td>
+<td class="py-1.5 px-space-sm text-center font-mono">1</td>
+<td class="py-1.5 px-space-sm text-center text-outline">PC</td>
+<td class="py-1.5 px-space-md text-right font-mono">550,00</td>
+<td class="py-1.5 px-space-md text-right font-mono font-semibold text-primary">R$ 550,00</td>
+</tr>
+<!-- Item 2 -->
+<tr class="hover:bg-surface-container-low bg-surface-container-low/60">
+<td class="py-1.5 px-space-sm text-center font-mono text-outline">02</td>
+<td class="py-1.5 px-space-sm font-mono text-primary font-semibold">MAT-0104</td>
+<td class="py-1.5 px-space-md font-medium">Switch Gigalan 8 portas Gigabit 10/100/1000 Gerenciável VLAN</td>
+<td class="py-1.5 px-space-sm text-center font-mono">1</td>
+<td class="py-1.5 px-space-sm text-center text-outline">UN</td>
+<td class="py-1.5 px-space-md text-right font-mono">285,00</td>
+<td class="py-1.5 px-space-md text-right font-mono font-semibold text-primary">R$ 285,00</td>
+</tr>
+<!-- Item 3 -->
+<tr class="hover:bg-surface-container-low bg-surface-container-lowest">
+<td class="py-1.5 px-space-sm text-center font-mono text-outline">03</td>
+<td class="py-1.5 px-space-sm font-mono text-primary font-semibold">MAT-0211</td>
+<td class="py-1.5 px-space-md font-medium">Fonte de alimentação chaveada 12V 5A estabilizada com proteção</td>
+<td class="py-1.5 px-space-sm text-center font-mono">1</td>
+<td class="py-1.5 px-space-sm text-center text-outline">UN</td>
+<td class="py-1.5 px-space-md text-right font-mono">88,00</td>
+<td class="py-1.5 px-space-md text-right font-mono font-semibold text-primary">R$ 88,00</td>
+</tr>
+<!-- Item 4 -->
+<tr class="hover:bg-surface-container-low bg-surface-container-low/60">
+<td class="py-1.5 px-space-sm text-center font-mono text-outline">04</td>
+<td class="py-1.5 px-space-sm font-mono text-primary font-semibold">MAT-0342</td>
+<td class="py-1.5 px-space-md font-medium">Câmera IP Intelbras VIP 3230 B Full HD IR 30m PoE</td>
+<td class="py-1.5 px-space-sm text-center font-mono">1</td>
+<td class="py-1.5 px-space-sm text-center text-outline">UN</td>
+<td class="py-1.5 px-space-md text-right font-mono">380,00</td>
+<td class="py-1.5 px-space-md text-right font-mono font-semibold text-primary">R$ 380,00</td>
+</tr>
+<!-- Item 5 -->
+<tr class="hover:bg-surface-container-low bg-surface-container-lowest">
+<td class="py-1.5 px-space-sm text-center font-mono text-outline">05</td>
+<td class="py-1.5 px-space-sm font-mono text-primary font-semibold">MAT-0012</td>
+<td class="py-1.5 px-space-md font-medium">Conector RJ45 blindado Cat6 com guia (Pacote 10 un)</td>
+<td class="py-1.5 px-space-sm text-center font-mono">1</td>
+<td class="py-1.5 px-space-sm text-center text-outline">CX</td>
+<td class="py-1.5 px-space-md text-right font-mono text-outline">0,00</td>
+<td class="py-1.5 px-space-md text-right font-mono font-semibold text-secondary">Cortesia</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="bg-surface-container-high font-label-md text-label-md">
+<td class="py-1.5 px-space-md text-right text-on-surface-variant uppercase" colspan="5">Subtotal Peças e Materiais:</td>
+<td class="py-1.5 px-space-md text-right font-mono font-bold text-primary text-[13px]" colspan="2">R$ 1.303,00</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<!-- 4. Mão de Obra / Serviços Especializados -->
+<div class="w-full mb-space-lg">
+<div class="bg-primary px-space-md py-1.5 flex items-center justify-between rounded-t">
+<span class="font-label-md text-label-md uppercase tracking-wider font-bold text-on-primary flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary-container">engineering</span>
+              2. Serviços Técnicos Especializados & Mão de Obra
+            </span>
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider">Normas ABNT / NBR</span>
+</div>
+<table class="w-full text-left font-body-sm text-body-sm bg-surface-container-lowest">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase">
+<th class="py-1 px-space-sm w-10 text-center">Item</th>
+<th class="py-1 px-space-md">Descrição do Serviço Especializado</th>
+<th class="py-1 px-space-md w-36 text-center">Horas / Escopo</th>
+<th class="py-1 px-space-md w-28 text-right">Valor Total</th>
+</tr>
+</thead>
+<tbody class="text-on-surface">
+<tr class="hover:bg-surface-container-low bg-surface-container-lowest">
+<td class="py-1.5 px-space-sm text-center font-mono text-outline">01</td>
+<td class="py-1.5 px-space-md font-medium">Instalação, passagem de fibra óptica e fusão nos pontos A e B</td>
+<td class="py-1.5 px-space-md text-center text-outline-variant text-on-surface-variant">Turno Integral (Técnico N2)</td>
+<td class="py-1.5 px-space-md text-right font-mono font-semibold text-primary">R$ 350,00</td>
+</tr>
+<tr class="hover:bg-surface-container-low bg-surface-container-low/60">
+<td class="py-1.5 px-space-sm text-center font-mono text-outline">02</td>
+<td class="py-1.5 px-space-md font-medium">Configuração dos equipamentos de rede, VLAN e teste de taxa de transferência</td>
+<td class="py-1.5 px-space-md text-center text-outline-variant text-on-surface-variant">Especializada (Engenharia de Redes)</td>
+<td class="py-1.5 px-space-md text-right font-mono font-semibold text-primary">R$ 150,00</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="bg-surface-container-high font-label-md text-label-md">
+<td class="py-1.5 px-space-md text-right text-on-surface-variant uppercase" colspan="3">Subtotal Mão de Obra e Instalações:</td>
+<td class="py-1.5 px-space-md text-right font-mono font-bold text-primary text-[13px]">R$ 500,00</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<!-- 5. Resumo Financeiro & Condições de Pagamento -->
+<div class="grid grid-cols-12 gap-space-md mb-space-md">
+<!-- Observações & Garantia -->
+<div class="col-span-7 bg-surface-container-low p-space-md rounded flex flex-col justify-between">
+<div>
+<span class="font-label-sm text-label-sm font-bold uppercase tracking-wider text-primary flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-[15px] text-secondary">verified</span>
+                Termos de Garantia & Condições Comerciais
+              </span>
+<ul class="font-body-sm text-body-sm text-on-surface-variant space-y-1 list-disc list-inside">
+<li><strong class="text-on-surface">Garantia de Equipamentos:</strong> 12 meses contra defeitos de fabricação.</li>
+<li><strong class="text-on-surface">Garantia de Mão de Obra:</strong> 90 dias para conectorizações, fusões e testes.</li>
+<li><strong class="text-on-surface">Validade da Proposta:</strong> 15 dias corridos (a contar de 22/09/2026).</li>
+<li><strong class="text-on-surface">Pagamento:</strong> 50% de entrada no aceite e 50% após conclusão e homologação.</li>
+<li>Modalidades: Boleto Bancário ou Chave Pix CNPJ: 28.942.115/0001-83.</li>
+</ul>
+</div>
+<div class="mt-2 text-[10px] text-outline italic">
+              * A aprovação formal autoriza a alocação imediata de equipe técnica e reserva de estoque.
+            </div>
+</div>
+<!-- Totalizador Financeiro -->
+<div class="col-span-5 bg-surface-container p-space-md rounded flex flex-col justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm font-bold uppercase tracking-wider text-primary mb-1">Demonstrativo de Fechamento</span>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant">Subtotal Peças / Materiais:</span>
+<span class="font-mono text-on-surface">R$ 1.303,00</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant">Subtotal Serviços Especializados:</span>
+<span class="font-mono text-on-surface">R$ 500,00</span>
+</div>
+<div class="flex justify-between items-center text-body-sm">
+<span class="text-on-surface-variant">Desconto Comercial Concedido:</span>
+<span class="font-mono text-secondary">- R$ 0,00</span>
+</div>
+</div>
+<div class="mt-2 pt-2 bg-primary text-on-primary p-space-sm rounded flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider">Total Geral</span>
+<span class="text-[10px] text-outline-variant">Líquido a faturar</span>
+</div>
+<div class="font-headline-lg text-headline-lg font-bold font-mono tracking-tight text-white">
+                R$ 1.803,00
+              </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom of A4 Sheet: Signatures, Page Number, Authentication Hash -->
+<div class="flex flex-col w-full pt-space-lg">
+<!-- Linhas de Assinatura -->
+<div class="grid grid-cols-2 gap-space-xl mb-space-lg pt-space-md">
+<!-- Assinatura Cliente -->
+<div class="flex flex-col items-center">
+<div class="w-full h-px bg-outline-variant mb-1"></div>
+<span class="font-label-md text-label-md text-primary font-bold text-center">CONDOMÍNIO CLUBE MORADIA JARDIM DO CEDRO</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-center">De Acordo / Aceite Comercial do Cliente</span>
+<span class="text-[10px] text-outline mt-0.5">Data: ____ / ____ / 2026</span>
+</div>
+<!-- Assinatura Técnico Alex T.I. -->
+<div class="flex flex-col items-center">
+<div class="w-full h-px bg-outline-variant mb-1"></div>
+<span class="font-label-md text-label-md text-primary font-bold text-center">Alex Pereira - Depto. Técnico Sênior</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-center">ALEX T.I. Tecnologia e Assistência Ltda</span>
+<span class="text-[10px] text-outline mt-0.5">CREA-SP / Reg. Profissional: 506.912/SP</span>
+</div>
+</div>
+<!-- Rodapé do Documento & Hash -->
+<div class="flex items-center justify-between text-[10px] text-outline pt-space-xs bg-surface-container-lowest">
+<div class="flex items-center gap-space-xs font-mono">
+<span class="material-symbols-outlined text-[12px] text-secondary">verified_user</span>
+<span>Autenticação Digital: 9D4A-883F-CED0-2026-ALX</span>
+</div>
+<div>
+<span>ALEX Orçamentos v2.6 • Documento gerado eletronicamente em 22/09/2026 14:32:08</span>
+</div>
+<div class="font-semibold text-on-surface-variant">
+            Página 1 de 1
+          </div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple interactive zoom logic for desktop preview simulation
+  const a4Page = document.getElementById('folha-a4-viewport');
+  const zoomSelect = document.getElementById('zoom-select');
+  const zoomInBtn = document.getElementById('zoom-in');
+  const zoomOutBtn = document.getElementById('zoom-out');
+  const btnImprimir = document.getElementById('btn-imprimir');
+  const btnGerarPdf = document.getElementById('btn-gerar-pdf');
+
+  function applyZoom(scale) {
+    if (a4Page) {
+      a4Page.style.transform = `scale(${scale})`;
+      if (scale > 1) {
+        a4Page.style.marginBottom = `${(scale - 1) * 700}px`;
+      } else {
+        a4Page.style.marginBottom = '0px';
+      }
+    }
+  }
+
+  if (zoomSelect) {
+    zoomSelect.addEventListener('change', (e) => {
+      applyZoom(parseFloat(e.target.value));
+    });
+  }
+
+  if (zoomInBtn && zoomSelect) {
+    zoomInBtn.addEventListener('click', () => {
+      let current = parseFloat(zoomSelect.value);
+      if (current < 1.25) {
+        let next = (current + 0.15).toFixed(2);
+        applyZoom(next);
+      }
+    });
+  }
+
+  if (zoomOutBtn && zoomSelect) {
+    zoomOutBtn.addEventListener('click', () => {
+      let current = parseFloat(zoomSelect.value);
+      if (current > 0.70) {
+        let next = (current - 0.15).toFixed(2);
+        applyZoom(next);
+      }
+    });
+  }
+
+  if (btnImprimir) {
+    btnImprimir.addEventListener('click', () => {
+      window.print();
+    });
+  }
+
+  if (btnGerarPdf) {
+    btnGerarPdf.addEventListener('click', () => {
+      const originalText = btnGerarPdf.innerHTML;
+      btnGerarPdf.innerHTML = `<span class="material-symbols-outlined text-[18px] animate-spin">sync</span><span>Exportando PDF...</span>`;
+      setTimeout(() => {
+        btnGerarPdf.innerHTML = `<span class="material-symbols-outlined text-[18px]">check_circle</span><span>PDF Gerado!</span>`;
+        setTimeout(() => {
+          btnGerarPdf.innerHTML = originalText;
+        }, 2000);
+      }, 900);
+    });
+  }
+</script></main></div><footer class="fixed bottom-0 left-0 right-0 h-6 bg-primary-container text-on-primary-container z-50 flex items-center justify-between px-space-md font-body-sm text-body-sm"><div class="flex items-center gap-space-md"><span>Pronto</span><div class="w-px h-3 bg-tertiary-container"></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary-container"></span><span>Conectado (PostgreSQL Local)</span></div><div class="w-px h-3 bg-tertiary-container"></div><span>Usuário: Alex (Administrador)</span><div class="w-px h-3 bg-tertiary-container"></div><span>Filial: ALEX T.I. Matriz</span></div><div class="flex items-center gap-space-md"><span>CAPS</span><span>NUM</span><div class="w-px h-3 bg-tertiary-container"></div><span>100%</span><div class="w-px h-3 bg-tertiary-container"></div><span>v2.6.4</span></div></footer></body></html>

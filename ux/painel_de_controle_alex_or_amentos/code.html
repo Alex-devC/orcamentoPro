@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {"darkMode":"class","theme":{"extend":{"colors":{"error":"#ba1a1a","on-secondary-fixed-variant":"#004b73","on-primary-container":"#7a92b7","tertiary-fixed-dim":"#b9c7e4","on-secondary-container":"#004368","tertiary-fixed":"#d6e3ff","outline":"#74777f","on-tertiary-container":"#8391ad","inverse-on-surface":"#eff1f4","surface":"#f7f9fc","primary-fixed":"#d4e3ff","error-container":"#ffdad6","secondary-fixed-dim":"#93ccff","tertiary-container":"#1c2a41","on-error-container":"#93000a","on-primary-fixed-variant":"#304869","on-tertiary":"#ffffff","surface-bright":"#f7f9fc","tertiary":"#06152b","surface-variant":"#e0e3e6","on-secondary-fixed":"#001d31","on-primary-fixed":"#001c3a","surface-dim":"#d8dadd","secondary-fixed":"#cce5ff","secondary":"#006398","on-error":"#ffffff","inverse-surface":"#2d3133","outline-variant":"#c4c6cf","background":"#f7f9fc","on-surface-variant":"#43474e","surface-container-low":"#f2f4f7","surface-container-high":"#e6e8eb","surface-container-lowest":"#ffffff","primary-fixed-dim":"#b0c8f0","on-tertiary-fixed":"#0d1c32","primary-container":"#0f2a4a","on-tertiary-fixed-variant":"#39475f","on-background":"#191c1e","on-primary":"#ffffff","surface-tint":"#485f82","surface-container":"#eceef1","secondary-container":"#49b3fe","primary":"#00152f","surface-container-highest":"#e0e3e6","on-surface":"#191c1e","inverse-primary":"#b0c8f0","on-secondary":"#ffffff"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-sm":"0.25rem","space-xs":"0.125rem","margin":"0.5rem","space-lg":"0.75rem","space-md":"0.5rem","space-xl":"1rem","gutter":"0.5rem"},"fontFamily":{"headline-lg":["Inter"],"body-lg":["Inter"],"headline-md":["Inter"],"body-sm":["Inter"],"headline-sm":["Inter"],"label-sm":["Inter"],"label-lg":["Inter"],"body-md":["Inter"],"label-md":["Inter"]},"fontSize":{"headline-lg":["20px",{"lineHeight":"26px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-lg":["13px",{"lineHeight":"18px","fontWeight":"500"}],"headline-md":["16px",{"lineHeight":"22px","letterSpacing":"-0.005em","fontWeight":"600"}],"body-sm":["11px",{"lineHeight":"14px","fontWeight":"400"}],"headline-sm":["14px",{"lineHeight":"18px","fontWeight":"600"}],"label-sm":["10px",{"lineHeight":"12px","letterSpacing":"0.03em","fontWeight":"600"}],"label-lg":["12px",{"lineHeight":"16px","fontWeight":"600"}],"body-md":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-md":["11px",{"lineHeight":"14px","fontWeight":"500"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased select-none"><header class="fixed top-0 left-0 right-0 z-50 flex flex-col bg-surface-container-lowest"><div class="h-8 bg-primary text-on-primary flex items-center justify-between px-space-md"><div class="flex items-center gap-space-md"><img alt="logo.png" class="h-4 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WKU7RB-6xC6ka68F1bRcPQCg8J5Aa-H3dI9-evrUkWDEoq1qYiCTltHYQCyLZi_iXMgXiNPW-0IgyQIcI_HmUUqYmclawdXcNk6b6gfyF_plUaaqXpsT1VgCJ2Wm-4u85jiWoz3ljq-gHf-2NB1muEVKTZ6i_f7Rkut8t8LIhgUI_1E-RMX6ezIXiCE358VK3ganUIFHsNM-UutmzPtVnUGyw9L-UAfPA1g_nmo5fFb03EXnVCepQBheOrUORG81zY8_sOLIG6"/><span class="font-label-md text-label-md text-primary-fixed tracking-wide">ALEX Orçamentos v2.6 - ALEX T.I. Tecnologia e Assistência [Base de Dados: Produção]</span></div><div class="flex items-center gap-space-sm"><div class="w-6 h-6 rounded-full bg-secondary flex items-center justify-center"><span class="material-symbols-outlined text-on-secondary text-[14px]">person</span></div><div class="flex items-center ml-space-md"><button class="w-8 h-8 flex items-center justify-center hover:bg-primary-container text-on-primary transition-colors" title="Minimizar" type="button"><span class="material-symbols-outlined text-[14px]">minimize</span></button><button class="w-8 h-8 flex items-center justify-center hover:bg-primary-container text-on-primary transition-colors" title="Maximizar" type="button"><span class="material-symbols-outlined text-[14px]">crop_square</span></button><button class="w-8 h-8 flex items-center justify-center hover:bg-error hover:text-on-error text-on-primary transition-colors" title="Fechar" type="button"><span class="material-symbols-outlined text-[14px]">close</span></button></div></div></div><div class="h-7 bg-surface-container-high px-space-md flex items-end gap-space-xs"><nav class="flex items-center gap-space-xs h-full" data-active-classes="bg-surface-container-lowest text-secondary font-label-md"><a aria-current="page" class="px-space-lg py-space-xs transition-colors bg-surface-container-lowest text-secondary font-label-md" data-path="painel-principal" href="#">ARQUIVO</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="gestao-orcamentos" href="#">ORÇAMENTOS</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="cadastros-gerais" href="#">CADASTROS</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="central-relatorios" href="#">RELATÓRIOS</a><a class="px-space-lg py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors" data-path="sistema-configuracoes" href="#">SISTEMA</a></nav></div><div class="h-16 bg-surface-container-lowest flex items-center px-space-md gap-space-md overflow-x-auto shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-sm h-full py-space-xs"><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">post_add</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Novo Doc</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">save</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Salvar</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">picture_as_pdf</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Gerar PDF</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">print</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Imprimir</span></div></div><div class="w-px h-10 bg-surface-variant"></div><div class="flex items-center gap-space-sm h-full py-space-xs"><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-primary text-[20px]">person_add</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">+ Cliente</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-primary text-[20px]">inventory_2</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">+ Item</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-primary text-[20px]">handyman</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">+ Serviço</span></div></div><div class="w-px h-10 bg-surface-variant"></div><div class="flex items-center gap-space-sm h-full py-space-xs"><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">sync</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Recarregar</span></div><div class="flex flex-col items-center justify-center px-space-sm h-full hover:bg-surface-container-high rounded cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-[20px]">settings</span><span class="font-label-sm text-label-sm text-on-surface mt-space-xs">Ajustes</span></div></div></div></header><aside class="fixed left-0 top-[124px] bottom-6 w-60 bg-surface-container-low z-40 flex flex-col p-space-md"><div class="mb-space-md px-space-sm flex items-center justify-between"><span class="font-label-md text-label-md uppercase tracking-wider text-on-surface-variant">Navegação do Módulo</span><span class="material-symbols-outlined text-[16px] text-on-surface-variant">dock_to_left</span></div><nav class="flex-1 flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-label-md"><a aria-current="page" class="flex items-center px-space-md py-space-sm rounded transition-all bg-primary-container text-on-primary-container font-label-md" data-path="painel-principal" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">desktop_windows</span>Visão Geral</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="gestao-orcamentos" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">receipt_long</span>Orçamentos Ativos</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="cadastros-gerais" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">database</span>Bases Cadastrais</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="central-relatorios" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">monitoring</span>Relatórios Gerenciais</a><a class="flex items-center px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all font-body-sm text-body-sm" data-path="sistema-configuracoes" href="#"><span class="material-symbols-outlined text-[16px] mr-space-sm">admin_panel_settings</span>Administração & BD</a></nav><div class="mt-auto p-space-sm bg-surface-container rounded"><div class="flex items-center gap-space-xs text-secondary"><span class="w-2 h-2 rounded-full bg-secondary-container"></span><span class="font-label-sm text-label-sm font-semibold">PostgreSQL Operacional</span></div><span class="font-body-sm text-body-sm text-on-surface-variant block mt-space-xs">Latência de Rede: 1ms</span></div></aside><div class="pl-60"><main class="w-full pt-[124px] pb-6 bg-surface min-h-screen px-space-md"><div class="flex flex-col w-full gap-space-md">
+<!-- Top Bar / Page Header -->
+<section class="flex flex-wrap items-center justify-between gap-space-md bg-surface-container-lowest px-space-md py-space-sm rounded shadow-sm">
+<div class="flex items-baseline gap-space-md">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Dashboard</h1>
+<span class="text-outline-variant font-label-md">|</span>
+<p class="font-body-md text-body-md text-on-surface-variant">Visão geral dos seus orçamentos</p>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs text-on-surface-variant bg-surface-container-low px-space-sm py-space-xs rounded">
+<span class="material-symbols-outlined text-[15px] text-secondary">schedule</span>
+<span class="font-label-md text-label-md">Hoje, 22 de Setembro de 2026 — 15:42</span>
+</div>
+<button class="flex items-center gap-space-xs px-space-md py-space-xs bg-surface-container-high hover:bg-surface-variant active:bg-secondary-fixed text-on-surface rounded font-label-md text-label-md transition-colors" id="btn-refresh" title="Recarregar dados do servidor (Atalho F5)" type="button">
+<span class="material-symbols-outlined text-[15px] text-secondary">refresh</span>
+<span>Atualizar (F5)</span>
+</button>
+</div>
+</section>
+<!-- Compact Status KPI Ribbon -->
+<section class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-space-sm">
+<!-- Card 1: Rascunhos -->
+<div class="bg-surface-container-lowest rounded p-space-sm flex items-center justify-between shadow-sm hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Rascunhos</span>
+<span class="font-headline-md text-headline-md text-on-surface mt-space-xs">4</span>
+</div>
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-outline group-hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+</div>
+</div>
+<!-- Card 2: Aguardando aprovação -->
+<div class="bg-surface-container-lowest rounded p-space-sm flex items-center justify-between shadow-sm hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-secondary-fixed-variant">Aguardando</span>
+<span class="font-headline-md text-headline-md text-secondary mt-space-xs">12</span>
+</div>
+<div class="w-8 h-8 rounded bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed-variant">
+<span class="material-symbols-outlined text-[18px]">pending_actions</span>
+</div>
+</div>
+<!-- Card 3: Aprovados -->
+<div class="bg-surface-container-lowest rounded p-space-sm flex items-center justify-between shadow-sm hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Aprovados</span>
+<span class="font-headline-md text-headline-md text-primary mt-space-xs">28</span>
+</div>
+<div class="w-8 h-8 rounded bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-[18px]">thumb_up</span>
+</div>
+</div>
+<!-- Card 4: Em execução -->
+<div class="bg-surface-container-lowest rounded p-space-sm flex items-center justify-between shadow-sm hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-tertiary-fixed-variant">Em Execução</span>
+<span class="font-headline-md text-headline-md text-tertiary mt-space-xs">7</span>
+</div>
+<div class="w-8 h-8 rounded bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed">
+<span class="material-symbols-outlined text-[18px]">engineering</span>
+</div>
+</div>
+<!-- Card 5: Finalizados -->
+<div class="bg-surface-container-lowest rounded p-space-sm flex items-center justify-between shadow-sm hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Finalizados</span>
+<span class="font-headline-md text-headline-md text-on-surface mt-space-xs">89</span>
+</div>
+<div class="w-8 h-8 rounded bg-primary-fixed flex items-center justify-center text-on-primary-fixed-variant">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+</div>
+<!-- Card 6: Cancelados -->
+<div class="bg-surface-container-lowest rounded p-space-sm flex items-center justify-between shadow-sm hover:bg-surface-container-low transition-colors cursor-pointer group">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-error">Cancelados</span>
+<span class="font-headline-md text-headline-md text-error mt-space-xs">5</span>
+</div>
+<div class="w-8 h-8 rounded bg-error-container flex items-center justify-center text-on-error-container">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</div>
+</div>
+</section>
+<!-- Lower Workspace Layout (75% DataGrid / 25% Sidebar) -->
+<section class="grid grid-cols-1 lg:grid-cols-4 gap-space-md items-start">
+<!-- Main DataGrid Container (3 Columns on Large Displays) -->
+<div class="lg:col-span-3 bg-surface-container-lowest rounded shadow-sm flex flex-col overflow-hidden">
+<!-- Grid Header & Quick Search Bar -->
+<div class="px-space-md py-space-sm bg-surface-container-low flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-primary">table_chart</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Últimos orçamentos</span>
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface-variant ml-space-xs">145 total</span>
+</div>
+<div class="flex items-center gap-space-xs min-w-[280px]">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-2 top-1.5 text-[16px] text-outline">search</span>
+<input class="w-full h-[26px] pl-7 pr-space-sm text-on-surface bg-surface-container-lowest rounded font-body-sm text-body-sm focus:outline-none focus:bg-surface-bright focus:text-primary transition-colors" id="quick-filter-input" placeholder="Filtrar orçamento nesta visualização..." type="text"/>
+</div>
+<button class="h-[26px] px-space-sm bg-surface-container-high hover:bg-surface-variant text-on-surface rounded flex items-center justify-center" title="Filtros avançados de pesquisa" type="button">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+</button>
+</div>
+</div>
+<!-- WPF DataGrid Emulation Table -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse select-text">
+<!-- Column Headers -->
+<thead>
+<tr class="bg-surface-container-high text-on-surface font-label-sm text-label-sm h-7 tracking-wider uppercase">
+<th class="px-space-md py-space-xs cursor-pointer hover:bg-surface-variant transition-colors whitespace-nowrap">
+<div class="flex items-center gap-space-xs">
+<span>Nº Orçamento</span>
+<span class="material-symbols-outlined text-[14px] text-secondary">arrow_downward</span>
+</div>
+</th>
+<th class="px-space-md py-space-xs cursor-pointer hover:bg-surface-variant transition-colors whitespace-nowrap">
+<div class="flex items-center gap-space-xs">
+<span>Data</span>
+<span class="material-symbols-outlined text-[14px] text-outline">sort</span>
+</div>
+</th>
+<th class="px-space-md py-space-xs cursor-pointer hover:bg-surface-variant transition-colors whitespace-nowrap">
+<div class="flex items-center gap-space-xs">
+<span>Cliente</span>
+<span class="material-symbols-outlined text-[14px] text-outline">sort</span>
+</div>
+</th>
+<th class="px-space-md py-space-xs cursor-pointer hover:bg-surface-variant transition-colors whitespace-nowrap">
+<div class="flex items-center gap-space-xs">
+<span>Status</span>
+<span class="material-symbols-outlined text-[14px] text-outline">sort</span>
+</div>
+</th>
+<th class="px-space-md py-space-xs cursor-pointer hover:bg-surface-variant transition-colors text-right whitespace-nowrap">
+<div class="flex items-center justify-end gap-space-xs">
+<span>Total (R$)</span>
+<span class="material-symbols-outlined text-[14px] text-outline">sort</span>
+</div>
+</th>
+<th class="px-space-md py-space-xs cursor-pointer hover:bg-surface-variant transition-colors whitespace-nowrap">
+<div class="flex items-center gap-space-xs">
+<span>Responsável</span>
+<span class="material-symbols-outlined text-[14px] text-outline">sort</span>
+</div>
+</th>
+</tr>
+</thead>
+<!-- Table Body with Dense Alternate Rows -->
+<tbody class="font-body-sm text-body-sm text-on-surface" id="grid-rows">
+<!-- Row 1: Selected Record -->
+<tr class="h-7 bg-secondary-fixed text-on-secondary-fixed font-body-lg cursor-pointer transition-colors shadow-inner" data-id="0754/2026">
+<td class="px-space-md font-semibold whitespace-nowrap flex items-center gap-space-xs py-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>0754/2026</span>
+</td>
+<td class="px-space-md whitespace-nowrap">22/09/2026</td>
+<td class="px-space-md font-medium whitespace-nowrap truncate max-w-[240px]">Cond. Clube Moradia Jardim do Cedro</td>
+<td class="px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-space-sm py-0.5 rounded font-label-sm text-label-sm bg-secondary-container text-on-secondary-container">
+                  Aguardando aprovação
+                </span>
+</td>
+<td class="px-space-md text-right font-medium whitespace-nowrap tabular-nums">1.803,00</td>
+<td class="px-space-md whitespace-nowrap">Alex</td>
+</tr>
+<!-- Row 2 -->
+<tr class="h-7 bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-colors" data-id="0753/2026">
+<td class="px-space-md font-medium whitespace-nowrap">0753/2026</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">20/09/2026</td>
+<td class="px-space-md whitespace-nowrap truncate max-w-[240px]">Clinica Odonto Vida Ltda</td>
+<td class="px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-space-sm py-0.5 rounded font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed-variant">
+                  Aprovado
+                </span>
+</td>
+<td class="px-space-md text-right font-medium whitespace-nowrap tabular-nums">850,00</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">Alex</td>
+</tr>
+<!-- Row 3 -->
+<tr class="h-7 bg-surface-container-low hover:bg-surface-container-high cursor-pointer transition-colors" data-id="0752/2026">
+<td class="px-space-md font-medium whitespace-nowrap">0752/2026</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">18/09/2026</td>
+<td class="px-space-md whitespace-nowrap truncate max-w-[240px]">Logística Silva & Filhos</td>
+<td class="px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-space-sm py-0.5 rounded font-label-sm text-label-sm bg-surface-container-highest text-on-surface-variant">
+                  Finalizado
+                </span>
+</td>
+<td class="px-space-md text-right font-medium whitespace-nowrap tabular-nums">2.450,00</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">Alex</td>
+</tr>
+<!-- Row 4 -->
+<tr class="h-7 bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-colors" data-id="0751/2026">
+<td class="px-space-md font-medium whitespace-nowrap">0751/2026</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">17/09/2026</td>
+<td class="px-space-md whitespace-nowrap truncate max-w-[240px]">Supermercado Bom Preço</td>
+<td class="px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-space-sm py-0.5 rounded font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed">
+                  Em execução
+                </span>
+</td>
+<td class="px-space-md text-right font-medium whitespace-nowrap tabular-nums">3.120,00</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">Marcos</td>
+</tr>
+<!-- Row 5 -->
+<tr class="h-7 bg-surface-container-low hover:bg-surface-container-high cursor-pointer transition-colors" data-id="0750/2026">
+<td class="px-space-md font-medium whitespace-nowrap">0750/2026</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">15/09/2026</td>
+<td class="px-space-md whitespace-nowrap truncate max-w-[240px]">Condomínio Edifício Solar</td>
+<td class="px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-space-sm py-0.5 rounded font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed-variant">
+                  Aprovado
+                </span>
+</td>
+<td class="px-space-md text-right font-medium whitespace-nowrap tabular-nums">940,00</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">Alex</td>
+</tr>
+<!-- Row 6 -->
+<tr class="h-7 bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-colors" data-id="0749/2026">
+<td class="px-space-md font-medium whitespace-nowrap">0749/2026</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">14/09/2026</td>
+<td class="px-space-md whitespace-nowrap truncate max-w-[240px]">Tech Solutions Informática</td>
+<td class="px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-space-sm py-0.5 rounded font-label-sm text-label-sm bg-error-container text-on-error-container">
+                  Cancelado
+                </span>
+</td>
+<td class="px-space-md text-right font-medium whitespace-nowrap tabular-nums">620,00</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">Alex</td>
+</tr>
+<!-- Row 7 -->
+<tr class="h-7 bg-surface-container-low hover:bg-surface-container-high cursor-pointer transition-colors" data-id="0748/2026">
+<td class="px-space-md font-medium whitespace-nowrap">0748/2026</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">12/09/2026</td>
+<td class="px-space-md whitespace-nowrap truncate max-w-[240px]">Padaria Pão de Ouro</td>
+<td class="px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-space-sm py-0.5 rounded font-label-sm text-label-sm bg-surface-container-highest text-on-surface-variant">
+                  Finalizado
+                </span>
+</td>
+<td class="px-space-md text-right font-medium whitespace-nowrap tabular-nums">1.580,00</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">Marcos</td>
+</tr>
+<!-- Row 8 -->
+<tr class="h-7 bg-surface-container-lowest hover:bg-surface-container-low cursor-pointer transition-colors" data-id="0747/2026">
+<td class="px-space-md font-medium whitespace-nowrap">0747/2026</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">10/09/2026</td>
+<td class="px-space-md whitespace-nowrap truncate max-w-[240px]">Auto Posto Alvorada</td>
+<td class="px-space-md whitespace-nowrap">
+<span class="inline-flex items-center px-space-sm py-0.5 rounded font-label-sm text-label-sm bg-surface-variant text-on-surface-variant">
+                  Rascunho
+                </span>
+</td>
+<td class="px-space-md text-right font-medium whitespace-nowrap tabular-nums">450,00</td>
+<td class="px-space-md whitespace-nowrap text-on-surface-variant">Alex</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- DataGrid Footer: Pagination & Metric Counter -->
+<div class="px-space-md py-space-xs bg-surface-container-low flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-md text-label-md">
+<span>Exibindo</span>
+<span class="font-semibold text-on-surface">8</span>
+<span>de</span>
+<span class="font-semibold text-on-surface">145</span>
+<span>orçamentos</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="w-6 h-6 flex items-center justify-center rounded bg-surface-container-lowest hover:bg-surface-container-high text-on-surface transition-colors" title="Primeira página" type="button">
+<span class="material-symbols-outlined text-[14px]">first_page</span>
+</button>
+<button class="w-6 h-6 flex items-center justify-center rounded bg-surface-container-lowest hover:bg-surface-container-high text-on-surface transition-colors" title="Página anterior" type="button">
+<span class="material-symbols-outlined text-[14px]">chevron_left</span>
+</button>
+<button class="w-6 h-6 flex items-center justify-center rounded bg-primary text-on-primary font-label-sm text-label-sm font-semibold" type="button">1</button>
+<button class="w-6 h-6 flex items-center justify-center rounded bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm transition-colors" type="button">2</button>
+<button class="w-6 h-6 flex items-center justify-center rounded bg-surface-container-lowest hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm transition-colors" type="button">3</button>
+<button class="w-6 h-6 flex items-center justify-center rounded bg-surface-container-lowest hover:bg-surface-container-high text-on-surface transition-colors" title="Próxima página" type="button">
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+</button>
+<button class="w-6 h-6 flex items-center justify-center rounded bg-surface-container-lowest hover:bg-surface-container-high text-on-surface transition-colors" title="Última página" type="button">
+<span class="material-symbols-outlined text-[14px]">last_page</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Right Sidebar: Quick Actions & Summary (25%) -->
+<div class="flex flex-col gap-space-md w-full">
+<!-- Fast Actions Command Deck -->
+<div class="bg-surface-container-lowest rounded p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">Ações Rápidas</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">flash_on</span>
+</div>
+<!-- Primary Action -->
+<button class="w-full flex items-center justify-between px-space-md py-space-sm rounded bg-primary hover:bg-primary-container text-on-primary transition-colors group" type="button">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span class="font-label-lg text-label-lg">Novo Orçamento</span>
+</div>
+<span class="px-space-xs py-0.5 rounded bg-primary-container text-on-primary-container font-label-sm text-label-sm">F2</span>
+</button>
+<!-- Secondary Actions -->
+<button class="w-full flex items-center justify-between px-space-md py-space-sm rounded bg-surface-container-high hover:bg-surface-variant text-on-surface transition-colors" type="button">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary">person_add</span>
+<span class="font-label-lg text-label-lg">Novo Cliente</span>
+</div>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">F3</span>
+</button>
+<button class="w-full flex items-center justify-between px-space-md py-space-sm rounded bg-surface-container-high hover:bg-surface-variant text-on-surface transition-colors" type="button">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary">category</span>
+<span class="font-label-lg text-label-lg">Nova Peça / Item</span>
+</div>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">F4</span>
+</button>
+<button class="w-full flex items-center justify-between px-space-md py-space-sm rounded bg-surface-container-high hover:bg-surface-variant text-on-surface transition-colors" type="button">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary">analytics</span>
+<span class="font-label-lg text-label-lg">Relatório de Vendas</span>
+</div>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">F6</span>
+</button>
+</div>
+<!-- Current Month Productivity Mini-Panel -->
+<div class="bg-surface-container-lowest rounded p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-primary">pie_chart</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Totais do Mês Vigente</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary font-semibold uppercase tracking-wider">Setembro/2026</span>
+</div>
+<div class="space-y-space-sm">
+<!-- Metric 1: Faturamento -->
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wide text-on-surface-variant">Faturamento Aprovado</span>
+<div class="flex items-baseline justify-between mt-space-xs">
+<span class="font-headline-lg text-headline-lg text-primary tracking-tight font-semibold">R$ 48.720,00</span>
+<span class="font-label-sm text-label-sm text-secondary flex items-center">
+<span class="material-symbols-outlined text-[14px]">trending_up</span> +14%
+              </span>
+</div>
+</div>
+<!-- Metric 2: Ticket Médio -->
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wide text-on-surface-variant">Ticket Médio</span>
+<div class="flex items-baseline justify-between mt-space-xs">
+<span class="font-headline-md text-headline-md text-on-surface font-semibold">R$ 1.740,00</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">28 orçamentos</span>
+</div>
+</div>
+<!-- Metric 3: Taxa de Conversão -->
+<div class="p-space-sm rounded bg-surface-container-low flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wide text-on-surface-variant">Taxa de Conversão</span>
+<span class="font-label-lg text-label-lg font-semibold text-secondary">72%</span>
+</div>
+<!-- Progress Track -->
+<div class="w-full h-1.5 bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 72%;"></div>
+</div>
+</div>
+</div>
+<!-- Inline Visual Distribution Chart (SVG < 2KB) -->
+<div class="pt-space-xs flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Distribuição por Categoria</span>
+<svg class="w-full h-11 text-secondary" preserveaspectratio="none" viewbox="0 0 200 44">
+<!-- Hardware / Peças -->
+<rect class="opacity-95" fill="currentColor" height="14" rx="2" width="80" x="0" y="8"></rect>
+<!-- Mão de Obra -->
+<rect class="opacity-65" fill="currentColor" height="14" rx="2" width="65" x="84" y="8"></rect>
+<!-- Licenciamento / Cloud -->
+<rect class="opacity-35" fill="currentColor" height="14" rx="2" width="47" x="153" y="8"></rect>
+<!-- Numeric / Text Annotations -->
+<text class="font-label-sm text-label-sm" fill="#43474e" font-size="9" x="0" y="36">Peças (40%)</text>
+<text class="font-label-sm text-label-sm" fill="#43474e" font-size="9" x="84" y="36">Serviços (33%)</text>
+<text class="font-label-sm text-label-sm" fill="#43474e" font-size="9" x="153" y="36">Cloud (27%)</text>
+</svg>
+</div>
+</div>
+</div>
+</section>
+</div>
+<script>
+  // Desktop Ergonomics: Table Row Selection & Shortcut Handlers
+  document.addEventListener('DOMContentLoaded', () => {
+    const tableRows = document.querySelectorAll('#grid-rows tr');
+    
+    tableRows.forEach(row => {
+      row.addEventListener('click', () => {
+        tableRows.forEach(r => {
+          r.classList.remove('bg-secondary-fixed', 'text-on-secondary-fixed', 'font-body-lg', 'shadow-inner');
+          r.classList.add('bg-surface-container-lowest', 'text-on-surface');
+        });
+        row.classList.remove('bg-surface-container-lowest', 'hover:bg-surface-container-low', 'bg-surface-container-low', 'hover:bg-surface-container-high');
+        row.classList.add('bg-secondary-fixed', 'text-on-secondary-fixed', 'font-body-lg', 'shadow-inner');
+      });
+    });
+
+    // Keyboard Shortcuts Simulation (F2, F3, F4, F5, F6)
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'F5') {
+        e.preventDefault();
+        const refreshBtn = document.getElementById('btn-refresh');
+        if (refreshBtn) {
+          refreshBtn.classList.add('bg-secondary-fixed');
+          setTimeout(() => refreshBtn.classList.remove('bg-secondary-fixed'), 200);
+        }
+      }
+    });
+
+    // Live Instant Filter
+    const filterInput = document.getElementById('quick-filter-input');
+    if (filterInput) {
+      filterInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        tableRows.forEach(row => {
+          const rowText = row.innerText.toLowerCase();
+          row.style.display = rowText.includes(query) ? '' : 'none';
+        });
+      });
+    }
+  });
+</script></main></div><footer class="fixed bottom-0 left-0 right-0 h-6 bg-primary-container text-on-primary-container z-50 flex items-center justify-between px-space-md font-body-sm text-body-sm"><div class="flex items-center gap-space-md"><span>Pronto</span><div class="w-px h-3 bg-tertiary-container"></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary-container"></span><span>Conectado (PostgreSQL Local)</span></div><div class="w-px h-3 bg-tertiary-container"></div><span>Usuário: Alex (Administrador)</span><div class="w-px h-3 bg-tertiary-container"></div><span>Filial: ALEX T.I. Matriz</span></div><div class="flex items-center gap-space-md"><span>CAPS</span><span>NUM</span><div class="w-px h-3 bg-tertiary-container"></div><span>100%</span><div class="w-px h-3 bg-tertiary-container"></div><span>v2.6.4</span></div></footer></body></html>
