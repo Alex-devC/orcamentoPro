@@ -11,185 +11,476 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Header: Saudação e identificação do usuário logado -->
-        <Border Grid.Row="0" Margin="0,0,0,24">
-            <StackPanel>
-                <TextBlock Text="Bem-vindo ao OrcPro"
-                           FontSize="28" FontWeight="SemiBold"
-                           Foreground="#2D2D30" />
-                <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                    <TextBlock Text="{Binding UsuarioLogado}"
-                               FontSize="14" FontWeight="SemiBold"
-                               Foreground="#0078D7" />
-                    <TextBlock Text=" • "
-                               FontSize="14"
-                               Foreground="#6C757D" />
-                    <TextBlock Text="{Binding UsuarioCargo}"
-                               FontSize="14"
-                               Foreground="#6C757D" />
-                </StackPanel>
-                <TextBlock Text="Gerencie orçamentos, clientes e serviços com eficiência."
-                           FontSize="13" Margin="0,4,0,0"
-                           Foreground="#6C757D" />
-            </StackPanel>
-        </Border>
-
-        <!-- Summary Cards por status de orçamento -->
-        <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,24" MinHeight="100">
-            <!-- Aberto -->
-            <Border Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1"
-                    CornerRadius="8" Margin="5">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
-                    <TextBlock Text="Em Aberto" FontSize="12" Foreground="#6C757D" />
-                    <TextBlock Text="{Binding OrcamentosAbertos}" FontSize="24" FontWeight="Bold"
-                               Foreground="#3B82F6" />
-                </StackPanel>
-            </Border>
-            <!-- Aguardando Aprovação -->
-            <Border Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1"
-                    CornerRadius="8" Margin="5">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
-                    <TextBlock Text="Aguardando Aprovação" FontSize="12" Foreground="#6C757D" />
-                    <TextBlock Text="{Binding OrcamentosAguardandoAprovacao}" FontSize="24" FontWeight="Bold"
-                               Foreground="#F59E0B" />
-                </StackPanel>
-            </Border>
-            <!-- Aprovados -->
-            <Border Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1"
-                    CornerRadius="8" Margin="5">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
-                    <TextBlock Text="Aprovados" FontSize="12" Foreground="#6C757D" />
-                    <TextBlock Text="{Binding OrcamentosAprovados}" FontSize="24" FontWeight="Bold"
-                               Foreground="#10B981" />
-                </StackPanel>
-            </Border>
-            <!-- Finalizados -->
-            <Border Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1"
-                    CornerRadius="8" Margin="5">
-                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
-                    <TextBlock Text="Finalizados" FontSize="12" Foreground="#6C757D" />
-                    <TextBlock Text="{Binding OrcamentosFinalizados}" FontSize="24" FontWeight="Bold"
-                               Foreground="#6B7280" />
-                </StackPanel>
-            </Border>
-        </UniformGrid>
-
-                <!-- Quick Actions Toolbar -->
-        <Border Grid.Row="2" Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1"
-                CornerRadius="8" Margin="0,0,0,16">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="10">
-                <Button Content="Novo Orçamento"
-                        Command="{Binding NovoOrcamentoCommand}"
-                        Style="{StaticResource RibbonButtonStyle}"
-                        Foreground="#FFFFFF"
-                        Background="#0078D7"
-                        Padding="14,8"
-                        Margin="0,0,8,0"
-                        FontSize="13" />
-                <Button Content="Clientes"
-                        Command="{Binding ClientesCommand}"
-                        Style="{StaticResource RibbonButtonStyle}"
-                        Foreground="#2D2D30"
-                        Background="#E5E7EB"
-                        Padding="14,8"
-                        Margin="0,0,8,0"
-                        FontSize="13" />
-                <Button Content="Relatórios"
-                        Command="{Binding RelatoriosCommand}"
-                        Style="{StaticResource RibbonButtonStyle}"
-                        Foreground="#2D2D30"
-                        Background="#E5E7EB"
-                        Padding="14,8"
-                        Margin="0,0,8,0"
-                        FontSize="13" />
-            </StackPanel>
-        </Border>
-
-                <!-- Orçamentos Recentes - DataGrid -->
-        <Border Grid.Row="3" Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="8">
+        <!-- ===== Cabeçalho da página ===== -->
+        <Border Grid.Row="0" Style="{StaticResource PanelCardStyle}" Padding="12,8">
             <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="0" Text="Orçamentos Recentes"
-                           FontSize="16" FontWeight="SemiBold"
-                           Foreground="#2D2D30"
-                           Margin="15,12,0,0" />
+                <TextBlock Grid.Column="0" Text="{Binding PageTitle}"
+                           Style="{StaticResource PageTitleStyle}" />
+                <TextBlock Grid.Column="1" Text="|" Margin="10,0"
+                           Foreground="{StaticResource BorderStrongBrush}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="{Binding PageSubtitle}"
+                           Style="{StaticResource PageSubtitleStyle}" />
 
-                <DataGrid Grid.Row="1"
-                          ItemsSource="{Binding OrcamentosRecentes}"
-                          AutoGenerateColumns="False"
-                          IsReadOnly="True"
-                          CanUserSortColumns="False"
-                          CanUserResizeRows="False"
-                          CanUserAddRows="False"
-                          HeadersVisibility="Column"
-                          BorderBrush="#E0E0E0"
-                          BorderThickness="0"
-                          FontSize="13"
-                          Margin="15,8,15,15"
-                          RowHeaderWidth="0">
-                    <DataGrid.RowStyle>
-                        <Style TargetType="DataGridRow">
-                            <Setter Property="BorderThickness" Value="0,0,0,1" />
-                            <Setter Property="BorderBrush" Value="#F3F3F4" />
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#F9FAFB" />
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DataGrid.RowStyle>
-                    <DataGrid.ColumnHeaderStyle>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#F3F3F4" />
-                            <Setter Property="Foreground" Value="#2D2D30" />
-                            <Setter Property="BorderBrush" Value="#E0E0E0" />
-                            <Setter Property="BorderThickness" Value="0,0,0,1" />
-                            <Setter Property="Padding" Value="12,8" />
-                            <Setter Property="FontSize" Value="12" />
-                            <Setter Property="FontWeight" Value="SemiBold" />
-                            <Setter Property="Cursor" Value="Arrow" />
-                        </Style>
-                    </DataGrid.ColumnHeaderStyle>
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Número"
-                                            Binding="{Binding Numero}"
-                                            Width="140" />
-                        <DataGridTextColumn Header="Cliente"
-                                            Binding="{Binding Cliente}"
-                                            Width="*" />
-                        <DataGridTextColumn Header="Data"
-                                            Binding="{Binding Data, StringFormat=d}"
-                                            Width="110" />
-                        <DataGridTextColumn Header="Valor Total"
-                                            Binding="{Binding ValorTotal, StringFormat=C2}"
-                                            Width="120" />
-                        <DataGridTemplateColumn Header="Status" Width="160">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Background="{Binding StatusColor, Converter={StaticResource HexToBrush}}"
-                                            CornerRadius="12"
-                                            Padding="12,3"
-                                            HorizontalAlignment="Left">
-                                        <TextBlock Text="{Binding Status}"
-                                                   FontSize="12"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="#FFFFFF" />
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
+                <StackPanel Grid.Column="3" Orientation="Horizontal">
+                    <Border Style="{StaticResource ChipStyle}" Background="{StaticResource SurfaceAltBrush}"
+                            Padding="8,3" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconCalendar}"
+                                  Stroke="{StaticResource TextMutedBrush}"
+                                  Style="{StaticResource IconPathStyle}" Width="13" Height="13" />
+                            <TextBlock Text="{Binding HeaderDateText}" Style="{StaticResource ChipTextStyle}"
+                                       Margin="6,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <Button Style="{StaticResource GhostButtonStyle}" Command="{Binding AtualizarCommand}"
+                            ToolTip="Recarregar dados do servidor (F5)">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconRefresh}"
+                                  Stroke="{StaticResource TextMutedBrush}"
+                                  Style="{StaticResource IconPathStyle}" Width="13" Height="13" />
+                            <TextBlock Text="Atualizar (F5)" FontSize="11" Margin="6,0,0,0"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
+        <!-- ===== Indicadores compactos por status ===== -->
+        <UniformGrid Grid.Row="1" Columns="6" Margin="0,8,0,0">
+            <Border Style="{StaticResource KpiCardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="RASCUNHOS" Style="{StaticResource KpiLabelStyle}" />
+                        <TextBlock Text="{Binding RascunhosCount}" Style="{StaticResource KpiValueStyle}" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource KpiIconBoxStyle}" Background="{StaticResource KpiNeutralBrush}">
+                        <Path Data="{StaticResource IconEdit}" Stroke="{StaticResource TextMutedBrush}" Style="{StaticResource IconPathStyle}" Width="16" Height="16" />
+                    </Border>
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource KpiCardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="AGUARDANDO" Style="{StaticResource KpiLabelStyle}" />
+                        <TextBlock Text="{Binding OrcamentosAguardandoAprovacao}" Style="{StaticResource KpiValueStyle}" Foreground="{StaticResource KpiPendingTextBrush}" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource KpiIconBoxStyle}" Background="{StaticResource KpiPendingBrush}">
+                        <Path Data="{StaticResource IconClock}" Stroke="{StaticResource KpiPendingTextBrush}" Style="{StaticResource IconPathStyle}" Width="16" Height="16" />
+                    </Border>
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource KpiCardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="APROVADOS" Style="{StaticResource KpiLabelStyle}" Foreground="{StaticResource AccentBrush}" />
+                        <TextBlock Text="{Binding OrcamentosAprovados}" Style="{StaticResource KpiValueStyle}" Foreground="{StaticResource NavyBrush}" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource KpiIconBoxStyle}" Background="{StaticResource KpiApprovedBrush}">
+                        <Path Data="{StaticResource IconCheck}" Stroke="{StaticResource KpiApprovedTextBrush}" Style="{StaticResource IconPathStyle}" StrokeThickness="1.8" Width="16" Height="16" />
+                    </Border>
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource KpiCardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="EM EXECUÇÃO" Style="{StaticResource KpiLabelStyle}" Foreground="{StaticResource KpiDoneTextBrush}" />
+                        <TextBlock Text="{Binding OrcamentosEmExecucao}" Style="{StaticResource KpiValueStyle}" Foreground="{StaticResource KpiExecTextBrush}" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource KpiIconBoxStyle}" Background="{StaticResource KpiExecBrush}">
+                        <Path Data="{StaticResource IconTool}" Stroke="{StaticResource KpiExecTextBrush}" Style="{StaticResource IconPathStyle}" Width="16" Height="16" />
+                    </Border>
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource KpiCardStyle}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="FINALIZADOS" Style="{StaticResource KpiLabelStyle}" />
+                        <TextBlock Text="{Binding OrcamentosFinalizados}" Style="{StaticResource KpiValueStyle}" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource KpiIconBoxStyle}" Background="{StaticResource KpiDoneBrush}">
+                        <Path Data="{StaticResource IconCheckCircle}" Stroke="{StaticResource KpiDoneTextBrush}" Style="{StaticResource IconPathStyle}" Width="16" Height="16" />
+                    </Border>
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource KpiCardStyle}" Margin="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="CANCELADOS" Style="{StaticResource KpiLabelStyle}" Foreground="{StaticResource DangerBrush}" />
+                        <TextBlock Text="{Binding OrcamentosCancelados}" Style="{StaticResource KpiValueStyle}" Foreground="{StaticResource DangerBrush}" />
+                    </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource KpiIconBoxStyle}" Background="{StaticResource KpiCancelBrush}">
+                        <Path Data="{StaticResource IconCancelCircle}" Stroke="#93000A" Style="{StaticResource IconPathStyle}" Width="16" Height="16" />
+                    </Border>
+                </Grid>
+            </Border>
+        </UniformGrid>
+        <!-- ===== Área de trabalho: tabela central + painel lateral ===== -->
+        <Grid Grid.Row="2" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="312" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Últimos orçamentos -->
+            <Border Grid.Column="0" Style="{StaticResource PanelCardStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource PanelHeaderBarStyle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Path Grid.Column="0" Data="{StaticResource IconTable}"
+                                  Stroke="{StaticResource NavyBrush}" Style="{StaticResource IconPathStyle}"
+                                  Width="16" Height="16" />
+                            <TextBlock Grid.Column="1" Text="Últimos orçamentos"
+                                       Style="{StaticResource PanelHeaderStyle}" Margin="8,0,0,0" />
+                            <Border Grid.Column="2" Style="{StaticResource ChipStyle}"
+                                    HorizontalAlignment="Left" Margin="10,0,0,0">
+                                <TextBlock Text="{Binding TotalOrcamentosLabel}"
+                                           Style="{StaticResource ChipTextStyle}" />
+                            </Border>
+                            <Grid Grid.Column="3" Width="240">
+                                <TextBox Style="{StaticResource SearchTextBoxStyle}" Tag="Filtrar nesta visão..."
+                                         Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" />
+                                <Path Data="{StaticResource IconSearch}" Stroke="{StaticResource TextDisabledBrush}"
+                                      Style="{StaticResource IconPathStyle}" Width="14" Height="14"
+                                      HorizontalAlignment="Left" Margin="6,0,0,0" />
+                            </Grid>
+                            <Button Grid.Column="4" Style="{StaticResource GhostButtonStyle}" Width="26"
+                                    Margin="6,0,0,0" Command="{Binding AtualizarCommand}">
+                                <Path Data="{StaticResource IconFilter}" Stroke="{StaticResource TextMutedBrush}"
+                                      Style="{StaticResource IconPathStyle}" Width="14" Height="14" />
+                            </Button>
+                        </Grid>
+                    </Border>
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding OrcamentosView}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              CanUserResizeRows="False"
+                              CanUserSortColumns="True"
+                              SelectionMode="Single"
+                              SelectionUnit="FullRow"
+                              HeadersVisibility="Column"
+                              RowHeaderWidth="0"
+                              RowHeight="28"
+                              ColumnHeaderHeight="28"
+                              GridLinesVisibility="None"
+                              AlternationCount="2"
+                              Background="{StaticResource SurfaceBrush}"
+                              RowBackground="{StaticResource SurfaceBrush}"
+                              AlternatingRowBackground="{StaticResource RowAltBrush}"
+                              BorderThickness="0"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              RowStyle="{StaticResource DataGridRowStyle}"
+                              CellStyle="{StaticResource DataGridCellStyle}"
+                              ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Nº ORÇAMENTO" Width="150" SortMemberPath="Numero">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="6" Height="6" VerticalAlignment="Center" Margin="0,0,6,0"
+                                                     Fill="{Binding StatusColor, Converter={StaticResource HexToBrush}}" />
+                                            <TextBlock Text="{Binding Numero}" FontSize="11" FontWeight="SemiBold"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="DATA" Binding="{Binding DataFormatada}" Width="100"
+                                                SortMemberPath="Data" />
+                            <DataGridTextColumn Header="CLIENTE" Binding="{Binding Cliente}" Width="*"
+                                                SortMemberPath="Cliente" />
+                            <DataGridTemplateColumn Header="STATUS" Width="170" SortMemberPath="Status">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource StatusBadgeStyle}"
+                                                Background="{Binding StatusBackgroundColor, Converter={StaticResource HexToBrush}}"
+                                                BorderBrush="{Binding StatusBorderColor, Converter={StaticResource HexToBrush}}">
+                                            <TextBlock Text="{Binding Status}"
+                                                       Style="{StaticResource StatusBadgeTextStyle}"
+                                                       Foreground="{Binding StatusForegroundColor, Converter={StaticResource HexToBrush}}" />
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="TOTAL (R$)" Binding="{Binding ValorTotalFormatado}" Width="110"
+                                                SortMemberPath="ValorTotal">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                        <Setter Property="FontFamily" Value="{StaticResource MonoFontFamily}" />
+                                        <Setter Property="FontSize" Value="11" />
+                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="RESPONSÁVEL" Binding="{Binding Responsavel}" Width="100"
+                                                SortMemberPath="Responsavel" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Border Grid.Row="2" Style="{StaticResource PanelFooterBarStyle}">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Exibindo" FontSize="11" VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="{Binding ExibindoCount}" FontSize="11" FontWeight="SemiBold"
+                                           Margin="4,0" VerticalAlignment="Center" />
+                                <TextBlock Text="de" FontSize="11" VerticalAlignment="Center"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Text="{Binding TotalOrcamentosCount}" FontSize="11" FontWeight="SemiBold"
+                                           Margin="4,0" VerticalAlignment="Center" />
+                                <TextBlock Text="orçamentos" FontSize="11" VerticalAlignment="Center"
+                                           Margin="4,0,0,0" Foreground="{StaticResource TextMutedBrush}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Style="{StaticResource PagerButtonStyle}">
+                                    <Path Data="{StaticResource IconFirstPage}" Stroke="{StaticResource TextMutedBrush}"
+                                          Style="{StaticResource IconPathStyle}" Width="12" Height="12" />
+                                </Button>
+                                <Button Style="{StaticResource PagerButtonStyle}">
+                                    <Path Data="{StaticResource IconChevronLeft}" Stroke="{StaticResource TextMutedBrush}"
+                                          Style="{StaticResource IconPathStyle}" Width="12" Height="12" />
+                                </Button>
+                                <Button Style="{StaticResource PagerActiveButtonStyle}">
+                                    <TextBlock Text="1" FontSize="11" />
+                                </Button>
+                                <Button Style="{StaticResource PagerButtonStyle}">
+                                    <TextBlock Text="2" FontSize="11" />
+                                </Button>
+                                <Button Style="{StaticResource PagerButtonStyle}">
+                                    <TextBlock Text="3" FontSize="11" />
+                                </Button>
+                                <Button Style="{StaticResource PagerButtonStyle}">
+                                    <Path Data="{StaticResource IconChevronRight}" Stroke="{StaticResource TextMutedBrush}"
+                                          Style="{StaticResource IconPathStyle}" Width="12" Height="12" />
+                                </Button>
+                                <Button Style="{StaticResource PagerButtonStyle}">
+                                    <Path Data="{StaticResource IconLastPage}" Stroke="{StaticResource TextMutedBrush}"
+                                          Style="{StaticResource IconPathStyle}" Width="12" Height="12" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+            <!-- ===== Painel lateral: Ações Rápidas ===== -->
+            <StackPanel Grid.Column="1">
+                <Border Style="{StaticResource PanelCardStyle}">
+                    <StackPanel Margin="10,8">
+                        <Grid>
+                            <TextBlock Text="Ações Rápidas" Style="{StaticResource PanelHeaderStyle}" />
+                            <Path Data="{StaticResource IconBolt}" Stroke="{StaticResource AccentBrush}"
+                                  Style="{StaticResource IconPathStyle}" Width="15" Height="15"
+                                  HorizontalAlignment="Right" />
+                        </Grid>
+
+                        <Button Style="{StaticResource PrimaryButtonStyle}" Margin="0,8,0,0"
+                                Command="{Binding NovoOrcamentoCommand}">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconPlus}" Stroke="{StaticResource WhiteBrush}"
+                                          Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                                    <TextBlock Text="Novo Orçamento" FontSize="12" FontWeight="SemiBold"
+                                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Border Style="{StaticResource ChipStyle}"
+                                        Background="{StaticResource NavyPanelBrush}"
+                                        HorizontalAlignment="Right">
+                                    <TextBlock Text="F2" Style="{StaticResource ChipTextStyle}"
+                                               Foreground="{StaticResource NavyMutedTextBrush}" />
+                                </Border>
+                            </Grid>
+                        </Button>
+
+                        <Button Style="{StaticResource QuickActionButtonStyle}" Margin="0,6,0,0"
+                                Command="{Binding ClientesCommand}">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconAddPerson}" Stroke="{StaticResource AccentBrush}"
+                                          Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                                    <TextBlock Text="Novo Cliente" FontSize="12" Margin="8,0,0,0"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Border Style="{StaticResource ChipStyle}" HorizontalAlignment="Right">
+                                    <TextBlock Text="F3" Style="{StaticResource ChipTextStyle}" />
+                                </Border>
+                            </Grid>
+                        </Button>
+
+                        <Button Style="{StaticResource QuickActionButtonStyle}" Margin="0,6,0,0"
+                                Command="{Binding NovaPecaCommand}">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconAddItem}" Stroke="{StaticResource AccentBrush}"
+                                          Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                                    <TextBlock Text="Nova Peça / Item" FontSize="12" Margin="8,0,0,0"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Border Style="{StaticResource ChipStyle}" HorizontalAlignment="Right">
+                                    <TextBlock Text="F4" Style="{StaticResource ChipTextStyle}" />
+                                </Border>
+                            </Grid>
+                        </Button>
+
+                        <Button Style="{StaticResource QuickActionButtonStyle}" Margin="0,6,0,0"
+                                Command="{Binding RelatoriosCommand}">
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconTrendUp}" Stroke="{StaticResource AccentBrush}"
+                                          Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                                    <TextBlock Text="Relatório de Vendas" FontSize="12" Margin="8,0,0,0"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Border Style="{StaticResource ChipStyle}" HorizontalAlignment="Right">
+                                    <TextBlock Text="F6" Style="{StaticResource ChipTextStyle}" />
+                                </Border>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </Border>
+                <!-- ===== Totais do Mês Vigente ===== -->
+                <Border Style="{StaticResource PanelCardStyle}" Margin="0,8,0,0">
+                    <StackPanel Margin="10,8">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconPie}" Stroke="{StaticResource NavyBrush}"
+                                      Style="{StaticResource IconPathStyle}" Width="16" Height="16" />
+                                <TextBlock Text="Totais do Mês Vigente"
+                                           Style="{StaticResource PanelHeaderStyle}" Margin="8,0,0,0" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding MesVigenteLabel}" Style="{StaticResource ChipTextStyle}"
+                                       Foreground="{StaticResource AccentBrush}"
+                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="2"
+                                Padding="8,6" Margin="0,8,0,0">
+                            <StackPanel>
+                                <TextBlock Text="FATURAMENTO APROVADO"
+                                           Style="{StaticResource MetricLabelStyle}" />
+                                <Grid Margin="0,3,0,0">
+                                    <TextBlock Text="{Binding FaturamentoAprovadoFormatado}" FontSize="17"
+                                               FontWeight="SemiBold" Foreground="{StaticResource NavyBrush}" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                VerticalAlignment="Bottom">
+                                        <Path Data="{StaticResource IconTrendUp}"
+                                              Stroke="{StaticResource AccentBrush}"
+                                              Style="{StaticResource IconPathStyle}" Width="13" Height="13" />
+                                        <TextBlock Text="{Binding FaturamentoVariacao}" FontSize="10"
+                                                   FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}"
+                                                   Margin="4,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="{StaticResource SurfaceAltBrush}" CornerRadius="2"
+                                Padding="8,6" Margin="0,6,0,0">
+                            <StackPanel>
+                                <TextBlock Text="TICKET MÉDIO" Style="{StaticResource MetricLabelStyle}" />
+                                <Grid Margin="0,3,0,0">
+                                    <TextBlock Text="{Binding TicketMedioFormatado}" FontSize="15"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding TicketMedioQuantidadeLabel}" FontSize="10"
+                                               Foreground="{StaticResource TextMutedBrush}"
+                                               HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <StackPanel Margin="0,8,0,0">
+                            <Grid>
+                                <TextBlock Text="TAXA DE CONVERSÃO" Style="{StaticResource MetricLabelStyle}" />
+                                <TextBlock Text="{Binding TaxaConversaoLabel}" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Right" />
+                            </Grid>
+                            <ProgressBar Style="{StaticResource FlatProgressBarStyle}" Margin="0,5,0,0"
+                                         Minimum="0" Maximum="100"
+                                         Value="{Binding TaxaConversao, Mode=OneWay}" />
+                        </StackPanel>
+
+                        <StackPanel Margin="0,10,0,0">
+                            <TextBlock Text="DISTRIBUIÇÃO POR CATEGORIA"
+                                       Style="{StaticResource MetricLabelStyle}" />
+                            <Grid Height="14" Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="40*" />
+                                    <ColumnDefinition Width="33*" />
+                                    <ColumnDefinition Width="27*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Background="{StaticResource AccentBrush}"
+                                        CornerRadius="2" Margin="0,0,3,0" />
+                                <Border Grid.Column="1" Background="#79C1E8" CornerRadius="2" Margin="0,0,3,0" />
+                                <Border Grid.Column="2" Background="#B4DCEF" CornerRadius="2" />
+                            </Grid>
+                            <Grid Margin="0,5,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="40*" />
+                                    <ColumnDefinition Width="33*" />
+                                    <ColumnDefinition Width="27*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding DistribuicaoPecasLabel}" FontSize="10"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Grid.Column="1" Text="{Binding DistribuicaoServicosLabel}" FontSize="10"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                                <TextBlock Grid.Column="2" Text="{Binding DistribuicaoCloudLabel}" FontSize="10"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{StaticResource TextMutedBrush}" />
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
     </Grid>
 </UserControl>
