@@ -1,12 +1,67 @@
-﻿<Window x:Class="OrcPro.App.MainWindow"
+<Window x:Class="OrcPro.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:OrcPro.App"
-        mc:Ignorable="d"
-        Title="OrcPro" Height="600" Width="1024">
-    <Grid>
+        xmlns:vm="clr-namespace:OrcPro.App.ViewModels"
+        Title="OrcPro"
+        Height="768" Width="1366"
+        MinHeight="768" MinWidth="1024"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI"
+        WindowState="Normal">
 
+    <Window.DataContext>
+        <vm:MainWindowViewModel />
+    </Window.DataContext>
+
+    <Grid Background="{DynamicResource BackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Top Ribbon -->
+        <Border Grid.Row="0" Background="{DynamicResource PrimaryBrush}">
+            <StackPanel Orientation="Horizontal" Margin="12,0">
+                <Button Content="_Arquivo"
+                        Command="{Binding ArquivoCommand}"
+                        Style="{StaticResource RibbonButtonStyle}" />
+                <Button Content="_Orçamentos"
+                        Command="{Binding OrcamentosCommand}"
+                        Style="{StaticResource RibbonButtonStyle}" />
+                <Button Content="_Cadastros"
+                        Command="{Binding CadastrosCommand}"
+                        Style="{StaticResource RibbonButtonStyle}" />
+                <Button Content="_Relatórios"
+                        Command="{Binding RelatoriosCommand}"
+                        Style="{StaticResource RibbonButtonStyle}" />
+                <Button Content="_Sistema"
+                        Command="{Binding SistemaCommand}"
+                        Style="{StaticResource RibbonButtonStyle}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Central Content Area -->
+        <Border Grid.Row="1" Background="{DynamicResource BackgroundBrush}">
+            <ContentControl Content="{Binding CurrentView}"
+                            Margin="24,16" />
+        </Border>
+
+        <!-- Status Bar -->
+        <StatusBar Grid.Row="2"
+                   Background="{DynamicResource PrimaryBrush}"
+                   Foreground="{DynamicResource WhiteBrush}"
+                   FontSize="12">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusMessage}"
+                           Foreground="{DynamicResource WhiteBrush}"
+                           Padding="10,0" />
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock Text="{Binding ModuleTitle}"
+                           Foreground="{DynamicResource WhiteBrush}"
+                           Padding="10,0" />
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>
