@@ -54,12 +54,12 @@
                             CornerRadius="4">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver">
+                                        <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
                             <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
                             <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
                         </Trigger>
-                        <Trigger Property="IsPressed">
+                        <Trigger Property="IsPressed" Value="True">
                             <Setter Property="Background" Value="{StaticResource AccentBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -74,8 +74,8 @@
     <!-- Active ribbon button style -->
     <Style x:Key="RibbonButtonActiveStyle" TargetType="Button" BasedOn="{StaticResource RibbonButtonStyle}">
         <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver">
+                <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{StaticResource AccentHoverBrush}" />
             </Trigger>
         </Style.Triggers>
