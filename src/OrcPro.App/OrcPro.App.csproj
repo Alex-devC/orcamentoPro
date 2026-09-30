@@ -6,13 +6,13 @@
     <ProjectReference Include="..\OrcPro.Domain\OrcPro.Domain.csproj" />
   </ItemGroup>
 
-        <PropertyGroup>
+          <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <PublishDir>publish\</PublishDir>
+    <PublishDir>$(MSBuildThisFileDirectory)..\..\publish\</PublishDir>
     <GenerateManifestsForSelfContainedApplication>false</GenerateManifestsForSelfContainedApplication>
   </PropertyGroup>
 
