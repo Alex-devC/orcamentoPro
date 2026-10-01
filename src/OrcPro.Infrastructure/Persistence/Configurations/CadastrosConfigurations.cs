@@ -49,7 +49,7 @@ public class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         builder.Property(c => c.TipoPessoa).IsRequired().HasMaxLength(2);
         builder.Property(c => c.NomeRazaoSocial).IsRequired().HasMaxLength(150);
         builder.Property(c => c.NomeFantasia).HasMaxLength(150);
-        builder.Property(c => c.CpfCnpj).IsRequired().HasMaxLength(20);
+        builder.Property(c => c.CpfCnpj).HasMaxLength(20);
         builder.HasIndex(c => c.CpfCnpj);
 
         builder.Property(c => c.RgIe).HasMaxLength(30);

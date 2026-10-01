@@ -26,6 +26,7 @@ public static class InfrastructureServiceExtensions
         // Repositories
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<IPerfilRepository, PerfilRepository>();
+        services.AddScoped<IPermissaoRepository, PermissaoRepository>();
         services.AddScoped<IEmpresaRepository, EmpresaRepository>();
         services.AddScoped<IClienteRepository, ClienteRepository>();
         services.AddScoped<ITecnicoRepository, TecnicoRepository>();
@@ -39,7 +40,10 @@ public static class InfrastructureServiceExtensions
 
         // Application services
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IPermissaoService, PermissaoService>();
+        services.AddScoped<IPermissaoSincronizador, PermissaoSincronizador>();
         services.AddScoped<IUsuarioService, UsuarioService>();
+        services.AddScoped<IPerfilService, PerfilService>();
         services.AddScoped<IClienteService, ClienteService>();
         services.AddScoped<ITecnicoService, TecnicoService>();
         services.AddScoped<IPecaService, PecaService>();

@@ -30,6 +30,12 @@ public class AtualizarUsuarioDto
     public string? Email { get; set; }
     public int PerfilId { get; set; }
     public bool Ativo { get; set; }
+
+    /// <summary>
+    /// Nova senha opcional (edição). Quando informada, é gravada sempre pelo
+    /// <c>IPasswordHasher</c> existente; quando vazia, a senha atual é mantida.
+    /// </summary>
+    public string? NovaSenha { get; set; }
 }
 
 public class AlterarSenhaDto

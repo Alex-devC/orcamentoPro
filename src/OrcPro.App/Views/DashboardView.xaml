@@ -32,6 +32,25 @@
                            Style="{StaticResource PageSubtitleStyle}" />
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal">
+                    <!-- Usuário autenticado (nome e perfil vindos do login) -->
+                    <Border Style="{StaticResource ChipStyle}" Background="{StaticResource AccentSoftBrush}"
+                            Padding="8,3" Margin="0,0,8,0"
+                            ToolTip="{Binding UsuarioCargo}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconUser}"
+                                  Stroke="{StaticResource NavyPanelBrush}"
+                                  Style="{StaticResource IconPathStyle}" Width="13" Height="13" />
+                            <TextBlock Text="{Binding UsuarioLogado}" Style="{StaticResource ChipTextStyle}"
+                                       Foreground="{StaticResource NavyPanelBrush}"
+                                       Margin="6,0,0,0" VerticalAlignment="Center" />
+                            <TextBlock Text="·" Style="{StaticResource ChipTextStyle}"
+                                       Foreground="{StaticResource NavyPanelBrush}"
+                                       Margin="5,0,0,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding UsuarioCargo}" Style="{StaticResource ChipTextStyle}"
+                                       Foreground="{StaticResource NavyPanelBrush}" Opacity="0.75"
+                                       Margin="5,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
                     <Border Style="{StaticResource ChipStyle}" Background="{StaticResource SurfaceAltBrush}"
                             Padding="8,3" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal">

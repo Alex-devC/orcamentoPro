@@ -1,0 +1,833 @@
+<UserControl x:Class="OrcPro.App.Views.UsuariosPerfisView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:OrcPro.App.Controls">
+
+    <UserControl.Resources>
+        <!-- Estilos compartilhados dos modulos de cadastro (tambem usados pela tela de Clientes). -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OrcPro.App;component/Resources/CadastroModuleStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ===== Cabeçalho da página ===== -->
+        <Border Grid.Row="0" Style="{StaticResource PanelCardStyle}" Padding="12,8" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Path Data="{StaticResource IconUsers}" Stroke="{StaticResource AccentBrush}"
+                      Style="{StaticResource IconPathStyle}" Width="18" Height="18" />
+                <TextBlock Text="Usuários e Perfis" Style="{StaticResource PageTitleStyle}" Margin="10,0,0,0" />
+                <TextBlock Text="|" Margin="10,0"
+                           Foreground="{StaticResource BorderStrongBrush}" VerticalAlignment="Center" />
+                <TextBlock Text="Cadastro de usuários, perfis e permissões do sistema"
+                           Style="{StaticResource PageSubtitleStyle}" />
+            </StackPanel>
+        </Border>
+
+        <!-- ===== Abas: Usuários / Perfis ===== -->
+        <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}">
+            <TabControl SelectedIndex="{Binding AbaSelecionada, Mode=TwoWay}"
+                        Style="{StaticResource ModuleTabControlStyle}"
+                        ItemContainerStyle="{StaticResource ModuleTabItemStyle}"
+                        Margin="0">
+                <TabItem Header="Usuários">
+                    <Grid DataContext="{Binding Usuarios}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+<!-- ===== Barra de ferramentas (pesquisa, filtros e ações) ===== -->
+                        <Border Grid.Row="0" Style="{StaticResource PanelHeaderBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Grid Width="240">
+                                        <TextBox Style="{StaticResource SearchTextBoxStyle}"
+                                                 Tag="Pesquisar por nome, usuário ou e-mail"
+                                                 AutomationProperties.AutomationId="UsuariosBusca"
+                                                 Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Path Data="{StaticResource IconSearch}" Stroke="{StaticResource TextDisabledBrush}"
+                                              Style="{StaticResource IconPathStyle}" Width="13" Height="13"
+                                              HorizontalAlignment="Left" VerticalAlignment="Center" Margin="7,0,0,0"
+                                              IsHitTestVisible="False" />
+                                    </Grid>
+
+                                    <ComboBox Width="120" Margin="8,0,0,0" Style="{StaticResource FormComboBoxStyle}"
+                                              ItemContainerStyle="{StaticResource FormComboBoxItemStyle}"
+                                              Tag="Situação"
+                                              AutomationProperties.AutomationId="UsuariosFiltroSituacao"
+                                              SelectedIndex="{Binding SituacaoFiltro, Mode=TwoWay}">
+                                        <ComboBoxItem Content="Todos" />
+                                        <ComboBoxItem Content="Somente ativos" />
+                                        <ComboBoxItem Content="Somente inativos" />
+                                    </ComboBox>
+
+                                    <ComboBox Width="150" Margin="8,0,0,0" Style="{StaticResource FormComboBoxStyle}"
+                                              ItemContainerStyle="{StaticResource FormComboBoxItemStyle}"
+                                              ItemsSource="{Binding FiltrosPerfil}"
+                                              DisplayMemberPath="Nome" SelectedValuePath="Id"
+                                              Tag="Perfil"
+                                              AutomationProperties.AutomationId="UsuariosFiltroPerfil"
+                                              SelectedValue="{Binding PerfilFiltroId, Mode=TwoWay}" />
+
+                                    <Button Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0"
+                                            Command="{Binding LimparBuscaCommand}" Content="Limpar busca"
+                                            AutomationProperties.AutomationId="UsuariosLimparBusca" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Style="{StaticResource GhostButtonStyle}" Margin="0,0,6,0"
+                                            Command="{Binding AtualizarListaCommand}"
+                                            AutomationProperties.AutomationId="UsuariosAtualizar"
+                                            ToolTip="Recarregar a listagem">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Data="{StaticResource IconRefresh}" Stroke="{StaticResource AccentBrush}"
+                                                  Style="{StaticResource IconPathStyle}" Width="13" Height="13" />
+                                            <TextBlock Text="Atualizar" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="110"
+                                            Height="26" FontSize="11" FontWeight="Normal"
+                                            Command="{Binding NovoCommand}"
+                                            AutomationProperties.AutomationId="UsuariosNovo">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Data="{StaticResource IconPlus}" Stroke="{StaticResource WhiteBrush}"
+                                                  Style="{StaticResource IconPathStyle}" Width="13" Height="13" />
+                                            <TextBlock Text="Novo usuário" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+<!-- ===== Grid de usuários ===== -->
+                        <Grid Grid.Row="1">
+                            <DataGrid x:Name="UsuariosGrid"
+                                      ItemsSource="{Binding Usuarios}"
+                                      SelectedItem="{Binding UsuarioSelecionado, Mode=TwoWay}"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False" CanUserDeleteRows="False"
+                                      IsReadOnly="True" HeadersVisibility="Column" RowHeaderWidth="0"
+                                      SelectionMode="Single" SelectionUnit="FullRow"
+                                      AlternationCount="2" BorderThickness="0"
+                                      Background="{StaticResource SurfaceBrush}"
+                                      RowStyle="{StaticResource DataGridRowStyle}"
+                                      ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
+                                      CellStyle="{StaticResource DataGridCellStyle}"
+                                      AutomationProperties.AutomationId="UsuariosGrid"
+                                      Sorting="OnGridUsuariosSorting"
+                                      MouseDoubleClick="OnUsuariosGridDoubleClick">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="44" SortMemberPath="Id" />
+                                    <DataGridTextColumn Header="NOME" Binding="{Binding NomeCompleto}" Width="2*" SortMemberPath="NomeCompleto" />
+                                    <DataGridTextColumn Header="USUÁRIO" Binding="{Binding Username}" Width="*" SortMemberPath="Username" />
+                                    <DataGridTextColumn Header="PERFIL" Binding="{Binding PerfilNome}" Width="*" CanUserSort="False" />
+                                    <DataGridTextColumn Header="E-MAIL" Binding="{Binding Email}" Width="*" CanUserSort="False" />
+                                    <DataGridTextColumn Header="ÚLTIMO ACESSO" Width="120" SortMemberPath="UltimoLogin">
+                                        <DataGridTextColumn.Binding>
+                                            <Binding Path="UltimoLogin"
+                                                     StringFormat="{}{0:dd/MM/yyyy HH:mm}" />
+                                        </DataGridTextColumn.Binding>
+                                    </DataGridTextColumn>
+                                    <DataGridTemplateColumn Header="SITUAÇÃO" Width="90">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border x:Name="Badge" Style="{StaticResource StatusBadgeStyle}"
+                                                        Background="{StaticResource AccentSoftBrush}"
+                                                        BorderBrush="{StaticResource AccentBrush}">
+                                                    <TextBlock x:Name="BadgeText" Text="Ativo"
+                                                               Style="{StaticResource StatusBadgeTextStyle}"
+                                                               Foreground="{StaticResource AccentBrush}" />
+                                                </Border>
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding Ativo}" Value="False">
+                                                        <Setter TargetName="Badge" Property="Background" Value="{StaticResource SurfaceHighBrush}" />
+                                                        <Setter TargetName="Badge" Property="BorderBrush" Value="{StaticResource BorderStrongBrush}" />
+                                                        <Setter TargetName="BadgeText" Property="Text" Value="Inativo" />
+                                                        <Setter TargetName="BadgeText" Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+<DataGridTemplateColumn Header="AÇÕES" Width="196">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Style="{StaticResource RowActionButtonStyle}"
+                                                            Command="{Binding DataContext.EditarCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Content="Editar"
+                                                            AutomationProperties.AutomationId="UsuariosEditarLinha"
+                                                            ToolTip="Editar usuário" />
+                                                    <Button Command="{Binding DataContext.AlternarSituacaoCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            AutomationProperties.AutomationId="UsuariosSituacaoLinha"
+                                                            ToolTip="Ativar ou inativar usuário">
+                                                        <Button.Style>
+                                                            <!-- O texto vem do estilo (nunca de Content local),
+                                                                 assim o trigger consegue alternar Ativar/Inativar. -->
+                                                            <Style TargetType="Button" BasedOn="{StaticResource RowActionButtonStyle}">
+                                                                <Setter Property="Content" Value="Ativar" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Ativo}" Value="True">
+                                                                        <Setter Property="Content" Value="Inativar" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                    <Button Style="{StaticResource RowActionButtonStyle}"
+                                                            Command="{Binding DataContext.ExcluirCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Content="Excluir"
+                                                            Foreground="{StaticResource DangerBrush}"
+                                                            AutomationProperties.AutomationId="UsuariosExcluirLinha"
+                                                            ToolTip="Excluir usuário" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!-- Estado vazio -->
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TemRegistros}" Value="False">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <Path Data="{StaticResource IconSearch}" Stroke="{StaticResource TextDisabledBrush}"
+                                      Style="{StaticResource IconPathStyle}" StrokeThickness="1.2"
+                                      Width="28" Height="28" HorizontalAlignment="Center" />
+                                <TextBlock Text="Nenhum usuário encontrado com os filtros atuais."
+                                           FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                           Margin="0,8,0,0" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
+<!-- ===== Rodapé do grid: paginação ===== -->
+                        <Border Grid.Row="2" Style="{StaticResource PanelFooterBarStyle}"
+                                BorderThickness="0,1,0,0">
+                            <Grid>
+                                <TextBlock Text="{Binding ResumoPaginacao}" FontSize="11"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Center" HorizontalAlignment="Left"
+                                           AutomationProperties.AutomationId="UsuariosResumo" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Style="{StaticResource PagerButtonStyle}" Command="{Binding PaginaAnteriorCommand}"
+                                            AutomationProperties.Name="Página anterior">
+                                        <Path Data="{StaticResource IconChevronLeft}" Stroke="{StaticResource TextMutedBrush}"
+                                              Style="{StaticResource IconPathStyle}" Width="11" Height="11" />
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButtonStyle}" Command="{Binding PaginaProximaCommand}"
+                                            AutomationProperties.Name="Próxima página" Margin="4,0,0,0">
+                                        <Path Data="{StaticResource IconChevronRight}" Stroke="{StaticResource TextMutedBrush}"
+                                              Style="{StaticResource IconPathStyle}" Width="11" Height="11" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Perfis">
+                    <Grid DataContext="{Binding Perfis}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+<!-- ===== Barra de ferramentas (perfis) ===== -->
+                        <Border Grid.Row="0" Style="{StaticResource PanelHeaderBarStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Grid Width="240">
+                                        <TextBox Style="{StaticResource SearchTextBoxStyle}"
+                                                 Tag="Pesquisar por nome ou descrição"
+                                                 AutomationProperties.AutomationId="PerfisBusca"
+                                                 Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Path Data="{StaticResource IconSearch}" Stroke="{StaticResource TextDisabledBrush}"
+                                              Style="{StaticResource IconPathStyle}" Width="13" Height="13"
+                                              HorizontalAlignment="Left" VerticalAlignment="Center" Margin="7,0,0,0"
+                                              IsHitTestVisible="False" />
+                                    </Grid>
+
+                                    <ComboBox Width="140" Margin="8,0,0,0" Style="{StaticResource FormComboBoxStyle}"
+                                              ItemContainerStyle="{StaticResource FormComboBoxItemStyle}"
+                                              Tag="Situação"
+                                              AutomationProperties.AutomationId="PerfisFiltroSituacao"
+                                              SelectedIndex="{Binding SituacaoFiltro, Mode=TwoWay}">
+                                        <ComboBoxItem Content="Todos" />
+                                        <ComboBoxItem Content="Somente ativos" />
+                                        <ComboBoxItem Content="Somente inativos" />
+                                    </ComboBox>
+
+                                    <Button Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0"
+                                            Command="{Binding LimparBuscaCommand}" Content="Limpar busca"
+                                            AutomationProperties.AutomationId="PerfisLimparBusca" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Style="{StaticResource GhostButtonStyle}" Margin="0,0,6,0"
+                                            Command="{Binding AtualizarListaCommand}"
+                                            AutomationProperties.AutomationId="PerfisAtualizar"
+                                            ToolTip="Recarregar a listagem">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Data="{StaticResource IconRefresh}" Stroke="{StaticResource AccentBrush}"
+                                                  Style="{StaticResource IconPathStyle}" Width="13" Height="13" />
+                                            <TextBlock Text="Atualizar" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="110"
+                                            Height="26" FontSize="11" FontWeight="Normal"
+                                            Command="{Binding NovoCommand}"
+                                            AutomationProperties.AutomationId="PerfisNovo">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Path Data="{StaticResource IconPlus}" Stroke="{StaticResource WhiteBrush}"
+                                                  Style="{StaticResource IconPathStyle}" Width="13" Height="13" />
+                                            <TextBlock Text="Novo perfil" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+<!-- ===== Grid de perfis ===== -->
+                        <Grid Grid.Row="1">
+                            <DataGrid x:Name="PerfisGrid"
+                                      ItemsSource="{Binding Perfis}"
+                                      SelectedItem="{Binding PerfilSelecionado, Mode=TwoWay}"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False" CanUserDeleteRows="False"
+                                      IsReadOnly="True" HeadersVisibility="Column" RowHeaderWidth="0"
+                                      SelectionMode="Single" SelectionUnit="FullRow"
+                                      AlternationCount="2" BorderThickness="0"
+                                      Background="{StaticResource SurfaceBrush}"
+                                      RowStyle="{StaticResource DataGridRowStyle}"
+                                      ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
+                                      CellStyle="{StaticResource DataGridCellStyle}"
+                                      AutomationProperties.AutomationId="PerfisGrid"
+                                      Sorting="OnGridPerfisSorting"
+                                      MouseDoubleClick="OnPerfisGridDoubleClick">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="44" SortMemberPath="Id" />
+                                    <DataGridTextColumn Header="NOME" Binding="{Binding Nome}" Width="1.2*" SortMemberPath="Nome" />
+                                    <DataGridTextColumn Header="DESCRIÇÃO" Binding="{Binding Descricao}" Width="2*" CanUserSort="False" />
+                                    <DataGridTextColumn Header="USUÁRIOS" Binding="{Binding QuantidadeUsuarios}" Width="80" CanUserSort="False" />
+                                    <DataGridTextColumn Header="PERMISSÕES" Width="120" CanUserSort="False">
+                                        <DataGridTextColumn.Binding>
+                                            <Binding Path="Permissoes.Count" StringFormat="{}{0} vinculada(s)" />
+                                        </DataGridTextColumn.Binding>
+                                    </DataGridTextColumn>
+                                    <DataGridTemplateColumn Header="SITUAÇÃO" Width="90">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border x:Name="Badge" Style="{StaticResource StatusBadgeStyle}"
+                                                        Background="{StaticResource AccentSoftBrush}"
+                                                        BorderBrush="{StaticResource AccentBrush}">
+                                                    <TextBlock x:Name="BadgeText" Text="Ativo"
+                                                               Style="{StaticResource StatusBadgeTextStyle}"
+                                                               Foreground="{StaticResource AccentBrush}" />
+                                                </Border>
+                                                <DataTemplate.Triggers>
+                                                    <DataTrigger Binding="{Binding Ativo}" Value="False">
+                                                        <Setter TargetName="Badge" Property="Background" Value="{StaticResource SurfaceHighBrush}" />
+                                                        <Setter TargetName="Badge" Property="BorderBrush" Value="{StaticResource BorderStrongBrush}" />
+                                                        <Setter TargetName="BadgeText" Property="Text" Value="Inativo" />
+                                                        <Setter TargetName="BadgeText" Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                                    </DataTrigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+<DataGridTemplateColumn Header="AÇÕES" Width="196">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Style="{StaticResource RowActionButtonStyle}"
+                                                            Command="{Binding DataContext.EditarCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Content="Editar"
+                                                            AutomationProperties.AutomationId="PerfisEditarLinha"
+                                                            ToolTip="Editar perfil" />
+                                                    <Button Command="{Binding DataContext.AlternarSituacaoCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Content="Ativar"
+                                                            AutomationProperties.AutomationId="PerfisSituacaoLinha"
+                                                            ToolTip="Ativar ou inativar perfil">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button" BasedOn="{StaticResource RowActionButtonStyle}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Ativo}" Value="True">
+                                                                        <Setter Property="Content" Value="Inativar" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                    <Button Style="{StaticResource RowActionButtonStyle}"
+                                                            Command="{Binding DataContext.ExcluirCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Content="Excluir"
+                                                            Foreground="{StaticResource DangerBrush}"
+                                                            AutomationProperties.AutomationId="PerfisExcluirLinha"
+                                                            ToolTip="Excluir perfil" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!-- Estado vazio -->
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TemRegistros}" Value="False">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <Path Data="{StaticResource IconShield}" Stroke="{StaticResource TextDisabledBrush}"
+                                      Style="{StaticResource IconPathStyle}" StrokeThickness="1.2"
+                                      Width="28" Height="28" HorizontalAlignment="Center" />
+                                <TextBlock Text="Nenhum perfil encontrado com os filtros atuais."
+                                           FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                           Margin="0,8,0,0" HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Grid>
+<!-- ===== Rodapé do grid de perfis ===== -->
+                        <Border Grid.Row="2" Style="{StaticResource PanelFooterBarStyle}"
+                                BorderThickness="0,1,0,0">
+                            <Grid>
+                                <TextBlock Text="{Binding ResumoPaginacao}" FontSize="11"
+                                           Foreground="{StaticResource TextMutedBrush}"
+                                           VerticalAlignment="Center" HorizontalAlignment="Left"
+                                           AutomationProperties.AutomationId="PerfisResumo" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Style="{StaticResource PagerButtonStyle}" Command="{Binding PaginaAnteriorCommand}"
+                                            AutomationProperties.Name="Página anterior de perfis">
+                                        <Path Data="{StaticResource IconChevronLeft}" Stroke="{StaticResource TextMutedBrush}"
+                                              Style="{StaticResource IconPathStyle}" Width="11" Height="11" />
+                                    </Button>
+                                    <Button Style="{StaticResource PagerButtonStyle}" Command="{Binding PaginaProximaCommand}"
+                                            AutomationProperties.Name="Próxima página de perfis" Margin="4,0,0,0">
+                                        <Path Data="{StaticResource IconChevronRight}" Stroke="{StaticResource TextMutedBrush}"
+                                              Style="{StaticResource IconPathStyle}" Width="11" Height="11" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </Border>
+
+        <!-- ============================================================
+             Modal: cadastro/edição de usuário
+             ============================================================ -->
+        <Border Grid.Row="0" Grid.RowSpan="2">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource ModalOverlayStyle}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Usuarios.EditorAberto}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Border Style="{StaticResource PanelCardStyle}" Width="420" HorizontalAlignment="Center"
+                    VerticalAlignment="Center" DataContext="{Binding Usuarios}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Cabeçalho do modal -->
+                    <Border Grid.Row="0" Style="{StaticResource PanelHeaderBarStyle}">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconAddPerson}" Stroke="{StaticResource AccentBrush}"
+                                      Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                                <TextBlock Text="{Binding EditorTitulo}" Style="{StaticResource PanelHeaderStyle}"
+                                           Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Campos -->
+                    <StackPanel Grid.Row="1" Margin="16,14,16,0">
+                        <TextBlock Text="NOME" Style="{StaticResource FormLabelStyle}" />
+                        <TextBox Style="{StaticResource FormInputStyle}"
+                                 AutomationProperties.AutomationId="UsuarioNomeInput"
+                                 Text="{Binding FormNome, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock Text="USUÁRIO (LOGIN)" Style="{StaticResource FormLabelStyle}" Margin="0,12,0,4" />
+                        <TextBox AutomationProperties.AutomationId="UsuarioLoginInput"
+                                 Text="{Binding FormUsuario, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource FormInputStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding UsuarioBloqueado}" Value="True">
+                                            <Setter Property="IsReadOnly" Value="True" />
+                                            <Setter Property="Focusable" Value="False" />
+                                            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                            <Setter Property="Background" Value="{StaticResource SurfaceAltBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        <TextBlock Style="{StaticResource FormHintStyle}"
+                                   Text="Usado no login. Não aceita e-mail e não pode ser alterado depois." />
+<TextBlock Text="SENHA" Style="{StaticResource FormLabelStyle}" Margin="0,12,0,4" />
+                        <PasswordBox Style="{StaticResource FormPasswordStyle}"
+                                     Tag="Senha de acesso"
+                                     AutomationProperties.AutomationId="UsuarioSenhaInput"
+                                     controls:PasswordBoxAssistant.BindPassword="{Binding FormSenha, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock Text="{Binding DicaSenha}" Style="{StaticResource FormHintStyle}" />
+
+                        <TextBlock Text="PERFIL" Style="{StaticResource FormLabelStyle}" Margin="0,12,0,4" />
+                        <ComboBox Style="{StaticResource FormComboBoxStyle}"
+                                  ItemContainerStyle="{StaticResource FormComboBoxItemStyle}"
+                                  ItemsSource="{Binding PerfisDisponiveis}"
+                                  DisplayMemberPath="Nome"
+                                  Tag="Selecione o perfil"
+                                  AutomationProperties.AutomationId="UsuarioPerfilCombo"
+                                  SelectedItem="{Binding FormPerfil, Mode=TwoWay}" />
+
+                        <CheckBox Content="Ativo" Style="{StaticResource FormCheckBoxStyle}"
+                                  IsChecked="{Binding FormAtivo}" Margin="0,14,0,0"
+                                  AutomationProperties.AutomationId="UsuarioAtivoCheck" />
+                        <TextBlock Style="{StaticResource FormHintStyle}"
+                                   Text="Usuários inativos continuam cadastrados, mas não entram no sistema." />
+
+                        <!-- Mensagem de erro/aviso do formulário -->
+                        <Border Background="#FEF2F2" BorderBrush="{StaticResource DangerBrush}"
+                                BorderThickness="1" CornerRadius="2" Padding="8,6" Margin="0,14,0,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding EditorMensagemVisivel}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource DangerBrush}"
+                                      Style="{StaticResource IconPathStyle}" StrokeThickness="1.4"
+                                      Width="14" Height="14" />
+                                <TextBlock Text="{Binding EditorMensagem}" FontSize="11"
+                                           Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap"
+                                           Margin="6,0,0,0" VerticalAlignment="Center"
+                                           AutomationProperties.AutomationId="UsuarioMensagemErro" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Rodapé do modal -->
+                    <Border Grid.Row="2" Style="{StaticResource PanelFooterBarStyle}" Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource GhostButtonStyle}" MinWidth="90"
+                                    Content="Cancelar"
+                                    Command="{Binding CancelarEditorCommand}"
+                                    AutomationProperties.AutomationId="UsuarioCancelar" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="110" Margin="8,0,0,0"
+                                    Content="Salvar"
+                                    Command="{Binding SalvarCommand}"
+                                    AutomationProperties.AutomationId="UsuarioSalvar" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Border>
+<!-- ============================================================
+             Modal: cadastro/edição de perfil
+             ============================================================ -->
+        <Border Grid.Row="0" Grid.RowSpan="2">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource ModalOverlayStyle}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Perfis.EditorAberto}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Border Style="{StaticResource PanelCardStyle}" Width="620" MaxHeight="720" HorizontalAlignment="Center"
+                    VerticalAlignment="Center" DataContext="{Binding Perfis}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource PanelHeaderBarStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconShield}" Stroke="{StaticResource AccentBrush}"
+                                  Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                            <TextBlock Text="{Binding EditorTitulo}" Style="{StaticResource PanelHeaderStyle}"
+                                       Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="16,14,16,0">
+                        <TextBlock Text="NOME" Style="{StaticResource FormLabelStyle}" />
+                        <TextBox Style="{StaticResource FormInputStyle}"
+                                 AutomationProperties.AutomationId="PerfilNomeInput"
+                                 Text="{Binding FormNome, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <TextBlock Text="DESCRIÇÃO" Style="{StaticResource FormLabelStyle}" Margin="0,12,0,4" />
+                        <TextBox Style="{StaticResource FormMultilineInputStyle}"
+                                 AutomationProperties.AutomationId="PerfilDescricaoInput"
+                                 Text="{Binding FormDescricao, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <CheckBox Content="Ativo" Style="{StaticResource FormCheckBoxStyle}"
+                                  IsChecked="{Binding FormAtivo}" Margin="0,14,0,0"
+                                  AutomationProperties.AutomationId="PerfilAtivoCheck" />
+                        <!-- ============ Permissões do perfil (catálogo MODULO.ACAO) ============ -->
+                        <Grid Margin="0,16,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="PERMISSÕES" Style="{StaticResource SectionLabelStyle}" />
+                                <TextBlock Text="{Binding ResumoPermissoesSelecionadas}" Style="{StaticResource FormHintStyle}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <CheckBox Content="Selecionar todas" Style="{StaticResource FormCheckBoxStyle}"
+                                          IsChecked="{Binding TodasPermissoesMarcadas, Mode=TwoWay}"
+                                          IsEnabled="{Binding PodeGerenciarPermissoes}"
+                                          AutomationProperties.AutomationId="PerfilSelecionarTodas" Margin="0,0,10,0" />
+                                <Button Style="{StaticResource GhostButtonStyle}" Height="24"
+                                        Content="Desmarcar todas"
+                                        Command="{Binding DesmarcarTodasCommand}"
+                                        AutomationProperties.AutomationId="PerfilDesmarcarTodas" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Aviso: sem a permissão de gerenciamento, apenas consulta -->
+                        <Border Background="#FFFBEB" BorderBrush="#F5C242" BorderThickness="1" CornerRadius="2"
+                                Padding="8,6" Margin="0,8,0,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding PodeGerenciarPermissoes}" Value="False">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconInfo}" Stroke="#8A6100"
+                                      Style="{StaticResource IconPathStyle}" StrokeThickness="1.4" Width="14" Height="14" />
+                                <TextBlock Text="Você não possui a permissão USUARIOS_PERFIS.GERENCIAR_PERMISSOES: as permissões podem ser consultadas, mas não alteradas."
+                                           FontSize="10" Foreground="#8A6100" Margin="6,0,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Lista de permissões agrupada por módulo -->
+                        <ScrollViewer MaxHeight="230" VerticalScrollBarVisibility="Auto" Margin="0,8,0,0">
+                            <ItemsControl ItemsSource="{Binding Modulos}"
+                                          AutomationProperties.AutomationId="PerfilPermissoesLista">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource PanelCardStyle}" Padding="10,8" Margin="0,0,0,8">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <TextBlock Text="{Binding Rotulo}" Style="{StaticResource PanelHeaderStyle}"
+                                                               FontSize="12" VerticalAlignment="Center" />
+                                                    <CheckBox Content="Selecionar todas" Style="{StaticResource FormCheckBoxStyle}"
+                                                              IsChecked="{Binding TodasMarcadas, Mode=TwoWay}"
+                                                              IsEnabled="{Binding Habilitada}"
+                                                              HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                              AutomationProperties.AutomationId="PerfilModuloSelecionarTodas" />
+                                                </Grid>
+                                                <ItemsControl ItemsSource="{Binding Itens}" Margin="0,6,0,0">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <CheckBox Content="{Binding Nome}" Style="{StaticResource FormCheckBoxStyle}"
+                                                                      IsChecked="{Binding Selecionada, Mode=TwoWay}"
+                                                                      IsEnabled="{Binding Habilitada}"
+                                                                      Margin="0,4,0,0" Tag="{Binding Codigo}"
+                                                                      AutomationProperties.AutomationId="{Binding Codigo}"
+                                                                      AutomationProperties.Name="{Binding Codigo}" />
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                <TextBlock Text="{Binding Resumo}" FontSize="10"
+                                                           Foreground="{StaticResource TextMutedBrush}" Margin="0,4,0,0" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <Border Background="#FEF2F2" BorderBrush="{StaticResource DangerBrush}"
+                                BorderThickness="1" CornerRadius="2" Padding="8,6" Margin="0,14,0,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding EditorMensagemVisivel}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource DangerBrush}"
+                                      Style="{StaticResource IconPathStyle}" StrokeThickness="1.4"
+                                      Width="14" Height="14" />
+                                <TextBlock Text="{Binding EditorMensagem}" FontSize="11"
+                                           Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap"
+                                           Margin="6,0,0,0" VerticalAlignment="Center"
+                                           AutomationProperties.AutomationId="PerfilMensagemErro" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" Style="{StaticResource PanelFooterBarStyle}" Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource GhostButtonStyle}" MinWidth="90"
+                                    Content="Cancelar"
+                                    Command="{Binding CancelarEditorCommand}"
+                                    AutomationProperties.AutomationId="PerfilCancelar" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="110" Margin="8,0,0,0"
+                                    Content="Salvar"
+                                    Command="{Binding SalvarCommand}"
+                                    AutomationProperties.AutomationId="PerfilSalvar" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Border>
+<!-- ============================================================
+             Confirmação de exclusão — usuários
+             ============================================================ -->
+        <Border Grid.Row="0" Grid.RowSpan="2">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource ModalOverlayStyle}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Usuarios.ConfirmacaoAberta}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Border Style="{StaticResource PanelCardStyle}" Width="380" HorizontalAlignment="Center"
+                    VerticalAlignment="Center" DataContext="{Binding Usuarios}">
+                <StackPanel>
+                    <Border Style="{StaticResource PanelHeaderBarStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconCancelCircle}" Stroke="{StaticResource DangerBrush}"
+                                  Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                            <TextBlock Text="Excluir usuário" Style="{StaticResource PanelHeaderStyle}"
+                                       Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="{Binding ConfirmacaoMensagem}" TextWrapping="Wrap" FontSize="12"
+                               Foreground="{StaticResource TextBrush}" Margin="16,14,16,0" />
+
+                    <Border Style="{StaticResource PanelFooterBarStyle}" Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource GhostButtonStyle}" MinWidth="90"
+                                    Content="Cancelar"
+                                    Command="{Binding CancelarExclusaoCommand}"
+                                    AutomationProperties.AutomationId="UsuarioExcluirCancelar" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="110" Margin="8,0,0,0"
+                                    Background="{StaticResource DangerBrush}"
+                                    Content="Excluir"
+                                    Command="{Binding ConfirmarExclusaoCommand}"
+                                    AutomationProperties.AutomationId="UsuarioExcluirConfirmar" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- ============================================================
+             Confirmação de exclusão — perfis
+             ============================================================ -->
+        <Border Grid.Row="0" Grid.RowSpan="2">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource ModalOverlayStyle}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Perfis.ConfirmacaoAberta}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Border Style="{StaticResource PanelCardStyle}" Width="380" HorizontalAlignment="Center"
+                    VerticalAlignment="Center" DataContext="{Binding Perfis}">
+                <StackPanel>
+                    <Border Style="{StaticResource PanelHeaderBarStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconCancelCircle}" Stroke="{StaticResource DangerBrush}"
+                                  Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                            <TextBlock Text="Excluir perfil" Style="{StaticResource PanelHeaderStyle}"
+                                       Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="{Binding ConfirmacaoMensagem}" TextWrapping="Wrap" FontSize="12"
+                               Foreground="{StaticResource TextBrush}" Margin="16,14,16,0" />
+
+                    <Border Style="{StaticResource PanelFooterBarStyle}" Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource GhostButtonStyle}" MinWidth="90"
+                                    Content="Cancelar"
+                                    Command="{Binding CancelarExclusaoCommand}"
+                                    AutomationProperties.AutomationId="PerfilExcluirCancelar" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="110" Margin="8,0,0,0"
+                                    Background="{StaticResource DangerBrush}"
+                                    Content="Excluir"
+                                    Command="{Binding ConfirmarExclusaoCommand}"
+                                    AutomationProperties.AutomationId="PerfilExcluirConfirmar" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

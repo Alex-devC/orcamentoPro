@@ -8,6 +8,16 @@
         <views:DashboardView />
     </DataTemplate>
 
+    <!-- Cadastro de Clientes -->
+    <DataTemplate DataType="{x:Type vm:ClientesViewModel}">
+        <views:ClientesView />
+    </DataTemplate>
+
+    <!-- Cadastro de Usuários e Perfis (abas Usuários / Perfis) -->
+    <DataTemplate DataType="{x:Type vm:UsuariosPerfisViewModel}">
+        <views:UsuariosPerfisView />
+    </DataTemplate>
+
     <!-- Placeholder para módulos ainda não implementados -->
     <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
         <Border Background="{StaticResource CanvasBrush}" Padding="16">

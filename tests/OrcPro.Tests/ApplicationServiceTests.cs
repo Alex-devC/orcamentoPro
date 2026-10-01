@@ -81,6 +81,9 @@ public class InMemoryUsuarioRepository : InMemoryRepository<Usuario>, IUsuarioRe
 
     public Task<bool> ExistsUsernameAsync(string username, int? ignorarId = null, CancellationToken cancellationToken = default)
         => Task.FromResult(Items.Any(u => string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase) && (!ignorarId.HasValue || u.Id != ignorarId.Value)));
+
+    public Task<int> CountByPerfilIdAsync(int perfilId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Items.Count(u => u.PerfilId == perfilId));
 }
 
 public class InMemoryOrcamentoRepository : InMemoryRepository<Orcamento>, IOrcamentoRepository
@@ -104,6 +107,12 @@ public class InMemoryOrcamentoRepository : InMemoryRepository<Orcamento>, IOrcam
 
     public Task<IReadOnlyList<Orcamento>> GetByStatusIdAsync(int statusId, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<Orcamento>>(Items.Where(o => o.StatusId == statusId).ToList());
+
+    public Task<int> CountByUsuarioIdAsync(int usuarioId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Items.Count(o => o.UsuarioId == usuarioId));
+
+    public Task<int> CountByClienteIdAsync(int clienteId, CancellationToken cancellationToken = default)
+        => Task.FromResult(Items.Count(o => o.ClienteId == clienteId));
 }
 
 public class InMemoryOrcamentoStatusRepository : InMemoryRepository<OrcamentoStatus>, IOrcamentoStatusRepository

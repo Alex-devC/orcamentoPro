@@ -8,4 +8,5 @@ public interface IUsuarioRepository : IRepository<Usuario>
     Task<Usuario?> GetWithPerfilAndPermissoesByUsernameAsync(string username, CancellationToken cancellationToken = default);
     Task<Usuario?> GetWithPerfilAndPermissoesAsync(int id, CancellationToken cancellationToken = default);
     Task<bool> ExistsUsernameAsync(string username, int? ignorarId = null, CancellationToken cancellationToken = default);
+    Task<int> CountByPerfilIdAsync(int perfilId, CancellationToken cancellationToken = default);
 }

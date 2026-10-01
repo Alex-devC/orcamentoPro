@@ -2,11 +2,11 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        xmlns:vm="clr-namespace:OrcPro.App.ViewModels"
         Title="{Binding WindowTitle}"
         Width="1366" Height="768"
-        MinWidth="1024" MinHeight="720"
+        MinWidth="1024" MinHeight="768"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         WindowStyle="None"
         ResizeMode="CanResize"
         UseLayoutRounding="True"
@@ -16,14 +16,17 @@
         FontSize="12"
         Background="{StaticResource CanvasBrush}">
 
+    <!-- Legenda nativa (CaptionHeight=32): arrasto, duplo clique (maximizar/restaurar),
+         snap de janelas e redimensionamento ficam por conta do Windows.
+         Os botões de controle na barra superior usam IsHitTestVisibleInChrome para
+         receberem o clique dentro da faixa de legenda. -->
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6" GlassFrameThickness="0"
                             CornerRadius="0" UseAeroCaptionButtons="False" />
     </shell:WindowChrome.WindowChrome>
 
-    <Window.DataContext>
-        <vm:MainWindowViewModel />
-    </Window.DataContext>
+    <!-- O DataContext é definido em code-behind (MainWindow(UsuarioSessaoDto)),
+         pois a sessão vem do login. -->
 
     <Grid>
         <Grid.RowDefinitions>
@@ -70,22 +73,25 @@
                     </StackPanel>
                     <Button Style="{StaticResource TitleBarButtonStyle}"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True"
-                            Command="{x:Static SystemCommands.MinimizeWindowCommand}"
-                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                            AutomationProperties.Name="Minimizar"
+                            Click="OnMinimizeClick"
                             ToolTip="Minimizar">
                         <Path Data="{StaticResource IconWinMinimize}" Stroke="{StaticResource WhiteBrush}"
+                              shell:WindowChrome.IsHitTestVisibleInChrome="True"
                               Style="{StaticResource IconPathStyle}" StrokeThickness="1" Width="10" Height="10" />
                     </Button>
                     <Button Style="{StaticResource TitleBarMaximizeButtonStyle}"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True"
-                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                            AutomationProperties.Name="Maximizar ou restaurar"
+                            Click="OnMaximizeRestoreClick"
                             ToolTip="Maximizar ou restaurar" />
                     <Button Style="{StaticResource TitleBarCloseButtonStyle}"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True"
-                            Command="{x:Static SystemCommands.CloseWindowCommand}"
-                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                            AutomationProperties.Name="Fechar"
+                            Click="OnCloseClick"
                             ToolTip="Fechar">
                         <Path Data="{StaticResource IconWinClose}" Stroke="{StaticResource WhiteBrush}"
+                              shell:WindowChrome.IsHitTestVisibleInChrome="True"
                               Style="{StaticResource IconPathStyle}" StrokeThickness="1" Width="10" Height="10" />
                     </Button>
                 </StackPanel>
@@ -294,7 +300,10 @@
                     <StackPanel Orientation="Horizontal" Margin="4,0">
                         <Border Style="{StaticResource RibbonGroupStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding RibbonActionCommand}" CommandParameter="Cadastro de clientes (módulo em desenvolvimento).">
+                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding OpenClientesCommand}"
+                                        IsEnabled="{Binding PodeAcessarClientes}"
+                                        AutomationProperties.Name="Clientes"
+                                        ToolTip="Cadastro de clientes">
                                     <StackPanel>
                                         <Path Data="{StaticResource IconUsers}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
                                         <TextBlock Text="Clientes" Style="{StaticResource RibbonButtonLabelStyle}" />
@@ -316,6 +325,19 @@
                                     <StackPanel>
                                         <Path Data="{StaticResource IconTool}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
                                         <TextBlock Text="Serviços" Style="{StaticResource RibbonButtonLabelStyle}" />
+                                    </StackPanel>
+                                </Button>
+                                <!-- Módulo implementado: Usuários e Perfis -->
+                                <Button Style="{StaticResource RibbonLargeButtonStyle}"
+                                        Command="{Binding OpenUsuariosPerfisCommand}" CommandParameter="usuarios"
+                                        IsEnabled="{Binding PodeAcessarUsuariosPerfis}"
+                                        AutomationProperties.Name="Usuários e Perfis"
+                                        ToolTip="Cadastro de usuários, perfis e permissões">
+                                    <StackPanel>
+                                        <Path Data="{StaticResource IconUsers}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
+                                        <TextBlock Text="Usuários e Perfis" Width="68" FontSize="10"
+                                                   TextWrapping="Wrap" TextAlignment="Center"
+                                                   HorizontalAlignment="Center" Margin="0,4,0,0" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -416,13 +438,15 @@
                     <StackPanel Orientation="Horizontal" Margin="4,0">
                         <Border Style="{StaticResource RibbonGroupStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding RibbonActionCommand}" CommandParameter="Usuários do sistema (módulo em desenvolvimento).">
+                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding OpenUsuariosPerfisCommand}" CommandParameter="usuarios"
+                                        IsEnabled="{Binding PodeAcessarUsuariosPerfis}" ToolTip="Cadastro de usuários (aba Usuários)">
                                     <StackPanel>
                                         <Path Data="{StaticResource IconUsers}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
                                         <TextBlock Text="Usuários" Style="{StaticResource RibbonButtonLabelStyle}" />
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding RibbonActionCommand}" CommandParameter="Perfis e permissões (módulo em desenvolvimento).">
+                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding OpenUsuariosPerfisCommand}" CommandParameter="perfis"
+                                        IsEnabled="{Binding PodeAcessarUsuariosPerfis}" ToolTip="Cadastro de perfis e permissões (aba Perfis)">
                                     <StackPanel>
                                         <Path Data="{StaticResource IconShield}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
                                         <TextBlock Text="Perfis" Style="{StaticResource RibbonButtonLabelStyle}" />

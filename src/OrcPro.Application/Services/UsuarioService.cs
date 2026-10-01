@@ -12,15 +12,18 @@ public class UsuarioService : IUsuarioService
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly IPerfilRepository _perfilRepository;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IOrcamentoRepository _orcamentoRepository;
 
     public UsuarioService(
         IUsuarioRepository usuarioRepository,
         IPerfilRepository perfilRepository,
-        IPasswordHasher passwordHasher)
+        IPasswordHasher passwordHasher,
+        IOrcamentoRepository orcamentoRepository)
     {
         _usuarioRepository = usuarioRepository;
         _perfilRepository = perfilRepository;
         _passwordHasher = passwordHasher;
+        _orcamentoRepository = orcamentoRepository;
     }
 
     public async Task<UsuarioDto> ObterPorIdAsync(int id, CancellationToken cancellationToken = default)
@@ -53,6 +56,9 @@ public class UsuarioService : IUsuarioService
         if (string.IsNullOrWhiteSpace(dto.Username))
             throw new ValidationException("O nome de usuário (username) é obrigatório.");
 
+        if (string.IsNullOrWhiteSpace(dto.NomeCompleto))
+            throw new ValidationException("O nome completo é obrigatório.");
+
         if (string.IsNullOrWhiteSpace(dto.Senha))
             throw new ValidationException("A senha inicial é obrigatória.");
 
@@ -82,6 +88,9 @@ public class UsuarioService : IUsuarioService
 
     public async Task<UsuarioDto> AtualizarAsync(AtualizarUsuarioDto dto, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(dto.NomeCompleto))
+            throw new ValidationException("O nome completo é obrigatório.");
+
         var usuario = await _usuarioRepository.GetByIdAsync(dto.Id, cancellationToken);
         if (usuario == null)
             throw new NotFoundException("Usuário", dto.Id);
@@ -95,6 +104,13 @@ public class UsuarioService : IUsuarioService
         usuario.PerfilId = dto.PerfilId;
         usuario.Ativo = dto.Ativo;
         usuario.DataAtualizacao = DateTime.UtcNow;
+
+        // O login usa o campo "Usuário", que não é alterado na edição (garante unicidade).
+        // A senha só é trocada quando o formulário informa uma nova: sempre via IPasswordHasher.
+        if (!string.IsNullOrWhiteSpace(dto.NovaSenha))
+        {
+            usuario.PasswordHash = _passwordHasher.HashPassword(dto.NovaSenha);
+        }
 
         await _usuarioRepository.UpdateAsync(usuario, cancellationToken);
         return await ObterPorIdAsync(usuario.Id, cancellationToken);
@@ -128,6 +144,25 @@ public class UsuarioService : IUsuarioService
         usuario.DataAtualizacao = DateTime.UtcNow;
 
         await _usuarioRepository.UpdateAsync(usuario, cancellationToken);
+    }
+
+    /// <summary>
+    /// Exclui definitivamente o usuário. Usuários com orçamentos vinculados não podem ser
+    /// excluídos (a recomendação é inativar); o login continua usando o campo Usuário, sem
+    /// qualquer alteração nas regras de autenticação.
+    /// </summary>
+    public async Task ExcluirAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var usuario = await _usuarioRepository.GetByIdAsync(id, cancellationToken);
+        if (usuario == null)
+            throw new NotFoundException("Usuário", id);
+
+        var orcamentos = await _orcamentoRepository.CountByUsuarioIdAsync(id, cancellationToken);
+        if (orcamentos > 0)
+            throw new BusinessException(
+                $"O usuário '{usuario.Username}' possui {orcamentos} orçamento(s) vinculado(s) e não pode ser excluído. Inative-o em vez de excluir.");
+
+        await _usuarioRepository.DeleteAsync(id, cancellationToken);
     }
 
     private static UsuarioDto MapearParaDto(Usuario u)

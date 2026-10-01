@@ -12,4 +12,5 @@ public interface IUsuarioService
     Task<UsuarioDto> AtualizarAsync(AtualizarUsuarioDto dto, CancellationToken cancellationToken = default);
     Task AlterarSenhaAsync(AlterarSenhaDto dto, CancellationToken cancellationToken = default);
     Task AlterarStatusAtivoAsync(int id, bool ativo, CancellationToken cancellationToken = default);
+    Task ExcluirAsync(int id, CancellationToken cancellationToken = default);
 }

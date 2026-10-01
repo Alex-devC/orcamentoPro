@@ -16,6 +16,9 @@ public class PerfilDto
     public string? Descricao { get; set; }
     public bool Ativo { get; set; }
     public List<PermissaoDto> Permissoes { get; set; } = new();
+
+    /// <summary>Quantidade de usuários vinculados ao perfil (uso no grid e na exclusão).</summary>
+    public int QuantidadeUsuarios { get; set; }
 }
 
 public class SalvarPerfilDto

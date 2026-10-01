@@ -24,8 +24,8 @@ public class DashboardViewModel : ViewModelBase
     private int _orcamentosCancelados;
 
     private string _filterText = string.Empty;
-    private string _usuarioLogado = "Carlos Eduardo";
-    private string _usuarioCargo = "Administrador";
+    private string _usuarioLogado = string.Empty;
+    private string _usuarioCargo = string.Empty;
 
     private decimal _faturamentoAprovado;
     private string _faturamentoVariacao = string.Empty;
@@ -36,8 +36,15 @@ public class DashboardViewModel : ViewModelBase
     private int _distribuicaoServicos;
     private int _distribuicaoCloud;
 
-    public DashboardViewModel()
+    /// <summary>
+    /// Cria o Dashboard informando o usuário autenticado: o nome completo (ou username)
+    /// e o perfil vindos do login real, exibidos no cabeçalho da página.
+    /// </summary>
+    public DashboardViewModel(string usuarioLogado, string usuarioCargo)
     {
+        _usuarioLogado = usuarioLogado;
+        _usuarioCargo = usuarioCargo;
+
         OrcamentosRecentes = new ObservableCollection<OrcamentoResumoViewModel>();
         CarregarDadosMock();
 
@@ -193,23 +200,24 @@ public class DashboardViewModel : ViewModelBase
         _distribuicaoServicos = 33;
         _distribuicaoCloud = 27;
 
-        // Últimos orçamentos (dados de demonstração)
+        // Últimos orçamentos (dados de demonstração). O responsável é o usuário real
+        // logado: o Dashboard apresenta "os seus orçamentos" — nenhum usuário mockado.
         AddOrcamento("0754/2026", new DateTime(2026, 9, 22), "Cond. Clube Moradia Jardim do Cedro",
-            "Aguardando Aprovação", 1803.00m, "Carlos");
+            "Aguardando Aprovação", 1803.00m, _usuarioLogado);
         AddOrcamento("0753/2026", new DateTime(2026, 9, 20), "Clínica Odonto Vida Ltda",
-            "Aprovado", 850.00m, "Carlos");
+            "Aprovado", 850.00m, _usuarioLogado);
         AddOrcamento("0752/2026", new DateTime(2026, 9, 18), "Logística Silva & Filhos",
-            "Finalizado", 2450.00m, "Carlos");
+            "Finalizado", 2450.00m, _usuarioLogado);
         AddOrcamento("0751/2026", new DateTime(2026, 9, 17), "Supermercado Bom Preço",
-            "Em Execução", 3120.00m, "Marcos");
+            "Em Execução", 3120.00m, _usuarioLogado);
         AddOrcamento("0750/2026", new DateTime(2026, 9, 15), "Condomínio Edifício Solar",
-            "Aprovado", 940.00m, "Carlos");
+            "Aprovado", 940.00m, _usuarioLogado);
         AddOrcamento("0749/2026", new DateTime(2026, 9, 14), "Tech Solutions Informática",
-            "Cancelado", 620.00m, "Carlos");
+            "Cancelado", 620.00m, _usuarioLogado);
         AddOrcamento("0748/2026", new DateTime(2026, 9, 12), "Padaria Pão de Ouro",
-            "Finalizado", 1580.00m, "Marcos");
+            "Finalizado", 1580.00m, _usuarioLogado);
         AddOrcamento("0747/2026", new DateTime(2026, 9, 10), "Auto Posto Alvorada",
-            "Rascunho", 450.00m, "Carlos");
+            "Rascunho", 450.00m, _usuarioLogado);
     }
 
     private void AddOrcamento(string numero, DateTime data, string cliente, string status, decimal valor,

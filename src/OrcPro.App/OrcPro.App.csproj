@@ -12,6 +12,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <!-- Saída da build apontada para a pasta publish/ na raiz do projeto (mesmo destino do publish). -->
+    <OutputPath>$(MSBuildThisFileDirectory)..\..\publish\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <PublishDir>$(MSBuildThisFileDirectory)..\..\publish\</PublishDir>
     <GenerateManifestsForSelfContainedApplication>false</GenerateManifestsForSelfContainedApplication>
   </PropertyGroup>

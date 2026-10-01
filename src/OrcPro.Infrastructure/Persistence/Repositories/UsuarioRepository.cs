@@ -36,8 +36,14 @@ public class UsuarioRepository : BaseRepository<Usuario>, IUsuarioRepository
 
     public async Task<bool> ExistsUsernameAsync(string username, int? ignorarId = null, CancellationToken cancellationToken = default)
     {
-        return await DbSet.AnyAsync(u => u.Username == username && (!ignorarId.HasValue || u.Id != ignorarId.Value), cancellationToken);
+        // Comparação sem diferenciar maiúsculas/minúsculas: evita dois usuários lógicos
+        // ("Admin" e "admin") apontando para o mesmo login.
+        var normalizado = username.Trim().ToLower();
+        return await DbSet.AnyAsync(u => u.Username.ToLower() == normalizado && (!ignorarId.HasValue || u.Id != ignorarId.Value), cancellationToken);
     }
+
+    public Task<int> CountByPerfilIdAsync(int perfilId, CancellationToken cancellationToken = default)
+        => DbSet.CountAsync(u => u.PerfilId == perfilId, cancellationToken);
 
     protected override IQueryable<Usuario> ApplyCustomFilters(IQueryable<Usuario> query, PagedRequest request)
     {
@@ -49,8 +55,28 @@ public class UsuarioRepository : BaseRepository<Usuario>, IUsuarioRepository
             query = query.Where(u => u.Username.ToLower().Contains(term) || u.NomeCompleto.ToLower().Contains(term) || (u.Email != null && u.Email.ToLower().Contains(term)));
         }
 
+        // Filtros da tela de Usuários (situação e perfil) chegam como FilterRequest.
+        foreach (var filtro in request.Filters)
+        {
+            if (string.Equals(filtro.PropertyName, "Ativo", StringComparison.OrdinalIgnoreCase)
+                && bool.TryParse(filtro.Value, out var ativo))
+            {
+                query = query.Where(u => u.Ativo == ativo);
+            }
+            else if (string.Equals(filtro.PropertyName, "PerfilId", StringComparison.OrdinalIgnoreCase)
+                     && int.TryParse(filtro.Value, out var perfilId))
+            {
+                query = query.Where(u => u.PerfilId == perfilId);
+            }
+        }
+
         return query;
     }
+}
+
+public class PermissaoRepository : BaseRepository<Permissao>, IPermissaoRepository
+{
+    public PermissaoRepository(OrcProDbContext context) : base(context) { }
 }
 
 public class PerfilRepository : BaseRepository<Perfil>, IPerfilRepository
@@ -72,5 +98,29 @@ public class PerfilRepository : BaseRepository<Perfil>, IPerfilRepository
             .Where(p => p.Ativo)
             .OrderBy(p => p.Nome)
             .ToListAsync(cancellationToken);
+    }
+
+    protected override IQueryable<Perfil> ApplyCustomFilters(IQueryable<Perfil> query, PagedRequest request)
+    {
+        // As permissões entram no grid apenas para contagem/exibição futura do módulo de permissões.
+        query = query.Include(p => p.PerfilPermissoes)
+            .ThenInclude(pp => pp.Permissao);
+
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var term = request.SearchTerm.Trim().ToLower();
+            query = query.Where(p => p.Nome.ToLower().Contains(term) || (p.Descricao != null && p.Descricao.ToLower().Contains(term)));
+        }
+
+        foreach (var filtro in request.Filters)
+        {
+            if (string.Equals(filtro.PropertyName, "Ativo", StringComparison.OrdinalIgnoreCase)
+                && bool.TryParse(filtro.Value, out var ativo))
+            {
+                query = query.Where(p => p.Ativo == ativo);
+            }
+        }
+
+        return query;
     }
 }

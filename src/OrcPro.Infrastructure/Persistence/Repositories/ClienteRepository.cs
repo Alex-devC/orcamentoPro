@@ -56,7 +56,7 @@ public class ClienteRepository : BaseRepository<Cliente>, IClienteRepository
                 c.Codigo.ToLower().Contains(term) ||
                 c.NomeRazaoSocial.ToLower().Contains(term) ||
                 (c.NomeFantasia != null && c.NomeFantasia.ToLower().Contains(term)) ||
-                c.CpfCnpj.ToLower().Contains(term) ||
+                (c.CpfCnpj != null && c.CpfCnpj.Contains(term)) ||
                 (c.Cidade != null && c.Cidade.ToLower().Contains(term)) ||
                 c.Celular.Contains(term));
         }

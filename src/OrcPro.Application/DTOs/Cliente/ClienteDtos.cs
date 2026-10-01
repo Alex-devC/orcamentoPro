@@ -7,7 +7,9 @@ public class ClienteDto
     public string TipoPessoa { get; set; } = "PJ";
     public string NomeRazaoSocial { get; set; } = string.Empty;
     public string? NomeFantasia { get; set; }
-    public string CpfCnpj { get; set; } = string.Empty;
+
+    /// <summary>Somente dígitos quando informado (a máscara é aplicada na exibição).</summary>
+    public string? CpfCnpj { get; set; }
     public string? RgIe { get; set; }
     public string? Telefone { get; set; }
     public string Celular { get; set; } = string.Empty;
@@ -23,6 +25,9 @@ public class ClienteDto
     public string? Observacoes { get; set; }
     public bool Ativo { get; set; }
     public DateTime DataCriacao { get; set; }
+
+    /// <summary>Orçamentos vinculados: define se o cliente pode ser excluído ou apenas inativado.</summary>
+    public int QuantidadeOrcamentos { get; set; }
 }
 
 public class CriarClienteDto
@@ -31,7 +36,9 @@ public class CriarClienteDto
     public string TipoPessoa { get; set; } = "PJ";
     public string NomeRazaoSocial { get; set; } = string.Empty;
     public string? NomeFantasia { get; set; }
-    public string CpfCnpj { get; set; } = string.Empty;
+
+    /// <summary>Opcional: quando informado, é validado (dígitos verificadores) e único.</summary>
+    public string? CpfCnpj { get; set; }
     public string? RgIe { get; set; }
     public string? Telefone { get; set; }
     public string Celular { get; set; } = string.Empty;

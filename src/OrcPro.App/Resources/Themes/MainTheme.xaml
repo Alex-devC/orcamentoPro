@@ -1,5 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework">
 
     <!-- ================================================================
          OrcPro - Enterprise Desktop Theme
@@ -436,11 +437,17 @@
         <Setter Property="Foreground" Value="{StaticResource WhiteBrush}" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="shell:WindowChrome.IsHitTestVisibleInChrome" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd" Background="{TemplateBinding Background}">
+                    <!-- IsHitTestVisibleInChrome é obrigatório também nos elementos internos:
+                         a área de legenda do WindowChrome só entrega o clique ao WPF quando o
+                         elemento sob o cursor (e não apenas o Button) é visível no chrome. -->
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          shell:WindowChrome.IsHitTestVisibleInChrome="True"
                                           TextElement.Foreground="{TemplateBinding Foreground}" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -468,7 +475,8 @@
     </Style>
 
     <Style x:Key="TitleBarMaximizeButtonStyle" TargetType="Button" BasedOn="{StaticResource TitleBarButtonStyle}">
-        <Setter Property="Command" Value="{x:Static SystemCommands.MaximizeWindowCommand}" />
+        <!-- O ícone alterna conforme WindowState (maximizado/restaurado); o comportamento
+             é tratado no code-behind (OnMaximizeRestoreClick). -->
         <Setter Property="Content">
             <Setter.Value>
                 <Path Data="{StaticResource IconWinMaximize}" Stroke="{StaticResource WhiteBrush}"
@@ -477,7 +485,6 @@
         </Setter>
         <Style.Triggers>
             <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
-                <Setter Property="Command" Value="{x:Static SystemCommands.RestoreWindowCommand}" />
                 <Setter Property="Content">
                     <Setter.Value>
                         <Path Data="{StaticResource IconWinRestore}" Stroke="{StaticResource WhiteBrush}"

@@ -1,38 +1,64 @@
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
+using OrcPro.Application.DTOs.Auth;
+using OrcPro.Application.Interfaces.Services;
+using OrcPro.Domain.Common;
 
 namespace OrcPro.App.ViewModels;
 
 /// <summary>
 /// ViewModel do shell principal: barra superior, Ribbon, navegação do módulo e rodapé de status.
 /// </summary>
-public class MainWindowViewModel : ViewModelBase
+public class MainWindowViewModel : ViewModelBase, IDisposable
 {
     private const string ModuleOverviewTitle = "Visão Geral";
+    private const string UsuariosPerfisModuleTitle = "Usuários e Perfis";
+    private const string ClientesModuleTitle = "Clientes";
     private const string ProductName = "OrcPro";
     private const string CompanyName = "ALEX T.I. Tecnologia e Assistência";
     private const string DatabaseProfileName = "[Base de Dados: Produção]";
     private const string DatabaseEndpointName = "PostgreSQL Local";
     private const string NetworkLatencyLabel = "Latência de rede: 1ms";
-    private const string OperatorName = "Carlos Eduardo";
-    private const string OperatorRole = "Administrador";
     private const string BranchName = "ALEX T.I. Matriz";
     private const string BuildVersion = "v2.6.4";
     private const string ZoomLevelValue = "100%";
 
+    private readonly UsuarioSessaoDto _sessao;
+    private readonly IServiceScope _moduloScope;
+    private readonly IUsuarioService _usuarioService;
+    private readonly IPerfilService _perfilService;
+    private readonly IClienteService _clienteService;
+    private readonly IPermissaoService _permissaoService;
     private ViewModelBase _currentView;
     private NavigationItemViewModel? _selectedNavigationItem;
     private string _moduleTitle = ModuleOverviewTitle;
     private string _statusMessage = "Pronto";
 
-    public MainWindowViewModel()
+    /// <summary>
+    /// Sessão do usuário autenticado no login; fornece nome e perfil para o shell
+    /// (title bar/rodapé) e para o Dashboard.
+    /// </summary>
+    public MainWindowViewModel(UsuarioSessaoDto sessao, IServiceProvider serviceProvider)
     {
+        _sessao = sessao ?? throw new ArgumentNullException(nameof(sessao));
+
+        // Um escopo próprio do shell para os serviços usados pelos módulos (usuarios/perfis).
+        _moduloScope = serviceProvider.CreateScope();
+        _usuarioService = _moduloScope.ServiceProvider.GetRequiredService<IUsuarioService>();
+        _perfilService = _moduloScope.ServiceProvider.GetRequiredService<IPerfilService>();
+        _clienteService = _moduloScope.ServiceProvider.GetRequiredService<IClienteService>();
+        _permissaoService = _moduloScope.ServiceProvider.GetRequiredService<IPermissaoService>();
+
         RibbonActionCommand = new RelayCommand(parameter => UpdateStatus(parameter as string));
+        OpenUsuariosPerfisCommand = new RelayCommand(parameter => OpenUsuariosPerfis(parameter as string));
+        OpenClientesCommand = new RelayCommand(_ => OpenClientes());
 
         NavigationItems = new ObservableCollection<NavigationItemViewModel>
         {
             new(ModuleOverviewTitle, "Dashboard",
-                new RelayCommand(_ => Navigate(ModuleOverviewTitle, new DashboardViewModel(),
+                new RelayCommand(_ => Navigate(ModuleOverviewTitle, CreateDashboard(),
                     "Painel principal carregado."))),
             new("Orçamentos Ativos", "Orcamentos",
                 new RelayCommand(_ => Navigate("Orçamentos Ativos",
@@ -56,12 +82,21 @@ public class MainWindowViewModel : ViewModelBase
                     "Módulo administrativo em desenvolvimento.")))
         };
 
-        _currentView = new DashboardViewModel();
+        _currentView = CreateDashboard();
         _selectedNavigationItem = NavigationItems[0];
     }
 
-    /// <summary>Comando único das ações do Ribbon; o parâmetro traz a mensagem de status.</summary>
+    /// <summary>Comando único das ações do Ribbon sem navegação; o parâmetro traz a mensagem de status.</summary>
     public ICommand RibbonActionCommand { get; }
+
+    /// <summary>
+    /// Abre o módulo Usuários e Perfis. O parâmetro seleciona a aba inicial
+    /// ("usuarios" ou "perfis"); sem parâmetro, abre em Usuários.
+    /// </summary>
+    public ICommand OpenUsuariosPerfisCommand { get; }
+
+    /// <summary>Abre o módulo de Clientes (Ribbon Cadastros → Clientes).</summary>
+    public ICommand OpenClientesCommand { get; }
 
     /// <summary>Itens do menu lateral "Navegação do Módulo".</summary>
     public ObservableCollection<NavigationItemViewModel> NavigationItems { get; }
@@ -104,6 +139,22 @@ public class MainWindowViewModel : ViewModelBase
         private set => SetField(ref _statusMessage, value);
     }
 
+    // ============================================================
+    // Permissões do usuário autenticado (catálogo MODULO.ACAO). O Ribbon e os módulos
+    // respeitam estas flags: sem a permissão de VISUALIZAR o acesso ao módulo é bloqueado
+    // e sem as permissões de ação os botões ficam desabilitados. O perfil Administrador
+    // recebe todas as permissões automaticamente (PermissaoSincronizador).
+    // ============================================================
+
+    /// <summary>Acesso ao módulo Clientes (CLIENTES.VISUALIZAR).</summary>
+    public bool PodeAcessarClientes => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Clientes.Visualizar);
+
+    /// <summary>Acesso ao módulo Usuários e Perfis (USUARIOS_PERFIS.VISUALIZAR).</summary>
+    public bool PodeAcessarUsuariosPerfis => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.UsuariosPerfis.Visualizar);
+
+    /// <summary>Acesso ao painel (DASHBOARD.VISUALIZAR).</summary>
+    public bool PodeAcessarDashboard => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Dashboard.Visualizar);
+
     // ---- Barra superior ----
     public string AppTitle => ProductName;
 
@@ -111,7 +162,11 @@ public class MainWindowViewModel : ViewModelBase
 
     public string DatabaseProfile => DatabaseProfileName;
 
-    public string OperatorCaption => $"{OperatorName} ({OperatorRole})";
+    public string OperatorCaption => $"{UsuarioLogado} ({_sessao.PerfilNome})";
+
+    /// <summary>Nome exibido do operador logado (nome completo; username como alternativa).</summary>
+    public string UsuarioLogado =>
+        string.IsNullOrWhiteSpace(_sessao.NomeCompleto) ? _sessao.Username : _sessao.NomeCompleto;
 
     // ---- Rodapé de status ----
     public string ConnectionSummary => $"Conectado ({DatabaseEndpointName})";
@@ -130,6 +185,12 @@ public class MainWindowViewModel : ViewModelBase
     public string NetworkLatencyText => NetworkLatencyLabel;
 
     /// <summary>
+    /// Cria o Dashboard repassando o nome e o perfil do usuário autenticado.
+    /// </summary>
+    private DashboardViewModel CreateDashboard() =>
+        new(UsuarioLogado, _sessao.PerfilNome);
+
+    /// <summary>
     /// Troca a visão exibida, atualiza o título do módulo e a mensagem de status.
     /// </summary>
     private void Navigate(string moduleTitle, ViewModelBase view, string statusMessage)
@@ -137,11 +198,55 @@ public class MainWindowViewModel : ViewModelBase
         ModuleTitle = moduleTitle;
         CurrentView = view;
         UpdateStatus(statusMessage);
+
+        // Carrega os dados da tela recém-exibida (grids, listas e opções dos formulários).
+        _ = view.InitializeAsync();
+    }
+
+    /// <summary>
+    /// Módulo de Usuários e Perfis (Ribbon Cadastros → Usuários e Perfis). Uma nova instância
+    /// é criada a cada abertura para que a listagem sempre reflita a base.
+    /// </summary>
+    private void OpenUsuariosPerfis(string? aba)
+    {
+        if (!PodeAcessarUsuariosPerfis)
+        {
+            UpdateStatus("Você não possui a permissão USUARIOS_PERFIS.VISUALIZAR.");
+            return;
+        }
+
+        var modulo = new UsuariosPerfisViewModel(_usuarioService, _perfilService, _permissaoService, _sessao, UpdateStatus);
+        modulo.AbaSelecionada = string.Equals(aba, "perfis", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+
+        Navigate(UsuariosPerfisModuleTitle, modulo, "Módulo de usuários e perfis carregado.");
+    }
+
+    /// <summary>
+    /// Módulo de Clientes (Ribbon Cadastros → Clientes). Nova instância a cada abertura para
+    /// que a listagem sempre reflita a base.
+    /// </summary>
+    private void OpenClientes()
+    {
+        if (!PodeAcessarClientes)
+        {
+            UpdateStatus("Você não possui a permissão CLIENTES.VISUALIZAR.");
+            return;
+        }
+
+        var modulo = new ClientesViewModel(_clienteService, _sessao, UpdateStatus);
+        Navigate(ClientesModuleTitle, modulo, "Módulo de clientes carregado.");
     }
 
     private void UpdateStatus(string? message)
     {
         if (!string.IsNullOrWhiteSpace(message))
             StatusMessage = message;
+    }
+
+    /// <summary>Libera o escopo de serviços usado pelos módulos do shell.</summary>
+    public void Dispose()
+    {
+        _moduloScope.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

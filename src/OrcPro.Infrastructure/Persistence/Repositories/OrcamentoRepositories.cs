@@ -78,6 +78,14 @@ public class OrcamentoRepository : BaseRepository<Orcamento>, IOrcamentoReposito
             .ToListAsync(cancellationToken);
     }
 
+    /// <summary>Quantos orçamentos pertencem ao usuário (guarda de exclusão no cadastro de usuários).</summary>
+    public Task<int> CountByUsuarioIdAsync(int usuarioId, CancellationToken cancellationToken = default)
+        => DbSet.CountAsync(o => o.UsuarioId == usuarioId, cancellationToken);
+
+    /// <summary>Quantos orçamentos pertencem ao cliente (guarda de exclusão no cadastro de clientes).</summary>
+    public Task<int> CountByClienteIdAsync(int clienteId, CancellationToken cancellationToken = default)
+        => DbSet.CountAsync(o => o.ClienteId == clienteId, cancellationToken);
+
     protected override IQueryable<Orcamento> ApplyCustomFilters(IQueryable<Orcamento> query, PagedRequest request)
     {
         query = query
@@ -91,7 +99,7 @@ public class OrcamentoRepository : BaseRepository<Orcamento>, IOrcamentoReposito
             query = query.Where(o => 
                 o.Numero.ToLower().Contains(term) ||
                 (o.Cliente != null && o.Cliente.NomeRazaoSocial.ToLower().Contains(term)) ||
-                (o.Cliente != null && o.Cliente.CpfCnpj.Contains(term)) ||
+                (o.Cliente != null && o.Cliente.CpfCnpj != null && o.Cliente.CpfCnpj.Contains(term)) ||
                 (o.Status != null && o.Status.Nome.ToLower().Contains(term)));
         }
 

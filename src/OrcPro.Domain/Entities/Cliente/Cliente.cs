@@ -9,7 +9,9 @@ public class Cliente : BaseEntity
     public string TipoPessoa { get; set; } = "PJ"; // "PJ" ou "PF"
     public string NomeRazaoSocial { get; set; } = string.Empty;
     public string? NomeFantasia { get; set; }
-    public string CpfCnpj { get; set; } = string.Empty;
+
+    /// <summary>CPF/CNPJ com apenas dígitos quando informado (opcional no cadastro).</summary>
+    public string? CpfCnpj { get; set; }
     public string? RgIe { get; set; }
     public string? Telefone { get; set; }
     public string Celular { get; set; } = string.Empty;
