@@ -16,6 +16,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private const string ModuleOverviewTitle = "Visão Geral";
     private const string UsuariosPerfisModuleTitle = "Usuários e Perfis";
     private const string ClientesModuleTitle = "Clientes";
+    private const string TecnicosModuleTitle = "Técnicos";
     private const string ProductName = "OrcPro";
     private const string CompanyName = "ALEX T.I. Tecnologia e Assistência";
     private const string DatabaseProfileName = "[Base de Dados: Produção]";
@@ -30,6 +31,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly IUsuarioService _usuarioService;
     private readonly IPerfilService _perfilService;
     private readonly IClienteService _clienteService;
+    private readonly ITecnicoService _tecnicoService;
     private readonly IPermissaoService _permissaoService;
     private ViewModelBase _currentView;
     private NavigationItemViewModel? _selectedNavigationItem;
@@ -49,11 +51,13 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _usuarioService = _moduloScope.ServiceProvider.GetRequiredService<IUsuarioService>();
         _perfilService = _moduloScope.ServiceProvider.GetRequiredService<IPerfilService>();
         _clienteService = _moduloScope.ServiceProvider.GetRequiredService<IClienteService>();
+        _tecnicoService = _moduloScope.ServiceProvider.GetRequiredService<ITecnicoService>();
         _permissaoService = _moduloScope.ServiceProvider.GetRequiredService<IPermissaoService>();
 
         RibbonActionCommand = new RelayCommand(parameter => UpdateStatus(parameter as string));
         OpenUsuariosPerfisCommand = new RelayCommand(parameter => OpenUsuariosPerfis(parameter as string));
         OpenClientesCommand = new RelayCommand(_ => OpenClientes());
+        OpenTecnicosCommand = new RelayCommand(_ => OpenTecnicos());
 
         NavigationItems = new ObservableCollection<NavigationItemViewModel>
         {
@@ -97,6 +101,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Abre o módulo de Clientes (Ribbon Cadastros → Clientes).</summary>
     public ICommand OpenClientesCommand { get; }
+
+    /// <summary>Abre o módulo de Técnicos (Ribbon Cadastros → Técnicos).</summary>
+    public ICommand OpenTecnicosCommand { get; }
 
     /// <summary>Itens do menu lateral "Navegação do Módulo".</summary>
     public ObservableCollection<NavigationItemViewModel> NavigationItems { get; }
@@ -148,6 +155,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Acesso ao módulo Clientes (CLIENTES.VISUALIZAR).</summary>
     public bool PodeAcessarClientes => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Clientes.Visualizar);
+
+    /// <summary>Acesso ao módulo Técnicos (TECNICOS.VISUALIZAR).</summary>
+    public bool PodeAcessarTecnicos => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Tecnicos.Visualizar);
 
     /// <summary>Acesso ao módulo Usuários e Perfis (USUARIOS_PERFIS.VISUALIZAR).</summary>
     public bool PodeAcessarUsuariosPerfis => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.UsuariosPerfis.Visualizar);
@@ -235,6 +245,22 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         var modulo = new ClientesViewModel(_clienteService, _sessao, UpdateStatus);
         Navigate(ClientesModuleTitle, modulo, "Módulo de clientes carregado.");
+    }
+
+    /// <summary>
+    /// Módulo de Técnicos (Ribbon Cadastros → Técnicos). Nova instância a cada abertura para
+    /// que a listagem sempre reflita a base.
+    /// </summary>
+    private void OpenTecnicos()
+    {
+        if (!PodeAcessarTecnicos)
+        {
+            UpdateStatus("Você não possui a permissão TECNICOS.VISUALIZAR.");
+            return;
+        }
+
+        var modulo = new TecnicosViewModel(_tecnicoService, _sessao, UpdateStatus);
+        Navigate(TecnicosModuleTitle, modulo, "Módulo de técnicos carregado.");
     }
 
     private void UpdateStatus(string? message)

@@ -156,6 +156,19 @@ public class InMemoryTecnicoRepository : InMemoryRepository<Tecnico>, ITecnicoRe
     public Task<bool> ExistsCodigoAsync(string codigo, int? ignorarId = null, CancellationToken cancellationToken = default)
         => Task.FromResult(Items.Any(t => t.Codigo == codigo && (!ignorarId.HasValue || t.Id != ignorarId.Value)));
 
+    public Task<bool> ExistsCpfAsync(string cpf, int? ignorarId = null, CancellationToken cancellationToken = default)
+        => Task.FromResult(Items.Any(t => t.Cpf == cpf && (!ignorarId.HasValue || t.Id != ignorarId.Value)));
+
+    /// <summary>Conta vínculos de orçamento a partir das coleções carregadas na entidade.</summary>
+    public Task<int> CountOrcamentosAsync(int tecnicoId, CancellationToken cancellationToken = default)
+    {
+        var tecnico = Items.FirstOrDefault(t => t.Id == tecnicoId);
+
+        return Task.FromResult(
+            (tecnico?.OrcamentoTecnicos.Count ?? 0) +
+            (tecnico?.MaoDeObraTecnicos.Count ?? 0));
+    }
+
     public Task<string> GerarProximoCodigoAsync(CancellationToken cancellationToken = default)
         => Task.FromResult($"TEC-{Items.Count + 1:D3}");
 

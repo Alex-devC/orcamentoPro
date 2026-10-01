@@ -13,6 +13,11 @@
         <views:ClientesView />
     </DataTemplate>
 
+    <!-- Cadastro de Técnicos -->
+    <DataTemplate DataType="{x:Type vm:TecnicosViewModel}">
+        <views:TecnicosView />
+    </DataTemplate>
+
     <!-- Cadastro de Usuários e Perfis (abas Usuários / Perfis) -->
     <DataTemplate DataType="{x:Type vm:UsuariosPerfisViewModel}">
         <views:UsuariosPerfisView />

@@ -51,11 +51,21 @@ public static class PermissaoCatalogo
             public const string Excluir = "USUARIOS_PERFIS.EXCLUIR";
             public const string GerenciarPermissoes = "USUARIOS_PERFIS.GERENCIAR_PERMISSOES";
         }
+
+        public static class Tecnicos
+        {
+            public const string Visualizar = "TECNICOS.VISUALIZAR";
+            public const string Criar = "TECNICOS.CRIAR";
+            public const string Editar = "TECNICOS.EDITAR";
+            public const string Excluir = "TECNICOS.EXCLUIR";
+            public const string AtivarInativar = "TECNICOS.ATIVAR_INATIVAR";
+        }
     }
 
     public const string ModuloDashboard = "DASHBOARD";
     public const string ModuloClientes = "CLIENTES";
     public const string ModuloUsuariosPerfis = "USUARIOS_PERFIS";
+    public const string ModuloTecnicos = "TECNICOS";
 
     /// <summary>Nome do perfil que recebe todas as permissões do catálogo.</summary>
     public const string PerfilAdministrador = "Administrador";
@@ -75,7 +85,13 @@ public static class PermissaoCatalogo
         new PermissaoDefinicao(Codigos.UsuariosPerfis.Criar, ModuloUsuariosPerfis, "Cadastrar usuários e perfis"),
         new PermissaoDefinicao(Codigos.UsuariosPerfis.Editar, ModuloUsuariosPerfis, "Editar usuários e perfis"),
         new PermissaoDefinicao(Codigos.UsuariosPerfis.Excluir, ModuloUsuariosPerfis, "Excluir usuários e perfis"),
-        new PermissaoDefinicao(Codigos.UsuariosPerfis.GerenciarPermissoes, ModuloUsuariosPerfis, "Gerenciar permissões de perfis")
+        new PermissaoDefinicao(Codigos.UsuariosPerfis.GerenciarPermissoes, ModuloUsuariosPerfis, "Gerenciar permissões de perfis"),
+
+        new PermissaoDefinicao(Codigos.Tecnicos.Visualizar, ModuloTecnicos, "Visualizar técnicos"),
+        new PermissaoDefinicao(Codigos.Tecnicos.Criar, ModuloTecnicos, "Cadastrar técnicos"),
+        new PermissaoDefinicao(Codigos.Tecnicos.Editar, ModuloTecnicos, "Editar técnicos"),
+        new PermissaoDefinicao(Codigos.Tecnicos.Excluir, ModuloTecnicos, "Excluir técnicos"),
+        new PermissaoDefinicao(Codigos.Tecnicos.AtivarInativar, ModuloTecnicos, "Ativar / inativar técnicos")
     };
 
     private static readonly IReadOnlyDictionary<string, string> RotulosModulo =
@@ -83,7 +99,8 @@ public static class PermissaoCatalogo
         {
             [ModuloDashboard] = "Dashboard",
             [ModuloClientes] = "Clientes",
-            [ModuloUsuariosPerfis] = "Usuários e Perfis"
+            [ModuloUsuariosPerfis] = "Usuários e Perfis",
+            [ModuloTecnicos] = "Técnicos"
         };
 
     /// <summary>Rótulo amigável do módulo (fallback: o próprio código do módulo).</summary>

@@ -309,7 +309,10 @@
                                         <TextBlock Text="Clientes" Style="{StaticResource RibbonButtonLabelStyle}" />
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding RibbonActionCommand}" CommandParameter="Cadastro de técnicos (módulo em desenvolvimento).">
+                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding OpenTecnicosCommand}"
+                                        IsEnabled="{Binding PodeAcessarTecnicos}"
+                                        AutomationProperties.Name="Técnicos"
+                                        ToolTip="Cadastro de técnicos">
                                     <StackPanel>
                                         <Path Data="{StaticResource IconUser}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
                                         <TextBlock Text="Técnicos" Style="{StaticResource RibbonButtonLabelStyle}" />

@@ -1,5 +1,6 @@
 ﻿using OrcPro.Application.DTOs.Common;
 using OrcPro.Application.Interfaces.Repositories;
+using OrcPro.Domain.Entities.Orcamento;
 using OrcPro.Domain.Entities.Peca;
 using OrcPro.Domain.Entities.Tecnico;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,25 @@ public class TecnicoRepository : BaseRepository<Tecnico>, ITecnicoRepository
     public async Task<bool> ExistsCodigoAsync(string codigo, int? ignorarId = null, CancellationToken cancellationToken = default)
     {
         return await DbSet.AnyAsync(t => t.Codigo == codigo && (!ignorarId.HasValue || t.Id != ignorarId.Value), cancellationToken);
+    }
+
+    /// <summary>
+    /// CPF é armazenado apenas com dígitos (o serviço normaliza), então a comparação é direta.
+    /// </summary>
+    public async Task<bool> ExistsCpfAsync(string cpf, int? ignorarId = null, CancellationToken cancellationToken = default)
+    {
+        return await DbSet.AnyAsync(t => t.Cpf == cpf && (!ignorarId.HasValue || t.Id != ignorarId.Value), cancellationToken);
+    }
+
+    public async Task<int> CountOrcamentosAsync(int tecnicoId, CancellationToken cancellationToken = default)
+    {
+        var comoTecnico = await Context.Set<OrcamentoTecnico>()
+            .CountAsync(t => t.TecnicoId == tecnicoId, cancellationToken);
+
+        var comoMaoDeObra = await Context.Set<OrcamentoMaoDeObraTecnico>()
+            .CountAsync(t => t.TecnicoId == tecnicoId, cancellationToken);
+
+        return comoTecnico + comoMaoDeObra;
     }
 
     public async Task<string> GerarProximoCodigoAsync(CancellationToken cancellationToken = default)

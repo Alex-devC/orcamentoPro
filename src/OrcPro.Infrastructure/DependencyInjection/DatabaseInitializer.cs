@@ -7,6 +7,85 @@ using Microsoft.Extensions.DependencyInjection;
 namespace OrcPro.Infrastructure.DependencyInjection;
 
 /// <summary>
+/// Ajustes pontuais de schema para bases criadas por versões anteriores.
+/// O <c>EnsureCreated</c> não altera tabelas existentes, então colunas novas precisam ser
+/// adicionadas explicitamente. A operação é idempotente e só atua em providers SQLite.
+/// </summary>
+internal static class SchemaUpgrade
+{
+    private static readonly Dictionary<string, Dictionary<string, string>> Colunas =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Tecnicos"] = new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Rg"] = "TEXT NULL",
+                ["Cep"] = "TEXT NULL",
+                ["Logradouro"] = "TEXT NULL",
+                ["Numero"] = "TEXT NULL",
+                ["Complemento"] = "TEXT NULL",
+                ["Bairro"] = "TEXT NULL",
+                ["Cidade"] = "TEXT NULL",
+                ["Uf"] = "TEXT NULL"
+            }
+        };
+
+    public static async Task AplicarAsync(OrcProDbContext context, CancellationToken cancellationToken = default)
+    {
+        if (!context.Database.IsSqlite())
+            return;
+
+        foreach (var (tabela, colunas) in Colunas)
+        {
+            var existentes = await LerColunasAsync(context, tabela, cancellationToken);
+            if (existentes.Count == 0)
+            {
+                // Tabela ainda não existe (base nova): EnsureCreated já a criou com todas as colunas.
+                continue;
+            }
+
+            foreach (var (coluna, definicao) in colunas)
+            {
+                if (existentes.Contains(coluna))
+                    continue;
+
+                // Os identificadores vêm do dicionário fixo acima (nunca entrada do usuário);
+                // DDL não aceita parâmetros, então a interpolação é segura aqui.
+#pragma warning disable EF1002
+                await context.Database.ExecuteSqlRawAsync(
+                    $"ALTER TABLE \"{tabela}\" ADD COLUMN \"{coluna}\" {definicao}",
+                    cancellationToken);
+#pragma warning restore EF1002
+            }
+        }
+    }
+
+    private static async Task<HashSet<string>> LerColunasAsync(
+        OrcProDbContext context,
+        string tabela,
+        CancellationToken cancellationToken)
+    {
+        var colunas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var conexao = context.Database.GetDbConnection();
+        if (conexao.State != System.Data.ConnectionState.Open)
+        {
+            await conexao.OpenAsync(cancellationToken);
+        }
+
+        using var comando = conexao.CreateCommand();
+        comando.CommandText = $"PRAGMA table_info(\"{tabela}\")";
+
+        using var leitor = await comando.ExecuteReaderAsync(cancellationToken);
+        while (await leitor.ReadAsync(cancellationToken))
+        {
+            colunas.Add(leitor.GetString(1));
+        }
+
+        return colunas;
+    }
+}
+
+/// <summary>
 /// Prepara a base de dados para o login real: cria o schema quando a base não existe e,
 /// apenas em instalações novas (sem nenhum usuário), cadastra o usuário inicial usando o
 /// <see cref="IPasswordHasher"/> já registrado no DI. Não é um sistema de autenticação
@@ -26,6 +105,9 @@ public static class DatabaseInitializer
         var context = scope.ServiceProvider.GetRequiredService<OrcProDbContext>();
 
         await context.Database.EnsureCreatedAsync(cancellationToken);
+
+        // Colunas novas em tabelas já existentes (o EnsureCreated não altera tabelas criadas antes).
+        await SchemaUpgrade.AplicarAsync(context, cancellationToken);
 
         // Catálogo de permissões: cria as permissões ausentes e garante que o perfil
         // Administrador possua todas. Idempotente — pode rodar em toda inicialização.

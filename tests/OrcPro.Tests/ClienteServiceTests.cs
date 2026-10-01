@@ -1,11 +1,13 @@
 ﻿using OrcPro.Application.DTOs.Cliente;
 using OrcPro.Application.DTOs.Common;
+using OrcPro.Application.DTOs.Tecnico;
 using OrcPro.Application.Exceptions;
 using OrcPro.Application.Interfaces.Repositories;
 using OrcPro.Application.Services;
 using OrcPro.Domain.Common;
 using OrcPro.Domain.Entities.Cliente;
 using OrcPro.Domain.Entities.Orcamento;
+using OrcPro.Domain.Entities.Tecnico;
 using Xunit;
 
 namespace OrcPro.Tests;
@@ -225,5 +227,210 @@ public class ClienteServiceTests
         Assert.Equal(2, result.TotalCount);
         Assert.Equal(1, result.Items.Single(c => c.Codigo == "CLI-00001").QuantidadeOrcamentos);
         Assert.Equal(0, result.Items.Single(c => c.Codigo == "CLI-00002").QuantidadeOrcamentos);
+    }
+}
+
+/// <summary>
+/// Regras do cadastro de Técnicos: CPF validado/normalizado e único, código único, e a
+/// impossibilidade de excluir quem está vinculado a orçamentos (restando a inativação).
+/// </summary>
+public class TecnicoServiceTests
+{
+    // CPFs sinteticamente válidos (apenas os dígitos verificadores conferem).
+    private const string CpfValido = "52998224725";
+    private const string OutroCpfValido = "11144477735";
+
+    private static TecnicoService CriarServico(InMemoryTecnicoRepository repo) => new(repo);
+
+    private static CriarTecnicoDto NovoTecnico(string nome = "Técnico Teste", string? cpf = CpfValido) => new()
+    {
+        Nome = nome,
+        Cpf = cpf,
+        Celular = "(11) 98888-7777",
+        Email = "tecnico@empresa.com"
+    };
+
+    [Fact]
+    public async Task TecnicoService_Criar_DeveGerarCodigoNormalizarCpfEGravarEndereco()
+    {
+        var repo = new InMemoryTecnicoRepository();
+        var service = CriarServico(repo);
+
+        var dto = NovoTecnico(cpf: "529.982.247-25");
+        dto.Especialidade = "Elétrica";
+        dto.Cep = "01001-000";
+        dto.Logradouro = "Av. Paulista";
+        dto.Numero = "1000";
+        dto.Complemento = "Sala 5";
+        dto.Bairro = "Bela Vista";
+        dto.Cidade = "São Paulo";
+        dto.Uf = "sp";
+
+        var criado = await service.CriarAsync(dto);
+
+        Assert.StartsWith("TEC-", criado.Codigo);
+        Assert.Equal(CpfValido, criado.Cpf); // gravado sem máscara
+        Assert.Equal("Elétrica", criado.Especialidade);
+        Assert.Equal("01001-000", criado.Cep);
+        Assert.Equal("Av. Paulista", criado.Logradouro);
+        Assert.Equal("Sala 5", criado.Complemento);
+        Assert.Equal("SP", criado.Uf); // UF normalizada em maiúsculas
+        Assert.True(criado.Ativo);
+        Assert.Equal(0, criado.QuantidadeOrcamentos);
+    }
+
+    [Fact]
+    public async Task TecnicoService_Criar_ComCpfInvalido_DeveFalhar()
+    {
+        var service = CriarServico(new InMemoryTecnicoRepository());
+
+        await Assert.ThrowsAsync<ValidationException>(() => service.CriarAsync(NovoTecnico(cpf: "52998224726")));
+    }
+
+    [Fact]
+    public async Task TecnicoService_Criar_SemCpf_DeveGravarNulo()
+    {
+        var service = CriarServico(new InMemoryTecnicoRepository());
+
+        var criado = await service.CriarAsync(NovoTecnico(nome: "Sem documento", cpf: null));
+
+        Assert.True(string.IsNullOrEmpty(criado.Cpf));
+    }
+
+    [Fact]
+    public async Task TecnicoService_Criar_ComCpfDuplicadoComMascaraDiferente_DeveFalhar()
+    {
+        var repo = new InMemoryTecnicoRepository();
+        await repo.AddAsync(new Tecnico { Id = 1, Codigo = "TEC-001", Nome = "Outro", Cpf = CpfValido, Ativo = true });
+
+        var service = CriarServico(repo);
+
+        // Com máscara: a comparação usa apenas os dígitos, então a duplicidade é detectada.
+        await Assert.ThrowsAsync<BusinessException>(() => service.CriarAsync(NovoTecnico(cpf: "529.982.247-25")));
+    }
+
+    [Fact]
+    public async Task TecnicoService_Criar_ComCodigoDuplicado_DeveFalhar()
+    {
+        var repo = new InMemoryTecnicoRepository();
+        await repo.AddAsync(new Tecnico { Id = 1, Codigo = "TEC-001", Nome = "Existe", Cpf = null, Ativo = true });
+
+        var service = CriarServico(repo);
+
+        var dto = NovoTecnico();
+        dto.Codigo = "TEC-001";
+
+        await Assert.ThrowsAsync<BusinessException>(() => service.CriarAsync(dto));
+    }
+
+    [Fact]
+    public async Task TecnicoService_Criar_SemNome_DeveFalhar()
+    {
+        var service = CriarServico(new InMemoryTecnicoRepository());
+
+        await Assert.ThrowsAsync<ValidationException>(() => service.CriarAsync(new CriarTecnicoDto { Nome = "  " }));
+    }
+    [Fact]
+    public async Task TecnicoService_Atualizar_ComCpfDeOutroTecnico_DeveFalhar()
+    {
+        var repo = new InMemoryTecnicoRepository();
+        await repo.AddAsync(new Tecnico { Id = 1, Codigo = "TEC-001", Nome = "Técnico 1", Cpf = CpfValido, Ativo = true });
+        await repo.AddAsync(new Tecnico { Id = 2, Codigo = "TEC-002", Nome = "Técnico 2", Cpf = OutroCpfValido, Ativo = true });
+
+        var service = CriarServico(repo);
+
+        await Assert.ThrowsAsync<BusinessException>(() => service.AtualizarAsync(new AtualizarTecnicoDto
+        {
+            Id = 2,
+            Nome = "Técnico 2",
+            Cpf = CpfValido
+        }));
+    }
+
+    [Fact]
+    public async Task TecnicoService_Atualizar_MantendoOProprioCpf_DevePermitir()
+    {
+        var repo = new InMemoryTecnicoRepository();
+        await repo.AddAsync(new Tecnico { Id = 1, Codigo = "TEC-001", Nome = "Técnico 1", Cpf = CpfValido, Ativo = true });
+
+        var service = CriarServico(repo);
+
+        var atualizado = await service.AtualizarAsync(new AtualizarTecnicoDto
+        {
+            Id = 1,
+            Codigo = "TEC-001",
+            Nome = "Técnico 1 Atualizado",
+            Cpf = "529.982.247-25"
+        });
+
+        Assert.Equal("Técnico 1 Atualizado", atualizado.Nome);
+        Assert.Equal(CpfValido, atualizado.Cpf);
+    }
+
+    [Fact]
+    public async Task TecnicoService_Excluir_ComOrcamentosVinculados_DeveBloquearEOrientarInativar()
+    {
+        var repo = new InMemoryTecnicoRepository();
+        var tecnico = new Tecnico { Id = 1, Codigo = "TEC-001", Nome = "Vinculado", Cpf = null, Ativo = true };
+        tecnico.OrcamentoTecnicos.Add(new OrcamentoTecnico { Id = 1, TecnicoId = 1 });
+        await repo.AddAsync(tecnico);
+
+        var service = CriarServico(repo);
+
+        var erro = await Assert.ThrowsAsync<BusinessException>(() => service.ExcluirAsync(1));
+        Assert.Contains("1 orçamento", erro.Message);
+        Assert.NotNull(await repo.GetByIdAsync(1));
+
+        // Alternativa permitida: inativar.
+        await service.InativarAsync(1);
+        var inativado = await repo.GetByIdAsync(1);
+        Assert.False(inativado!.Ativo);
+    }
+
+    [Fact]
+    public async Task TecnicoService_Excluir_SemOrcamentos_DeveRemover()
+    {
+        var repo = new InMemoryTecnicoRepository();
+        await repo.AddAsync(new Tecnico { Id = 1, Codigo = "TEC-001", Nome = "Livre", Cpf = null, Ativo = true });
+
+        var service = CriarServico(repo);
+
+        await service.ExcluirAsync(1);
+
+        Assert.Null(await repo.GetByIdAsync(1));
+    }
+
+    [Fact]
+    public async Task TecnicoService_ListarPaginado_DeveTrazerQuantidadeDeOrcamentos()
+    {
+        var repo = new InMemoryTecnicoRepository();
+        await repo.AddAsync(new Tecnico { Id = 1, Codigo = "TEC-001", Nome = "Com Orçamento", Cpf = null, Ativo = true });
+        var comVinculo = new Tecnico { Id = 2, Codigo = "TEC-002", Nome = "Com Mão de Obra", Cpf = null, Ativo = true };
+        comVinculo.MaoDeObraTecnicos.Add(new OrcamentoMaoDeObraTecnico { Id = 1, TecnicoId = 2 });
+        await repo.AddAsync(comVinculo);
+        await repo.AddAsync(new Tecnico { Id = 3, Codigo = "TEC-003", Nome = "Sem Orçamento", Cpf = null, Ativo = false });
+
+        var service = CriarServico(repo);
+
+        var result = await service.ListarPaginadoAsync(new PagedRequest { PageNumber = 1, PageSize = 10 });
+
+        Assert.Equal(3, result.TotalCount);
+        Assert.Equal(1, result.Items.Single(t => t.Codigo == "TEC-002").QuantidadeOrcamentos);
+        Assert.Equal(0, result.Items.Single(t => t.Codigo == "TEC-003").QuantidadeOrcamentos);
+    }
+
+    [Fact]
+    public void Tecnico_NaoDeveCriarVinculoComUsuario_PoisOsCadastrosSaoIndependentes()
+    {
+        // O cadastro de técnicos é independente: não existe propriedade de usuário na entidade
+        // nem campo de usuário no DTO de criação.
+        var tecnico = new Tecnico { Codigo = "TEC-001", Nome = "Técnico" };
+
+        Assert.Null(typeof(Tecnico).GetProperty("UsuarioId"));
+        Assert.Null(typeof(Tecnico).GetProperty("Usuario"));
+        Assert.DoesNotContain(
+            typeof(CriarTecnicoDto).GetProperties(),
+            p => p.Name.Contains("Usuario", StringComparison.OrdinalIgnoreCase));
+        Assert.Equal("Técnico", tecnico.Nome);
     }
 }

@@ -81,12 +81,21 @@ public class TecnicoConfiguration : IEntityTypeConfiguration<Tecnico>
 
         builder.Property(t => t.Nome).IsRequired().HasMaxLength(120);
         builder.Property(t => t.Cpf).HasMaxLength(20);
+        builder.Property(t => t.Rg).HasMaxLength(30);
         builder.Property(t => t.Telefone).HasMaxLength(25);
         builder.Property(t => t.Celular).HasMaxLength(25);
         builder.Property(t => t.Email).HasMaxLength(120);
         builder.Property(t => t.Especialidade).HasMaxLength(100);
         builder.Property(t => t.RegistroProfissional).HasMaxLength(50);
         builder.Property(t => t.Observacoes).HasMaxLength(1000);
+
+        builder.Property(t => t.Cep).HasMaxLength(10);
+        builder.Property(t => t.Logradouro).HasMaxLength(150);
+        builder.Property(t => t.Numero).HasMaxLength(20);
+        builder.Property(t => t.Complemento).HasMaxLength(80);
+        builder.Property(t => t.Bairro).HasMaxLength(80);
+        builder.Property(t => t.Cidade).HasMaxLength(80);
+        builder.Property(t => t.Uf).HasMaxLength(2);
     }
 }
 

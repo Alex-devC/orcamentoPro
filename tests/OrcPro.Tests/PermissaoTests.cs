@@ -19,14 +19,15 @@ public class PermissaoTests
     {
         var definicoes = PermissaoCatalogo.Definicoes;
 
-        Assert.Equal(11, definicoes.Count);
+        Assert.Equal(16, definicoes.Count);
 
         var esperados = new[]
         {
             "DASHBOARD.VISUALIZAR",
             "CLIENTES.VISUALIZAR", "CLIENTES.CRIAR", "CLIENTES.EDITAR", "CLIENTES.EXCLUIR", "CLIENTES.ATIVAR_INATIVAR",
             "USUARIOS_PERFIS.VISUALIZAR", "USUARIOS_PERFIS.CRIAR", "USUARIOS_PERFIS.EDITAR", "USUARIOS_PERFIS.EXCLUIR",
-            "USUARIOS_PERFIS.GERENCIAR_PERMISSOES"
+            "USUARIOS_PERFIS.GERENCIAR_PERMISSOES",
+            "TECNICOS.VISUALIZAR", "TECNICOS.CRIAR", "TECNICOS.EDITAR", "TECNICOS.EXCLUIR", "TECNICOS.ATIVAR_INATIVAR"
         };
 
         Assert.Equal(esperados.OrderBy(c => c), definicoes.Select(d => d.Codigo).OrderBy(c => c));
