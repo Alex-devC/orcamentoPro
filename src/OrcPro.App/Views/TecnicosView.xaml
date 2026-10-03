@@ -1,6 +1,7 @@
 <UserControl x:Class="OrcPro.App.Views.TecnicosView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:uc="clr-namespace:OrcPro.App.Controls"
              xmlns:conv="clr-namespace:OrcPro.App.Converters">
 
     <UserControl.Resources>
@@ -289,6 +290,25 @@
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,12">
                         <StackPanel>
+                            <!-- Resumo de validação (topo do formulário) -->
+                            <ItemsControl ItemsSource="{Binding ResumoValidacao}"
+                                          AutomationProperties.AutomationId="TecnicoResumoValidacao">
+                                <ItemsControl.Style>
+                                    <Style TargetType="ItemsControl" BasedOn="{StaticResource ValidationSummaryStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TemResumoValidacao}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ItemsControl.Style>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Style="{StaticResource ValidationErrorTextStyle}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                             <TextBlock Text="IDENTIFICAÇÃO" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6" />
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -322,6 +342,7 @@
                                     <TextBlock Text="NOME" Style="{StaticResource FormLabelStyle}" />
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              AutomationProperties.AutomationId="TecnicoNomeInput"
+                                             Tag="Nome"
                                              Text="{Binding FormNome, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                                 <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,12,0,0">
@@ -342,6 +363,7 @@
                                     <TextBlock Text="CPF" Style="{StaticResource FormLabelStyle}" />
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              AutomationProperties.AutomationId="TecnicoCpfInput"
+                                             Tag="Cpf"
                                              Text="{Binding FormCpf, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBlock Style="{StaticResource FormHintStyle}"
                                                Text="Opcional. Com máscara ou só dígitos; validado ao salvar." />
@@ -396,9 +418,15 @@
 
                                 <StackPanel Grid.Row="0" Grid.Column="0">
                                     <TextBlock Text="CEP" Style="{StaticResource FormLabelStyle}" />
-                                    <TextBox Style="{StaticResource FormInputStyle}"
-                                             AutomationProperties.AutomationId="TecnicoCepInput"
-                                             Text="{Binding FormCep, UpdateSourceTrigger=PropertyChanged}" />
+                                    <uc:CepComLookupControl
+                                                 CepText="{Binding FormCep, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 CepCommand="{Binding ConsultarCepCommand}"
+                                                 CanLookup="{Binding CepPodeConsultarManualmente}"
+                                                 TemErro="{Binding CepTemErro}"
+                                                 MensagemErro="{Binding CepMensagemErro}"
+                                                 Tag="CEP"
+                                                 AutomationId="TecnicoCepInput"
+                                                 LupaAutomationId="TecnicoCepLupa" />
                                 </StackPanel>
 
                                 <StackPanel Grid.Row="0" Grid.Column="2">

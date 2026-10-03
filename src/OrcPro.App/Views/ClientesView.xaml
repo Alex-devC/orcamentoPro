@@ -293,6 +293,25 @@
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,12">
                         <StackPanel>
+                            <!-- Resumo de validação (topo do formulário) -->
+                            <ItemsControl ItemsSource="{Binding ResumoValidacao}"
+                                          AutomationProperties.AutomationId="ClienteResumoValidacao">
+                                <ItemsControl.Style>
+                                    <Style TargetType="ItemsControl" BasedOn="{StaticResource ValidationSummaryStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TemResumoValidacao}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ItemsControl.Style>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Style="{StaticResource ValidationErrorTextStyle}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                             <TextBlock Text="IDENTIFICAÇÃO" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6" />
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -332,6 +351,7 @@
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              TabIndex="2"
                                              AutomationProperties.AutomationId="ClienteNomeInput"
+                                             Tag="Nome"
                                              Text="{Binding FormNome, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
 
@@ -348,6 +368,7 @@
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              TabIndex="4"
                                              AutomationProperties.AutomationId="ClienteCpfCnpjInput"
+                                             Tag="CpfCnpj"
                                              Text="{Binding FormCpfCnpj, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBlock Style="{StaticResource FormHintStyle}"
                                                Text="Opcional. Com máscara ou só dígitos; validado ao salvar." />
@@ -387,6 +408,7 @@
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              TabIndex="7"
                                              AutomationProperties.AutomationId="ClienteCelularInput"
+                                             Tag="Celular"
                                              Text="{Binding FormCelular, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
 
@@ -395,6 +417,7 @@
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              TabIndex="8"
                                              AutomationProperties.AutomationId="ClienteEmailInput"
+                                             Tag="Email"
                                              Text="{Binding FormEmail, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
 
@@ -427,6 +450,9 @@
                                                  CepText="{Binding FormCep, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                  CepCommand="{Binding ConsultarCepCommand}"
                                                  CanLookup="{Binding CepPodeConsultarManualmente}"
+                                                 TemErro="{Binding CepTemErro}"
+                                                 MensagemErro="{Binding CepMensagemErro}"
+                                                 Tag="CEP"
                                                  TabIndex="10"
                                                  AutomationId="ClienteCepInput"
                                                  LupaAutomationId="ClienteCepLupa" />

@@ -20,6 +20,7 @@ namespace OrcPro.Tests;
 /// Testes para o comportamento ENTER (navegação entre campos), lupa de CEP
 /// (consulta manual), LostFocus/autoconsulta de CEP e tratamento de CEP inválido.
 /// </summary>
+[Collection(WpfTestSupport.Colecao)]
 public class ClientesViewModelCepAndEnterTests
 {
     private static readonly UsuarioSessaoDto AdminSessao = new()

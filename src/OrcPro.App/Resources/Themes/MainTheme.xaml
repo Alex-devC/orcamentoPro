@@ -1,5 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:b="clr-namespace:OrcPro.App.Behaviors"
                     xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework">
 
     <!-- ================================================================
@@ -772,6 +773,10 @@
                         <Trigger Property="IsKeyboardFocusWithin" Value="True">
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                         </Trigger>
+                        <DataTrigger Binding="{Binding (b:TextFormattingBehavior.CampoInvalido), RelativeSource={RelativeSource TemplatedParent}}" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource DangerBrush}" />
+                            <Setter TargetName="Bd" Property="BorderThickness" Value="1.5" />
+                        </DataTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>

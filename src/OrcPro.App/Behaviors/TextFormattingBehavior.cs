@@ -86,6 +86,25 @@ public static class TextFormattingBehavior
 
     #endregion
 
+    #region CampoInvalido (estado visual de erro de validação)
+
+    /// <summary>
+    /// Marca o campo como inválido para que o estilo (SearchTextBoxStyle/FormInputStyle)
+    /// desenhe a borda em vermelho. Reutilizável por qualquer campo de texto do sistema.
+    /// </summary>
+    public static readonly DependencyProperty CampoInvalidoProperty =
+        DependencyProperty.RegisterAttached(
+            "CampoInvalido",
+            typeof(bool),
+            typeof(TextFormattingBehavior),
+            new PropertyMetadata(false));
+
+    public static bool GetCampoInvalido(DependencyObject obj) => (bool)obj.GetValue(CampoInvalidoProperty);
+    public static void SetCampoInvalido(DependencyObject obj, bool value) => obj.SetValue(CampoInvalidoProperty, value);
+
+    #endregion
+
+
     #region CepAddressCallback (para CEP - callback quando endereço encontrado)
 
     public static readonly DependencyProperty CepAddressCallbackProperty =

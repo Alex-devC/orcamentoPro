@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -26,6 +27,7 @@ public class TecnicosViewModel : ViewModelBase
 {
     private const int PageSize = 20;
     private const int DebounceBuscaMilissegundos = 350;
+    private const string CepCampo = "CEP";
 
     private readonly ITecnicoService _tecnicoService;
     private readonly ICepService? _cepService;
@@ -83,6 +85,7 @@ public class TecnicosViewModel : ViewModelBase
     private bool _cepBairroEditado;
     private bool _cepCidadeEditado;
     private bool _cepUfEditado;
+    private bool _carregandoFormulario;
 
     public TecnicosViewModel(
         ITecnicoService tecnicoService,
@@ -119,6 +122,7 @@ public class TecnicosViewModel : ViewModelBase
         LimparBuscaCommand = new RelayCommand(_ => Busca = string.Empty);
         PaginaAnteriorCommand = new AsyncRelayCommand(_ => IrParaPagina(Pagina - 1), _ => PodePaginaAnterior);
         PaginaProximaCommand = new AsyncRelayCommand(_ => IrParaPagina(Pagina + 1), _ => PodePaginaProxima);
+        ConsultarCepCommand = new AsyncRelayCommand(_ => ConsultarCepManualmenteAsync());
     }
 
     // ---------- Permissões do módulo ----------
@@ -281,7 +285,14 @@ public class TecnicosViewModel : ViewModelBase
         set
         {
             if (!SetField(ref _formCep, value)) return;
-            _ = TentarConsultarCepAsync(value);
+            OnPropertyChanged(nameof(CepPodeConsultarManualmente));
+
+            // Ao alterar o CEP, o estado de erro anterior deixa de valer:
+            // o usuário precisa poder corrigir e tentar novamente.
+            LimparErroValidacao(CepCampo);
+
+            if (!_carregandoFormulario)
+                _ = TentarConsultarCepAsync(value);
         }
     }
 
@@ -352,7 +363,11 @@ public class TecnicosViewModel : ViewModelBase
     public bool CepCarregando
     {
         get => _cepCarregando;
-        private set => SetField(ref _cepCarregando, value);
+        private set
+        {
+            if (SetField(ref _cepCarregando, value))
+                OnPropertyChanged(nameof(CepPodeConsultarManualmente));
+        }
     }
 
     /// <summary>Orçamentos vinculados (define exclusão ou apenas inativação).</summary>
@@ -373,6 +388,25 @@ public class TecnicosViewModel : ViewModelBase
     }
 
     public bool EditorMensagemVisivel => !string.IsNullOrWhiteSpace(EditorMensagem);
+
+    /// <summary>Indica se o botão de lupa de CEP pode ser clicado (serviço disponível, não carregando, CEP com 8 dígitos).</summary>
+    public bool CepPodeConsultarManualmente => _cepService is not null && !CepCarregando && CepTemOitoDigitos();
+
+    /// <summary>Indica que o CEP está em estado de erro (não encontrado/serviço indisponível) — borda vermelha.</summary>
+    public bool CepTemErro => CampoInvalido(CepCampo);
+
+    /// <summary>Mensagem de erro associada ao campo CEP (tooltip/resumo).</summary>
+    public string CepMensagemErro => ErrosValidacao.TryGetValue(CepCampo, out var msg) ? msg : string.Empty;
+
+    /// <summary>Notifica as propriedades visuais do CEP quando o estado de validação muda.</summary>
+    protected override void AoAlterarValidacao(string campo)
+    {
+        if (campo == CepCampo)
+        {
+            OnPropertyChanged(nameof(CepTemErro));
+            OnPropertyChanged(nameof(CepMensagemErro));
+        }
+    }
 
     // ---------- Visualização e exclusão ----------
 
@@ -408,6 +442,7 @@ public class TecnicosViewModel : ViewModelBase
     public RelayCommand LimparBuscaCommand { get; }
     public AsyncRelayCommand PaginaAnteriorCommand { get; }
     public AsyncRelayCommand PaginaProximaCommand { get; }
+    public AsyncRelayCommand ConsultarCepCommand { get; }
 
     // ---------- Carga de dados ----------
 
@@ -549,12 +584,15 @@ public class TecnicosViewModel : ViewModelBase
                 if (!_cepBairroEditado) SetField(ref _formBairro, result.Bairro ?? string.Empty);
                 if (!_cepCidadeEditado) SetField(ref _formCidade, result.Cidade ?? string.Empty);
                 if (!_cepUfEditado) SetField(ref _formUf, result.Uf ?? string.Empty);
+
+                // Consulta bem-sucedida: remove o estado de erro do CEP (borda/tooltip/resumo).
+                LimparErroValidacao(CepCampo);
             }
             else
             {
                 // CEP não encontrado ou serviço indisponível: limpa cache para permitir nova tentativa
                 _cepCache.Reset();
-                EditorMensagem = $"Não foi possível localizar o CEP '{CepMaskHelper.Formatar(cep)}'. Preencha o endereço manualmente.";
+                RegistrarErroCep(cep);
             }
         }
         catch (OperationCanceledException)
@@ -588,6 +626,95 @@ public class TecnicosViewModel : ViewModelBase
         if (!_cepUfEditado) SetField(ref _formUf, string.Empty);
     }
 
+    /// <summary>
+    /// Consulta CEP manualmente via botão de lupa. Ignora o cache (ação explícita do usuário)
+    /// para forçar nova consulta e descarta o endereço pertencente ao CEP anterior.
+    /// </summary>
+    private async Task ConsultarCepManualmenteAsync()
+    {
+        if (_cepService is null || string.IsNullOrWhiteSpace(FormCep))
+            return;
+
+        var cep = CepMaskHelper.Normalizar(FormCep);
+        if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
+        {
+            // CEP incompleto: registra o formato inválido na validação (campo vermelho + resumo).
+            EditorMensagem = "Digite um CEP com 8 dígitos para consultar.";
+            DefinirErroValidacao(CepCampo, "O CEP deve ter 8 dígitos.");
+            return;
+        }
+
+        CepCarregando = true;
+        EditorMensagem = string.Empty;
+
+        _cepCache.Reset();
+        ClearStaleAddressFields();
+
+        try
+        {
+            var result = await _cepService.ConsultarAsync(cep);
+            AplicarEndereco(result);
+        }
+        catch (Exception ex)
+        {
+            EditorMensagem = $"Erro na consulta de CEP: {ex.Message}";
+            DefinirErroValidacao(CepCampo, "Não foi possível consultar o CEP. Tente novamente.");
+        }
+        finally
+        {
+            CepCarregando = false;
+        }
+    }
+
+    /// <summary>Aplica o resultado da consulta de CEP nos campos do formulário, preservando campos editados.</summary>
+    private void AplicarEndereco(CepAddressResult result)
+    {
+        if (result.Success)
+        {
+            if (!_cepLogradouroEditado) SetField(ref _formLogradouro, result.Logradouro ?? string.Empty);
+            if (!_cepBairroEditado) SetField(ref _formBairro, result.Bairro ?? string.Empty);
+            if (!_cepCidadeEditado) SetField(ref _formCidade, result.Cidade ?? string.Empty);
+            if (!_cepUfEditado) SetField(ref _formUf, result.Uf ?? string.Empty);
+
+            // Mantém o cache coerente com o CEP efetivamente aplicado.
+            _cepCache.Registrar(result.Cep);
+            LimparErroValidacao(CepCampo);
+        }
+        else
+        {
+            _cepCache.Reset();
+            RegistrarErroCep(result.Cep);
+        }
+
+        OnPropertyChanged(nameof(CepPodeConsultarManualmente));
+    }
+
+    /// <summary>
+    /// Registra o erro de consulta de CEP na infraestrutura de validação (campo vermelho +
+    /// resumo no topo) e mantém o aviso geral do formulário.
+    /// </summary>
+    private void RegistrarErroCep(string cep)
+    {
+        var mensagem = $"Não foi possível localizar o CEP '{CepMaskHelper.Formatar(cep)}'. Preencha o endereço manualmente.";
+        EditorMensagem = mensagem;
+        DefinirErroValidacao(CepCampo, mensagem);
+    }
+
+    /// <summary>Sincroniza o resultado de uma validação de campo com a infraestrutura de validação.</summary>
+    private void AtualizarErroCampo(string campo, ValidationResult resultado)
+    {
+        if (resultado.IsValid)
+            LimparErroValidacao(campo);
+        else
+            DefinirErroValidacao(campo, resultado.FirstError);
+    }
+
+    private bool CepTemOitoDigitos()
+    {
+        var cep = CepMaskHelper.Normalizar(_formCep);
+        return cep.Length == 8 && cep.All(char.IsDigit);
+    }
+
     private void AbrirNovo()
     {
         _editorNovo = true;
@@ -597,6 +724,7 @@ public class TecnicosViewModel : ViewModelBase
         _cepCidadeEditado = false;
         _cepUfEditado = false;
         _cepCache.Reset();
+        LimparErrosValidacao();
         EditorTitulo = "Novo técnico";
         FormCodigo = string.Empty;
         FormNome = string.Empty;
@@ -649,31 +777,44 @@ public class TecnicosViewModel : ViewModelBase
 
     private void PreencherFormulario(TecnicoDto tecnico)
     {
-        _formId = tecnico.Id;
-        _cepLogradouroEditado = false;
-        _cepBairroEditado = false;
-        _cepCidadeEditado = false;
-        _cepUfEditado = false;
-        _cepCache.Reset();
-        FormCodigo = tecnico.Codigo;
-        FormNome = tecnico.Nome;
-        FormCpf = CpfCnpjValidatorEx.Formatar(tecnico.Cpf);
-        FormRg = tecnico.Rg ?? string.Empty;
-        FormTelefone = PhoneMaskHelper.Formatar(tecnico.Telefone);
-        FormCelular = PhoneMaskHelper.Formatar(tecnico.Celular);
-        FormEmail = tecnico.Email ?? string.Empty;
-        FormEspecialidade = tecnico.Especialidade ?? string.Empty;
-        FormRegistroProfissional = tecnico.RegistroProfissional ?? string.Empty;
-        FormCep = CepMaskHelper.Formatar(tecnico.Cep);
-        FormLogradouro = tecnico.Logradouro ?? string.Empty;
-        FormNumero = tecnico.Numero ?? string.Empty;
-        FormComplemento = tecnico.Complemento ?? string.Empty;
-        FormBairro = tecnico.Bairro ?? string.Empty;
-        FormCidade = tecnico.Cidade ?? string.Empty;
-        FormUf = tecnico.Uf ?? string.Empty;
-        FormObservacoes = tecnico.Observacoes ?? string.Empty;
-        FormAtivo = tecnico.Ativo;
-        _formQuantidadeOrcamentos = tecnico.QuantidadeOrcamentos;
+        // Durante o carregamento de um cadastro existente não disparamos consulta automática
+        // de CEP e os campos de endereço não contam como edição manual do usuário. Sem isso,
+        // uma alteração posterior de CEP não atualizaria o endereço.
+        _carregandoFormulario = true;
+        try
+        {
+            _formId = tecnico.Id;
+            _cepCache.Reset();
+            FormCodigo = tecnico.Codigo;
+            FormNome = tecnico.Nome;
+            FormCpf = CpfCnpjValidatorEx.Formatar(tecnico.Cpf);
+            FormRg = tecnico.Rg ?? string.Empty;
+            FormTelefone = PhoneMaskHelper.Formatar(tecnico.Telefone);
+            FormCelular = PhoneMaskHelper.Formatar(tecnico.Celular);
+            FormEmail = tecnico.Email ?? string.Empty;
+            FormEspecialidade = tecnico.Especialidade ?? string.Empty;
+            FormRegistroProfissional = tecnico.RegistroProfissional ?? string.Empty;
+            FormCep = CepMaskHelper.Formatar(tecnico.Cep);
+            FormLogradouro = tecnico.Logradouro ?? string.Empty;
+            FormNumero = tecnico.Numero ?? string.Empty;
+            FormComplemento = tecnico.Complemento ?? string.Empty;
+            FormBairro = tecnico.Bairro ?? string.Empty;
+            FormCidade = tecnico.Cidade ?? string.Empty;
+            FormUf = tecnico.Uf ?? string.Empty;
+            FormObservacoes = tecnico.Observacoes ?? string.Empty;
+            FormAtivo = tecnico.Ativo;
+            _formQuantidadeOrcamentos = tecnico.QuantidadeOrcamentos;
+        }
+        finally
+        {
+            _carregandoFormulario = false;
+            _cepLogradouroEditado = false;
+            _cepBairroEditado = false;
+            _cepCidadeEditado = false;
+            _cepUfEditado = false;
+        }
+
+        LimparErrosValidacao();
         EditorMensagem = string.Empty;
 
         OnPropertyChanged(nameof(ResumoOrcamentos));
@@ -682,6 +823,7 @@ public class TecnicosViewModel : ViewModelBase
     private void FecharEditor()
     {
         EditorAberto = false;
+        LimparErrosValidacao();
         EditorMensagem = string.Empty;
     }
 
@@ -697,9 +839,15 @@ public class TecnicosViewModel : ViewModelBase
              .CpfCnpj(FormCpf)
              .Build();
 
+         // Reflete os campos obrigatórios na infraestrutura de validação compartilhada
+         // (resumo no topo do formulário + foco no primeiro campo inválido).
+         AtualizarErroCampo("Nome", FormValidator.Required(FormNome, "o nome do técnico"));
+         AtualizarErroCampo("Cpf", FormValidator.CpfCnpj(FormCpf));
+
          if (!validation.IsValid)
          {
              EditorMensagem = validation.FirstError;
+             SolicitarFocoPrimeiroCampoInvalido();
              return;
          }
 

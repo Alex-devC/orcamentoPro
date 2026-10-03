@@ -26,6 +26,7 @@ public class ClientesViewModel : ViewModelBase
 {
     private const int PageSize = 20;
     private const int DebounceBuscaMilissegundos = 350;
+    private const string CepCampo = "CEP";
 
     private readonly IClienteService _clienteService;
     private readonly ICepService? _cepService;
@@ -40,6 +41,7 @@ public class ClientesViewModel : ViewModelBase
     private bool _cepBairroEditado;
     private bool _cepCidadeEditado;
     private bool _cepUfEditado;
+    private bool _carregandoFormulario;
 
     private readonly bool _podeVisualizar;
     private readonly bool _podeCriar;
@@ -297,7 +299,13 @@ public string FormEmailFinanceiro
         {
             if (!SetField(ref _formCep, value)) return;
             OnPropertyChanged(nameof(CepPodeConsultarManualmente));
-            _ = TentarConsultarCepAsync(value);
+
+            // Ao alterar o CEP, o estado de erro anterior deixa de valer:
+            // o usuário precisa poder corrigir e tentar novamente.
+            LimparErroValidacao(CepCampo);
+
+            if (!_carregandoFormulario)
+                _ = TentarConsultarCepAsync(value);
         }
     }
 
@@ -394,6 +402,22 @@ public string FormEmailFinanceiro
 
     public bool EditorMensagemVisivel => !string.IsNullOrWhiteSpace(EditorMensagem);
 
+    /// <summary>Indica que o CEP está em estado de erro (não encontrado/serviço indisponível) — borda vermelha.</summary>
+    public bool CepTemErro => CampoInvalido(CepCampo);
+
+    /// <summary>Mensagem de erro associada ao campo CEP (tooltip/resumo).</summary>
+    public string CepMensagemErro => ErrosValidacao.TryGetValue(CepCampo, out var msg) ? msg : string.Empty;
+
+    /// <summary>Notifica as propriedades visuais do CEP quando o estado de validação muda.</summary>
+    protected override void AoAlterarValidacao(string campo)
+    {
+        if (campo == CepCampo)
+        {
+            OnPropertyChanged(nameof(CepTemErro));
+            OnPropertyChanged(nameof(CepMensagemErro));
+        }
+    }
+
     // ---------- Visualização e exclusão ----------
 
     public bool VisualizacaoAberta
@@ -463,12 +487,15 @@ public string FormEmailFinanceiro
                 if (!_cepBairroEditado) SetField(ref _formBairro, result.Bairro ?? string.Empty);
                 if (!_cepCidadeEditado) SetField(ref _formCidade, result.Cidade ?? string.Empty);
                 if (!_cepUfEditado) SetField(ref _formUf, result.Uf ?? string.Empty);
+
+                // Consulta bem-sucedida: remove o estado de erro do CEP (borda/tooltip/resumo).
+                LimparErroValidacao(CepCampo);
             }
             else
             {
                 // CEP não encontrado ou serviço indisponível: limpa cache para permitir nova tentativa
                 _cepCache.Reset();
-                EditorMensagem = $"Não foi possível localizar o CEP '{CepMaskHelper.Formatar(cep)}'. Preencha o endereço manualmente.";
+                RegistrarErroCep(cep);
             }
         }
         catch (OperationCanceledException)
@@ -516,12 +543,19 @@ public string FormEmailFinanceiro
         var cep = CepMaskHelper.Normalizar(FormCep);
         if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
         {
+            // CEP incompleto: registra o formato inválido na validação (campo vermelho + resumo).
             EditorMensagem = "Digite um CEP com 8 dígitos para consultar.";
+            DefinirErroValidacao(CepCampo, "O CEP deve ter 8 dígitos.");
             return;
         }
 
         CepCarregando = true;
         EditorMensagem = string.Empty;
+
+        // A lupa é uma ação explícita: ignora o cache para forçar nova consulta e
+        // descarta o endereço que pertencia ao CEP anterior (preserva campos editados).
+        _cepCache.Reset();
+        ClearStaleAddressFields();
 
         try
         {
@@ -531,6 +565,7 @@ public string FormEmailFinanceiro
         catch (Exception ex)
         {
             EditorMensagem = $"Erro na consulta de CEP: {ex.Message}";
+            DefinirErroValidacao(CepCampo, "Não foi possível consultar o CEP. Tente novamente.");
         }
         finally
         {
@@ -547,13 +582,38 @@ public string FormEmailFinanceiro
             if (!_cepBairroEditado) SetField(ref _formBairro, result.Bairro ?? string.Empty);
             if (!_cepCidadeEditado) SetField(ref _formCidade, result.Cidade ?? string.Empty);
             if (!_cepUfEditado) SetField(ref _formUf, result.Uf ?? string.Empty);
+
+            // Mantém o cache coerente com o CEP efetivamente aplicado.
+            _cepCache.Registrar(result.Cep);
+            LimparErroValidacao(CepCampo);
         }
         else
         {
-            EditorMensagem = $"Não foi possível localizar o CEP '{CepMaskHelper.Formatar(result.Cep)}'. Preencha o endereço manualmente.";
+            _cepCache.Reset();
+            RegistrarErroCep(result.Cep);
         }
 
         OnPropertyChanged(nameof(CepPodeConsultarManualmente));
+    }
+
+    /// <summary>
+    /// Registra o erro de consulta de CEP na infraestrutura de validação (campo vermelho +
+    /// resumo no topo) e mantém o aviso geral do formulário.
+    /// </summary>
+    private void RegistrarErroCep(string cep)
+    {
+        var mensagem = $"Não foi possível localizar o CEP '{CepMaskHelper.Formatar(cep)}'. Preencha o endereço manualmente.";
+        EditorMensagem = mensagem;
+        DefinirErroValidacao(CepCampo, mensagem);
+    }
+
+    /// <summary>Sincroniza o resultado de uma validação de campo com a infraestrutura de validação.</summary>
+    private void AtualizarErroCampo(string campo, ValidationResult resultado)
+    {
+        if (resultado.IsValid)
+            LimparErroValidacao(campo);
+        else
+            DefinirErroValidacao(campo, resultado.FirstError);
     }
 
     private bool CepTemOitoDigitos()
@@ -670,6 +730,7 @@ public string FormEmailFinanceiro
         _cepCidadeEditado = false;
         _cepUfEditado = false;
         _cepCache.Reset();
+        LimparErrosValidacao();
         EditorTitulo = "Novo cliente";
         FormCodigo = string.Empty;
         FormTipoPessoa = "PJ";
@@ -723,32 +784,46 @@ public string FormEmailFinanceiro
 
     private void PreencherFormulario(ClienteDto cliente)
     {
-        _formId = cliente.Id;
-        _cepLogradouroEditado = false;
-        _cepBairroEditado = false;
-        _cepCidadeEditado = false;
-        _cepUfEditado = false;
-        _cepCache.Reset();
-        FormCodigo = cliente.Codigo;
-        FormTipoPessoa = cliente.TipoPessoa;
-        FormNome = cliente.NomeRazaoSocial;
-        FormNomeFantasia = cliente.NomeFantasia ?? string.Empty;
-        FormCpfCnpj = CpfCnpjValidatorEx.Formatar(cliente.CpfCnpj);
-        FormRgIe = cliente.RgIe ?? string.Empty;
-        FormTelefone = PhoneMaskHelper.Formatar(cliente.Telefone);
-        FormCelular = PhoneMaskHelper.Formatar(cliente.Celular);
-        FormEmail = cliente.Email;
-        FormEmailFinanceiro = cliente.EmailFinanceiro ?? string.Empty;
-        FormCep = CepMaskHelper.Formatar(cliente.Cep);
-        FormLogradouro = cliente.Logradouro ?? string.Empty;
-        FormNumero = cliente.Numero ?? string.Empty;
-        FormComplemento = cliente.Complemento ?? string.Empty;
-        FormBairro = cliente.Bairro ?? string.Empty;
-        FormCidade = cliente.Cidade ?? string.Empty;
-        FormUf = cliente.Uf ?? string.Empty;
-        FormObservacoes = cliente.Observacoes ?? string.Empty;
-        FormAtivo = cliente.Ativo;
-        _formQuantidadeOrcamentos = cliente.QuantidadeOrcamentos;
+        // Durante o carregamento de um cadastro existente não disparamos consulta automática
+        // de CEP e os campos de endereço não contam como edição manual do usuário — eles
+        // vêm do cadastro salvo. Sem isso, uma alteração posterior de CEP não atualizaria
+        // o endereço (os campos ficariam marcados como "editados manualmente").
+        _carregandoFormulario = true;
+        try
+        {
+            _formId = cliente.Id;
+            _cepCache.Reset();
+            FormCodigo = cliente.Codigo;
+            FormTipoPessoa = cliente.TipoPessoa;
+            FormNome = cliente.NomeRazaoSocial;
+            FormNomeFantasia = cliente.NomeFantasia ?? string.Empty;
+            FormCpfCnpj = CpfCnpjValidatorEx.Formatar(cliente.CpfCnpj);
+            FormRgIe = cliente.RgIe ?? string.Empty;
+            FormTelefone = PhoneMaskHelper.Formatar(cliente.Telefone);
+            FormCelular = PhoneMaskHelper.Formatar(cliente.Celular);
+            FormEmail = cliente.Email;
+            FormEmailFinanceiro = cliente.EmailFinanceiro ?? string.Empty;
+            FormCep = CepMaskHelper.Formatar(cliente.Cep);
+            FormLogradouro = cliente.Logradouro ?? string.Empty;
+            FormNumero = cliente.Numero ?? string.Empty;
+            FormComplemento = cliente.Complemento ?? string.Empty;
+            FormBairro = cliente.Bairro ?? string.Empty;
+            FormCidade = cliente.Cidade ?? string.Empty;
+            FormUf = cliente.Uf ?? string.Empty;
+            FormObservacoes = cliente.Observacoes ?? string.Empty;
+            FormAtivo = cliente.Ativo;
+            _formQuantidadeOrcamentos = cliente.QuantidadeOrcamentos;
+        }
+        finally
+        {
+            _carregandoFormulario = false;
+            _cepLogradouroEditado = false;
+            _cepBairroEditado = false;
+            _cepCidadeEditado = false;
+            _cepUfEditado = false;
+        }
+
+        LimparErrosValidacao();
         EditorMensagem = string.Empty;
 
         OnPropertyChanged(nameof(ResumoOrcamentos));
@@ -757,6 +832,7 @@ public string FormEmailFinanceiro
     private void FecharEditor()
     {
         EditorAberto = false;
+        LimparErrosValidacao();
         EditorMensagem = string.Empty;
     }
 
@@ -773,9 +849,17 @@ public string FormEmailFinanceiro
              .CpfCnpj(FormCpfCnpj)
              .Build();
 
+         // Reflete os campos obrigatórios na infraestrutura de validação compartilhada
+         // (resumo no topo do formulário + foco no primeiro campo inválido).
+         AtualizarErroCampo("Nome", FormValidator.Required(FormNome, "o Nome / Razão Social do cliente"));
+         AtualizarErroCampo("Celular", FormValidator.Required(FormCelular, "o Celular / WhatsApp do cliente"));
+         AtualizarErroCampo("Email", FormValidator.Required(FormEmail, "o e-mail principal do cliente"));
+         AtualizarErroCampo("CpfCnpj", FormValidator.CpfCnpj(FormCpfCnpj));
+
          if (!validation.IsValid)
          {
              EditorMensagem = validation.FirstError;
+             SolicitarFocoPrimeiroCampoInvalido();
              return;
          }
 

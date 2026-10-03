@@ -90,5 +90,40 @@ public partial class CepComLookupControl : UserControl
         set => SetValue(LupaAutomationIdProperty, value);
     }
 
+    /// <summary>Indica que o CEP atual está em estado de erro (borda vermelha + tooltip).</summary>
+    public static readonly DependencyProperty TemErroProperty =
+        DependencyProperty.Register(
+            nameof(TemErro),
+            typeof(bool),
+            typeof(CepComLookupControl),
+            new PropertyMetadata(false));
+
+    public bool TemErro
+    {
+        get => (bool)GetValue(TemErroProperty);
+        set => SetValue(TemErroProperty, value);
+    }
+
+    /// <summary>Mensagem de erro associada ao campo (usada no tooltip).</summary>
+    public static readonly DependencyProperty MensagemErroProperty =
+        DependencyProperty.Register(
+            nameof(MensagemErro),
+            typeof(string),
+            typeof(CepComLookupControl),
+            new PropertyMetadata(string.Empty));
+
+    public string MensagemErro
+    {
+        get => (string)GetValue(MensagemErroProperty);
+        set => SetValue(MensagemErroProperty, value);
+    }
+
+    /// <summary>Move o foco para o TextBox interno de CEP (usado pela navegação/foco do formulário).</summary>
+    public void FocusCep()
+    {
+        CepTextBox.Focus();
+        CepTextBox.CaretIndex = CepTextBox.Text.Length;
+    }
+
     #endregion
 }

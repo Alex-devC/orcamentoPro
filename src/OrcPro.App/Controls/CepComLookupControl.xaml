@@ -21,11 +21,22 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <TextBox Grid.Column="0" Style="{StaticResource FormInputStyle}"
+        <TextBox x:Name="CepTextBox" Grid.Column="0"
                  b:TextFormattingBehavior.FormatMode="Cep"
+                 b:TextFormattingBehavior.CampoInvalido="{Binding TemErro, ElementName=Root}"
                  TabIndex="{Binding TabIndex, ElementName=Root}"
                  AutomationProperties.AutomationId="{Binding AutomationId, ElementName=Root}"
-                 Text="{Binding CepText, ElementName=Root, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                 Text="{Binding CepText, ElementName=Root, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+            <TextBox.Style>
+                <Style TargetType="TextBox" BasedOn="{StaticResource FormInputStyle}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding TemErro, ElementName=Root}" Value="True">
+                            <Setter Property="ToolTip" Value="{Binding MensagemErro, ElementName=Root}" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBox.Style>
+        </TextBox>
         <Button Grid.Column="1"
                 Style="{StaticResource CepLookupButtonStyle}"
                 Command="{Binding CepCommand, ElementName=Root}"

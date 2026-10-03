@@ -74,4 +74,13 @@ public sealed class CepQueryCache
     {
         _ultimoCep = null;
     }
+
+    /// <summary>
+    /// Registra explicitamente um CEP como já consultado (ex.: após consulta manual
+    /// bem-sucedida pela lupa), evitando consultas automáticas duplicadas em seguida.
+    /// </summary>
+    public void Registrar(string cepNormalizado)
+    {
+        _ultimoCep = cepNormalizado;
+    }
 }
