@@ -7,7 +7,9 @@ using OrcPro.Application.DTOs.Auth;
 using OrcPro.Application.DTOs.Cliente;
 using OrcPro.Application.DTOs.Common;
 using OrcPro.Application.Interfaces.Services;
+using OrcPro.App.Controls;
 using OrcPro.App.ViewModels;
+using OrcPro.App.Views;
 using OrcPro.Domain.Common;
 using OrcPro.Domain.Common.Formatters;
 using Xunit;
@@ -307,6 +309,7 @@ public class ClientesViewModelCepAndEnterTests
         var vm = CriarViewModel(service);
         AbrirFormulario(vm);
         vm.FormCep = "01310100";
+        await Task.Delay(50);
 
         // Assert
         Assert.True(vm.CepPodeConsultarManualmente);
@@ -387,6 +390,109 @@ public class ClientesViewModelCepAndEnterTests
 
             return Task.FromResult(CepAddressResult.FailureResult(
                 normalized, "CEP não encontrado", ProviderName));
+        }
+    }
+
+    #endregion
+
+    #region Smoke Tests - WPF View/Control Instantiation
+
+    /// <summary>
+    /// Verifica que o CepComLookupControl pode ser instanciado sem XamlParseException,
+    /// garantindo que todos os recursos (styles, brushes, icons) são resolvidos corretamente.
+    /// </summary>
+    [Fact]
+    public void CepComLookupControl_Instantiation_DeveCriarSemException()
+    {
+        RunOnStaThread(() =>
+        {
+            var control = new CepComLookupControl();
+            Assert.NotNull(control);
+        });
+    }
+
+    /// <summary>
+    /// Verifica que a ClientesView pode ser instanciada sem XamlParseException.
+    /// Isso garante que todos os recursos da tela (incluindo o CepComLookupControl)
+    /// são resolvidos corretamente durante a inicialização.
+    /// </summary>
+    [Fact]
+    public void ClientesView_Instantiation_DeveCriarSemException()
+    {
+        RunOnStaThread(() =>
+        {
+            var vm = CriarViewModel(new FakeCepService());
+            var view = new ClientesView
+            {
+                DataContext = vm
+            };
+            Assert.NotNull(view);
+        });
+    }
+
+    /// <summary>
+    /// Verifica que o ClientesViewModel abre o formulário de novo cliente sem exceção,
+    /// garantindo que o DataContext está em estado válido para o binding da View.
+    /// </summary>
+    [Fact]
+    public void ClientesViewModel_AbrirNovo_DeveInicializarFormulario()
+    {
+        var vm = CriarViewModel(new FakeCepService());
+        vm.NovoCommand.Execute(null);
+
+        Assert.True(vm.EditorAberto);
+        Assert.Equal("Novo cliente", vm.EditorTitulo);
+    }
+
+    /// <summary>
+    /// Executa uma ação em uma thread STA, necessária para criar controles WPF.
+    /// Garante que uma Application com os recursos do tema esteja disponível
+    /// para que os StaticResources sejam resolvidos corretamente.
+    /// </summary>
+    private static void RunOnStaThread(Action action)
+    {
+        var tcs = new TaskCompletionSource<object?>();
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                EnsureApplicationResources();
+                action();
+                tcs.SetResult(null);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+
+        // Propaga qualquer exceção ocorrida na thread STA
+        if (tcs.Task.IsFaulted && tcs.Task.Exception != null)
+            throw tcs.Task.Exception.InnerException ?? tcs.Task.Exception;
+    }
+
+    /// <summary>
+    /// Garante que uma Application WPF com os recursos do tema foi criada.
+    /// Como Application é singleton por AppDomain, esta verificação é thread-safe.
+    /// </summary>
+    private static void EnsureApplicationResources()
+    {
+        if (System.Windows.Application.Current == null)
+        {
+            var app = new System.Windows.Application();
+            app.Resources.MergedDictionaries.Add(
+                new System.Windows.ResourceDictionary
+                {
+                    Source = new Uri("/OrcPro.App;component/Resources/Themes/MainTheme.xaml", UriKind.Relative)
+                });
+            app.Resources.MergedDictionaries.Add(
+                new System.Windows.ResourceDictionary
+                {
+                    Source = new Uri("/OrcPro.App;component/Resources/CadastroModuleStyles.xaml", UriKind.Relative)
+                });
         }
     }
 

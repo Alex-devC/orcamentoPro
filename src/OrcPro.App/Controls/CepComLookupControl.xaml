@@ -3,6 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:b="clr-namespace:OrcPro.App.Behaviors"
              x:Name="Root">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OrcPro.App;component/Resources/Themes/MainTheme.xaml" />
+                <ResourceDictionary Source="/OrcPro.App;component/Resources/CadastroModuleStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
     <UserControl.Style>
         <Style TargetType="UserControl">
             <Setter Property="Padding" Value="0" />
