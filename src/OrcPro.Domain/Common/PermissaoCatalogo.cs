@@ -60,12 +60,22 @@ public static class PermissaoCatalogo
             public const string Excluir = "TECNICOS.EXCLUIR";
             public const string AtivarInativar = "TECNICOS.ATIVAR_INATIVAR";
         }
+
+        public static class Pecas
+        {
+            public const string Visualizar = "PECAS.VISUALIZAR";
+            public const string Criar = "PECAS.CRIAR";
+            public const string Editar = "PECAS.EDITAR";
+            public const string Excluir = "PECAS.EXCLUIR";
+            public const string AtivarInativar = "PECAS.ATIVAR_INATIVAR";
+        }
     }
 
     public const string ModuloDashboard = "DASHBOARD";
     public const string ModuloClientes = "CLIENTES";
     public const string ModuloUsuariosPerfis = "USUARIOS_PERFIS";
     public const string ModuloTecnicos = "TECNICOS";
+    public const string ModuloPecas = "PECAS";
 
     /// <summary>Nome do perfil que recebe todas as permissões do catálogo.</summary>
     public const string PerfilAdministrador = "Administrador";
@@ -91,7 +101,13 @@ public static class PermissaoCatalogo
         new PermissaoDefinicao(Codigos.Tecnicos.Criar, ModuloTecnicos, "Cadastrar técnicos"),
         new PermissaoDefinicao(Codigos.Tecnicos.Editar, ModuloTecnicos, "Editar técnicos"),
         new PermissaoDefinicao(Codigos.Tecnicos.Excluir, ModuloTecnicos, "Excluir técnicos"),
-        new PermissaoDefinicao(Codigos.Tecnicos.AtivarInativar, ModuloTecnicos, "Ativar / inativar técnicos")
+        new PermissaoDefinicao(Codigos.Tecnicos.AtivarInativar, ModuloTecnicos, "Ativar / inativar técnicos"),
+
+        new PermissaoDefinicao(Codigos.Pecas.Visualizar, ModuloPecas, "Visualizar peças e itens"),
+        new PermissaoDefinicao(Codigos.Pecas.Criar, ModuloPecas, "Cadastrar peças e itens"),
+        new PermissaoDefinicao(Codigos.Pecas.Editar, ModuloPecas, "Editar peças e itens"),
+        new PermissaoDefinicao(Codigos.Pecas.Excluir, ModuloPecas, "Excluir peças e itens"),
+        new PermissaoDefinicao(Codigos.Pecas.AtivarInativar, ModuloPecas, "Ativar / inativar peças e itens")
     };
 
     private static readonly IReadOnlyDictionary<string, string> RotulosModulo =
@@ -100,7 +116,8 @@ public static class PermissaoCatalogo
             [ModuloDashboard] = "Dashboard",
             [ModuloClientes] = "Clientes",
             [ModuloUsuariosPerfis] = "Usuários e Perfis",
-            [ModuloTecnicos] = "Técnicos"
+            [ModuloTecnicos] = "Técnicos",
+            [ModuloPecas] = "Peças e Itens"
         };
 
     /// <summary>Rótulo amigável do módulo (fallback: o próprio código do módulo).</summary>

@@ -17,6 +17,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private const string UsuariosPerfisModuleTitle = "Usuários e Perfis";
     private const string ClientesModuleTitle = "Clientes";
     private const string TecnicosModuleTitle = "Técnicos";
+    private const string PecasModuleTitle = "Peças / Itens";
     private const string ProductName = "OrcPro";
     private const string CompanyName = "ALEX T.I. Tecnologia e Assistência";
     private const string DatabaseProfileName = "[Base de Dados: Produção]";
@@ -32,6 +33,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly IPerfilService _perfilService;
     private readonly IClienteService _clienteService;
     private readonly ITecnicoService _tecnicoService;
+    private readonly IPecaService _pecaService;
     private readonly IPermissaoService _permissaoService;
     private readonly ICepService _cepService;
     private ViewModelBase _currentView;
@@ -53,6 +55,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _perfilService = _moduloScope.ServiceProvider.GetRequiredService<IPerfilService>();
         _clienteService = _moduloScope.ServiceProvider.GetRequiredService<IClienteService>();
         _tecnicoService = _moduloScope.ServiceProvider.GetRequiredService<ITecnicoService>();
+        _pecaService = _moduloScope.ServiceProvider.GetRequiredService<IPecaService>();
         _permissaoService = _moduloScope.ServiceProvider.GetRequiredService<IPermissaoService>();
         _cepService = _moduloScope.ServiceProvider.GetRequiredService<ICepService>();
 
@@ -60,6 +63,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         OpenUsuariosPerfisCommand = new RelayCommand(parameter => OpenUsuariosPerfis(parameter as string));
         OpenClientesCommand = new RelayCommand(_ => OpenClientes());
         OpenTecnicosCommand = new RelayCommand(_ => OpenTecnicos());
+        OpenPecasCommand = new RelayCommand(_ => OpenPecas());
 
         NavigationItems = new ObservableCollection<NavigationItemViewModel>
         {
@@ -106,6 +110,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Abre o módulo de Técnicos (Ribbon Cadastros → Técnicos).</summary>
     public ICommand OpenTecnicosCommand { get; }
+
+    /// <summary>Abre o módulo Peças / Itens (Ribbon Cadastros → Peças / Itens).</summary>
+    public ICommand OpenPecasCommand { get; }
 
     /// <summary>Itens do menu lateral "Navegação do Módulo".</summary>
     public ObservableCollection<NavigationItemViewModel> NavigationItems { get; }
@@ -160,6 +167,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Acesso ao módulo Técnicos (TECNICOS.VISUALIZAR).</summary>
     public bool PodeAcessarTecnicos => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Tecnicos.Visualizar);
+
+    /// <summary>Acesso ao módulo Peças / Itens (PECAS.VISUALIZAR).</summary>
+    public bool PodeAcessarPecas => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Pecas.Visualizar);
 
     /// <summary>Acesso ao módulo Usuários e Perfis (USUARIOS_PERFIS.VISUALIZAR).</summary>
     public bool PodeAcessarUsuariosPerfis => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.UsuariosPerfis.Visualizar);
@@ -263,6 +273,22 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         var modulo = new TecnicosViewModel(_tecnicoService, _sessao, _cepService, UpdateStatus);
         Navigate(TecnicosModuleTitle, modulo, "Módulo de técnicos carregado.");
+    }
+
+    /// <summary>
+    /// Módulo de Peças / Itens (Ribbon Cadastros → Peças / Itens). Nova instância a cada abertura para
+    /// que a listagem sempre reflita a base.
+    /// </summary>
+    private void OpenPecas()
+    {
+        if (!PodeAcessarPecas)
+        {
+            UpdateStatus("Você não possui a permissão PECAS.VISUALIZAR.");
+            return;
+        }
+
+        var modulo = new PecasViewModel(_pecaService, _sessao, UpdateStatus);
+        Navigate(PecasModuleTitle, modulo, "Módulo de peças e itens carregado.");
     }
 
     private void UpdateStatus(string? message)

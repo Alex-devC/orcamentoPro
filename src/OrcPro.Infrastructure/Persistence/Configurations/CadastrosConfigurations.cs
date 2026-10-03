@@ -117,6 +117,11 @@ public class PecaConfiguration : IEntityTypeConfiguration<Peca>
         builder.Property(p => p.EstoqueAtual).HasPrecision(18, 3);
         builder.Property(p => p.EstoqueMinimo).HasPrecision(18, 3);
 
+        builder.Property(p => p.Categoria).HasMaxLength(100);
+        builder.Property(p => p.Marca).HasMaxLength(100);
+        builder.Property(p => p.Modelo).HasMaxLength(100);
+        builder.Property(p => p.CodigoBarras).HasMaxLength(50);
+
         builder.Property(p => p.Observacoes).HasMaxLength(1000);
     }
 }

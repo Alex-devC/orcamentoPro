@@ -318,12 +318,15 @@
                                         <TextBlock Text="Técnicos" Style="{StaticResource RibbonButtonLabelStyle}" />
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding RibbonActionCommand}" CommandParameter="Cadastro de peças e itens (módulo em desenvolvimento).">
-                                    <StackPanel>
-                                        <Path Data="{StaticResource IconAddItem}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
-                                        <TextBlock Text="Peças / Itens" Style="{StaticResource RibbonButtonLabelStyle}" />
-                                    </StackPanel>
-                                </Button>
+                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding OpenPecasCommand}"
+                                         IsEnabled="{Binding PodeAcessarPecas}"
+                                         AutomationProperties.Name="Peças / Itens"
+                                         ToolTip="Cadastro de peças e itens">
+                                     <StackPanel>
+                                         <Path Data="{StaticResource IconAddItem}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
+                                         <TextBlock Text="Peças / Itens" Style="{StaticResource RibbonButtonLabelStyle}" />
+                                     </StackPanel>
+                                 </Button>
                                 <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding RibbonActionCommand}" CommandParameter="Cadastro de serviços (módulo em desenvolvimento).">
                                     <StackPanel>
                                         <Path Data="{StaticResource IconTool}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />

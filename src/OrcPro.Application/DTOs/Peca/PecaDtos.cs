@@ -10,6 +10,10 @@ public class PecaDto
     public decimal PrecoVenda { get; set; }
     public decimal EstoqueAtual { get; set; }
     public decimal EstoqueMinimo { get; set; }
+    public string? Categoria { get; set; }
+    public string? Marca { get; set; }
+    public string? Modelo { get; set; }
+    public string? CodigoBarras { get; set; }
     public string? Observacoes { get; set; }
     public bool Ativo { get; set; }
     public DateTime DataCriacao { get; set; }
@@ -24,6 +28,10 @@ public class CriarPecaDto
     public decimal PrecoVenda { get; set; }
     public decimal EstoqueAtual { get; set; }
     public decimal EstoqueMinimo { get; set; }
+    public string? Categoria { get; set; }
+    public string? Marca { get; set; }
+    public string? Modelo { get; set; }
+    public string? CodigoBarras { get; set; }
     public string? Observacoes { get; set; }
     public bool Ativo { get; set; } = true;
 }

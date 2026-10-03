@@ -3,6 +3,8 @@ using OrcPro.Application.DTOs.Peca;
 using OrcPro.Application.Exceptions;
 using OrcPro.Application.Interfaces.Repositories;
 using OrcPro.Application.Interfaces.Services;
+using OrcPro.Domain.Common;
+using OrcPro.Domain.Common.Formatters;
 using OrcPro.Domain.Entities.Peca;
 
 namespace OrcPro.Application.Services;
@@ -48,7 +50,11 @@ public class PecaService : IPecaService
         var peca = new Peca
         {
             Codigo = dto.Codigo.Trim().ToUpperInvariant(),
-            Descricao = dto.Descricao.Trim(),
+            Descricao = InputFormattingHelper.ToUpperCase(dto.Descricao.Trim()),
+            Categoria = InputFormattingHelper.NormalizeText(dto.Categoria),
+            Marca = InputFormattingHelper.NormalizeText(dto.Marca),
+            Modelo = InputFormattingHelper.NormalizeText(dto.Modelo),
+            CodigoBarras = InputFormattingHelper.NormalizeText(dto.CodigoBarras),
             UnidadeMedida = dto.UnidadeMedida.Trim().ToUpperInvariant(),
             PrecoCusto = dto.PrecoCusto,
             PrecoVenda = dto.PrecoVenda,
@@ -75,7 +81,11 @@ public class PecaService : IPecaService
             throw new BusinessException($"Já existe outra peça cadastrada com o código '{dto.Codigo}'.");
 
         peca.Codigo = dto.Codigo.Trim().ToUpperInvariant();
-        peca.Descricao = dto.Descricao.Trim();
+        peca.Descricao = InputFormattingHelper.ToUpperCase(dto.Descricao.Trim());
+        peca.Categoria = InputFormattingHelper.NormalizeText(dto.Categoria);
+        peca.Marca = InputFormattingHelper.NormalizeText(dto.Marca);
+        peca.Modelo = InputFormattingHelper.NormalizeText(dto.Modelo);
+        peca.CodigoBarras = InputFormattingHelper.NormalizeText(dto.CodigoBarras);
         peca.UnidadeMedida = dto.UnidadeMedida.Trim().ToUpperInvariant();
         peca.PrecoCusto = dto.PrecoCusto;
         peca.PrecoVenda = dto.PrecoVenda;
@@ -128,6 +138,10 @@ public class PecaService : IPecaService
             Id = p.Id,
             Codigo = p.Codigo,
             Descricao = p.Descricao,
+            Categoria = p.Categoria,
+            Marca = p.Marca,
+            Modelo = p.Modelo,
+            CodigoBarras = p.CodigoBarras,
             UnidadeMedida = p.UnidadeMedida,
             PrecoCusto = p.PrecoCusto,
             PrecoVenda = p.PrecoVenda,

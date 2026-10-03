@@ -26,6 +26,13 @@ internal static class SchemaUpgrade
                 ["Bairro"] = "TEXT NULL",
                 ["Cidade"] = "TEXT NULL",
                 ["Uf"] = "TEXT NULL"
+            },
+            ["Pecas"] = new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Categoria"] = "TEXT NULL",
+                ["Marca"] = "TEXT NULL",
+                ["Modelo"] = "TEXT NULL",
+                ["CodigoBarras"] = "TEXT NULL"
             }
         };
 

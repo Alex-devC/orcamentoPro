@@ -15,5 +15,10 @@ public class Peca : BaseEntity
     public string? Observacoes { get; set; }
     public bool Ativo { get; set; } = true;
 
+    public string? Categoria { get; set; }
+    public string? Marca { get; set; }
+    public string? Modelo { get; set; }
+    public string? CodigoBarras { get; set; }
+
     public ICollection<OrcamentoItem> OrcamentoItens { get; set; } = new List<OrcamentoItem>();
 }

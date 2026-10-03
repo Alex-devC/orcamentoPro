@@ -18,6 +18,11 @@
         <views:TecnicosView />
     </DataTemplate>
 
+    <!-- Cadastro de Peças / Itens -->
+    <DataTemplate DataType="{x:Type vm:PecasViewModel}">
+        <views:PecasView />
+    </DataTemplate>
+
     <!-- Cadastro de Usuários e Perfis (abas Usuários / Perfis) -->
     <DataTemplate DataType="{x:Type vm:UsuariosPerfisViewModel}">
         <views:UsuariosPerfisView />
