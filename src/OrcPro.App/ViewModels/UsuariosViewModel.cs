@@ -10,6 +10,7 @@ using OrcPro.Application.DTOs.Usuario;
 using OrcPro.Application.Exceptions;
 using OrcPro.Application.Interfaces.Services;
 using OrcPro.Domain.Common;
+using OrcPro.Domain.Common.Formatters;
 
 namespace OrcPro.App.ViewModels;
 

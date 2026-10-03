@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using OrcPro.Application.DTOs.Cliente;
@@ -8,6 +9,10 @@ using OrcPro.Application.DTOs.Auth;
 using OrcPro.Application.DTOs.Common;
 using OrcPro.Application.Interfaces.Services;
 using OrcPro.Domain.Common;
+using OrcPro.Domain.Common.Formatters;
+
+// Alias to disambiguate between OrcPro.Domain.Common.CpfCnpjValidator (legacy) and OrcPro.Domain.Common.Formatters.CpfCnpjValidator (new)
+using CpfCnpjValidatorEx = OrcPro.Domain.Common.Formatters.CpfCnpjValidator;
 
 namespace OrcPro.App.ViewModels;
 
@@ -23,8 +28,18 @@ public class ClientesViewModel : ViewModelBase
     private const int DebounceBuscaMilissegundos = 350;
 
     private readonly IClienteService _clienteService;
+    private readonly ICepService? _cepService;
     private readonly Action<string>? _reportStatus;
     private readonly DispatcherTimer _buscaTimer;
+    private bool _cepCarregando;
+    private CancellationTokenSource? _cepCancellationTokenSource;
+    private readonly CepQueryCache _cepCache = new();
+
+    // Track which fields the user has manually edited (to avoid overwriting on CEP lookup)
+    private bool _cepLogradouroEditado;
+    private bool _cepBairroEditado;
+    private bool _cepCidadeEditado;
+    private bool _cepUfEditado;
 
     private readonly bool _podeVisualizar;
     private readonly bool _podeCriar;
@@ -75,9 +90,11 @@ public class ClientesViewModel : ViewModelBase
     public ClientesViewModel(
         IClienteService clienteService,
         UsuarioSessaoDto sessao,
+        ICepService? cepService = null,
         Action<string>? reportStatus = null)
     {
         _clienteService = clienteService;
+        _cepService = cepService;
         _reportStatus = reportStatus;
 
         // Permissões do módulo (CLIENTES.*) — o perfil Administrador recebe todas
@@ -275,13 +292,21 @@ public string FormEmailFinanceiro
     public string FormCep
     {
         get => _formCep;
-        set => SetField(ref _formCep, value);
+        set
+        {
+            if (!SetField(ref _formCep, value)) return;
+            _ = TentarConsultarCepAsync(value);
+        }
     }
 
     public string FormLogradouro
     {
         get => _formLogradouro;
-        set => SetField(ref _formLogradouro, value);
+        set
+        {
+            if (SetField(ref _formLogradouro, value))
+                _cepLogradouroEditado = true;
+        }
     }
 
     public string FormNumero
@@ -299,19 +324,31 @@ public string FormEmailFinanceiro
     public string FormBairro
     {
         get => _formBairro;
-        set => SetField(ref _formBairro, value);
+        set
+        {
+            if (SetField(ref _formBairro, value))
+                _cepBairroEditado = true;
+        }
     }
 
     public string FormCidade
     {
         get => _formCidade;
-        set => SetField(ref _formCidade, value);
+        set
+        {
+            if (SetField(ref _formCidade, value))
+                _cepCidadeEditado = true;
+        }
     }
 
     public string FormUf
     {
         get => _formUf;
-        set => SetField(ref _formUf, value);
+        set
+        {
+            if (SetField(ref _formUf, value))
+                _cepUfEditado = true;
+        }
     }
 
     public string FormObservacoes
@@ -324,6 +361,12 @@ public string FormEmailFinanceiro
     {
         get => _formAtivo;
         set => SetField(ref _formAtivo, value);
+    }
+
+    public bool CepCarregando
+    {
+        get => _cepCarregando;
+        private set => SetField(ref _cepCarregando, value);
     }
 
     /// <summary>Orçamentos vinculados (define exclusão ou apenas inativação).</summary>
@@ -362,6 +405,61 @@ public string FormEmailFinanceiro
     public string ConfirmacaoMensagem => _clienteParaExcluir is null
         ? string.Empty
         : $"Deseja excluir o cliente \"{_clienteParaExcluir.NomeRazaoSocial}\" ({_clienteParaExcluir.Codigo})? Esta ação não pode ser desfeita.";
+
+    // ---------- CEP ----------
+
+    /// <summary>
+    /// Quando o CEP é completado (8 dígitos), consulta automaticamente o endereço.
+    /// Não bloqueia a interface; preserva campos que o usuário editou manualmente.
+    /// Não repete a consulta ao mesmo CEP (cache por instância de ViewModel).
+    /// </summary>
+    private async Task TentarConsultarCepAsync(string cepInput)
+    {
+        if (_cepService is null)
+            return;
+
+        _cepCancellationTokenSource?.Cancel();
+        _cepCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        var cep = CepMaskHelper.Normalizar(cepInput);
+
+        // Só consultar quando tiver 8 dígitos completos
+        if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
+            return;
+
+        // Cache: não repetir consulta ao mesmo CEP na mesma sessão de edição
+        if (!_cepCache.ShouldQuery(cep))
+            return;
+
+        CepCarregando = true;
+        EditorMensagem = string.Empty;
+
+        try
+        {
+            var result = await _cepService.ConsultarAsync(cep, _cepCancellationTokenSource.Token);
+
+            if (result.Success)
+            {
+                if (!_cepLogradouroEditado) FormLogradouro = result.Logradouro ?? string.Empty;
+                if (!_cepBairroEditado) FormBairro = result.Bairro ?? string.Empty;
+                if (!_cepCidadeEditado) FormCidade = result.Cidade ?? string.Empty;
+                if (!_cepUfEditado) FormUf = result.Uf ?? string.Empty;
+            }
+            else
+            {
+                // CEP não encontrado ou serviço indisponível: permite preenchimento manual
+                EditorMensagem = $"Não foi possível localizar o CEP '{CepMaskHelper.Formatar(cep)}'. Preencha o endereço manualmente.";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Consulta cancelada - não é um erro
+        }
+        finally
+        {
+            CepCarregando = false;
+        }
+    }
 
     // ---------- Comandos ----------
 
@@ -458,10 +556,15 @@ public string FormEmailFinanceiro
 
     // ---------- Formulário ----------
 
-    private void AbrirNovo()
+     private void AbrirNovo()
     {
         _editorNovo = true;
         _formId = 0;
+        _cepLogradouroEditado = false;
+        _cepBairroEditado = false;
+        _cepCidadeEditado = false;
+        _cepUfEditado = false;
+        _cepCache.Reset();
         EditorTitulo = "Novo cliente";
         FormCodigo = string.Empty;
         FormTipoPessoa = "PJ";
@@ -516,17 +619,22 @@ public string FormEmailFinanceiro
     private void PreencherFormulario(ClienteDto cliente)
     {
         _formId = cliente.Id;
+        _cepLogradouroEditado = false;
+        _cepBairroEditado = false;
+        _cepCidadeEditado = false;
+        _cepUfEditado = false;
+        _cepCache.Reset();
         FormCodigo = cliente.Codigo;
         FormTipoPessoa = cliente.TipoPessoa;
         FormNome = cliente.NomeRazaoSocial;
         FormNomeFantasia = cliente.NomeFantasia ?? string.Empty;
-        FormCpfCnpj = CpfCnpjValidator.Formatar(cliente.CpfCnpj);
+        FormCpfCnpj = CpfCnpjValidatorEx.Formatar(cliente.CpfCnpj);
         FormRgIe = cliente.RgIe ?? string.Empty;
-        FormTelefone = cliente.Telefone ?? string.Empty;
-        FormCelular = cliente.Celular;
+        FormTelefone = PhoneMaskHelper.Formatar(cliente.Telefone);
+        FormCelular = PhoneMaskHelper.Formatar(cliente.Celular);
         FormEmail = cliente.Email;
         FormEmailFinanceiro = cliente.EmailFinanceiro ?? string.Empty;
-        FormCep = cliente.Cep ?? string.Empty;
+        FormCep = CepMaskHelper.Formatar(cliente.Cep);
         FormLogradouro = cliente.Logradouro ?? string.Empty;
         FormNumero = cliente.Numero ?? string.Empty;
         FormComplemento = cliente.Complemento ?? string.Empty;
@@ -551,7 +659,7 @@ public string FormEmailFinanceiro
     {
         VisualizacaoAberta = false;
     }
-private async Task SalvarAsync()
+    private async Task SalvarAsync()
     {
         if (string.IsNullOrWhiteSpace(FormNome))
         {
@@ -572,34 +680,38 @@ private async Task SalvarAsync()
         }
 
         // Validação de CPF/CNPJ já no formulário (mensagem imediata) e novamente no serviço.
-        if (!string.IsNullOrWhiteSpace(FormCpfCnpj) && !CpfCnpjValidator.EhValido(FormCpfCnpj))
+        // Usa o novo validator que suporta CPF, CNPJ numérico e CNPJ alfanumérico.
+        if (!string.IsNullOrWhiteSpace(FormCpfCnpj) && !CpfCnpjValidatorEx.EhValido(FormCpfCnpj))
         {
             EditorMensagem = "O CPF/CNPJ informado é inválido. Confira os dígitos.";
             return;
         }
 
-        var nome = FormNome.Trim();
+        // Aplicar formatação: texto para maiúsculo, e-mail para minúsculo, CPF/CNPJ normalizado,
+        // telefone e CEP normalizados (apenas dígitos)
+        var nome = InputFormattingHelper.ToUpperCase(FormNome.Trim());
+        var cpfCnpjNormalizado = CpfCnpjValidatorEx.Normalizar(FormCpfCnpj);
 
         var dto = new CriarClienteDto
         {
             Codigo = EditorNovo ? null : FormCodigo,
             TipoPessoa = FormTipoPessoa,
             NomeRazaoSocial = nome,
-            NomeFantasia = FormNomeFantasia,
-            CpfCnpj = FormCpfCnpj,
-            RgIe = FormRgIe,
-            Telefone = FormTelefone,
-            Celular = FormCelular,
-            Email = FormEmail,
-            EmailFinanceiro = FormEmailFinanceiro,
-            Cep = FormCep,
-            Logradouro = FormLogradouro,
-            Numero = FormNumero,
-            Complemento = FormComplemento,
-            Bairro = FormBairro,
-            Cidade = FormCidade,
-            Uf = FormUf,
-            Observacoes = FormObservacoes,
+            NomeFantasia = InputFormattingHelper.NormalizeText(FormNomeFantasia),
+            CpfCnpj = cpfCnpjNormalizado,
+            RgIe = InputFormattingHelper.NormalizeText(FormRgIe),
+            Telefone = PhoneMaskHelper.Normalizar(FormTelefone),
+            Celular = PhoneMaskHelper.Normalizar(FormCelular),
+            Email = InputFormattingHelper.NormalizeEmail(FormEmail) ?? string.Empty,
+            EmailFinanceiro = InputFormattingHelper.NormalizeEmail(FormEmailFinanceiro),
+            Cep = CepMaskHelper.Normalizar(FormCep),
+            Logradouro = InputFormattingHelper.NormalizeText(FormLogradouro),
+            Numero = InputFormattingHelper.NormalizeText(FormNumero),
+            Complemento = InputFormattingHelper.NormalizeText(FormComplemento),
+            Bairro = InputFormattingHelper.NormalizeText(FormBairro),
+            Cidade = InputFormattingHelper.NormalizeText(FormCidade),
+            Uf = FormUf.Trim().ToUpperInvariant(),
+            Observacoes = InputFormattingHelper.NormalizeText(FormObservacoes),
             Ativo = FormAtivo
         };
 

@@ -152,7 +152,7 @@ public class SegurancaServiceTests
 
         var armazenado = await usuarioRepo.GetByIdAsync(1);
         Assert.Equal(hasher.HashPassword("antiga"), armazenado!.PasswordHash);
-        Assert.Equal("Administrador Renomeado", armazenado.NomeCompleto);
+        Assert.Equal("ADMINISTRADOR RENOMEADO", armazenado.NomeCompleto);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using OrcPro.Application.DTOs.Auth;
@@ -7,6 +8,10 @@ using OrcPro.Application.DTOs.Common;
 using OrcPro.Application.DTOs.Tecnico;
 using OrcPro.Application.Interfaces.Services;
 using OrcPro.Domain.Common;
+using OrcPro.Domain.Common.Formatters;
+
+// Alias to disambiguate between OrcPro.Domain.Common.CpfCnpjValidator (legacy) and OrcPro.Domain.Common.Formatters.CpfCnpjValidator (new)
+using CpfCnpjValidatorEx = OrcPro.Domain.Common.Formatters.CpfCnpjValidator;
 
 namespace OrcPro.App.ViewModels;
 
@@ -23,6 +28,7 @@ public class TecnicosViewModel : ViewModelBase
     private const int DebounceBuscaMilissegundos = 350;
 
     private readonly ITecnicoService _tecnicoService;
+    private readonly ICepService? _cepService;
     private readonly Action<string>? _reportStatus;
     private readonly DispatcherTimer _buscaTimer;
 
@@ -70,13 +76,22 @@ public class TecnicosViewModel : ViewModelBase
 
     private bool _visualizacaoAberta;
     private bool _confirmacaoAberta;
+    private bool _cepCarregando;
+    private CancellationTokenSource? _cepCancellationTokenSource;
+    private readonly CepQueryCache _cepCache = new();
+    private bool _cepLogradouroEditado;
+    private bool _cepBairroEditado;
+    private bool _cepCidadeEditado;
+    private bool _cepUfEditado;
 
     public TecnicosViewModel(
         ITecnicoService tecnicoService,
         UsuarioSessaoDto sessao,
+        ICepService? cepService = null,
         Action<string>? reportStatus = null)
     {
         _tecnicoService = tecnicoService;
+        _cepService = cepService;
         _reportStatus = reportStatus;
 
         // Permissões do módulo (TECNICOS.*) — o perfil Administrador recebe todas
@@ -263,13 +278,21 @@ public class TecnicosViewModel : ViewModelBase
     public string FormCep
     {
         get => _formCep;
-        set => SetField(ref _formCep, value);
+        set
+        {
+            if (!SetField(ref _formCep, value)) return;
+            _ = TentarConsultarCepAsync(value);
+        }
     }
 
     public string FormLogradouro
     {
         get => _formLogradouro;
-        set => SetField(ref _formLogradouro, value);
+        set
+        {
+            if (SetField(ref _formLogradouro, value))
+                _cepLogradouroEditado = true;
+        }
     }
 
     public string FormNumero
@@ -287,19 +310,31 @@ public class TecnicosViewModel : ViewModelBase
     public string FormBairro
     {
         get => _formBairro;
-        set => SetField(ref _formBairro, value);
+        set
+        {
+            if (SetField(ref _formBairro, value))
+                _cepBairroEditado = true;
+        }
     }
 
     public string FormCidade
     {
         get => _formCidade;
-        set => SetField(ref _formCidade, value);
+        set
+        {
+            if (SetField(ref _formCidade, value))
+                _cepCidadeEditado = true;
+        }
     }
 
     public string FormUf
     {
         get => _formUf;
-        set => SetField(ref _formUf, value);
+        set
+        {
+            if (SetField(ref _formUf, value))
+                _cepUfEditado = true;
+        }
     }
 
     public string FormObservacoes
@@ -312,6 +347,12 @@ public class TecnicosViewModel : ViewModelBase
     {
         get => _formAtivo;
         set => SetField(ref _formAtivo, value);
+    }
+
+    public bool CepCarregando
+    {
+        get => _cepCarregando;
+        private set => SetField(ref _cepCarregando, value);
     }
 
     /// <summary>Orçamentos vinculados (define exclusão ou apenas inativação).</summary>
@@ -460,10 +501,65 @@ public class TecnicosViewModel : ViewModelBase
 
     // ---------- Formulário ----------
 
+    /// <summary>
+    /// Quando o CEP é completado (8 dígitos), consulta automaticamente o endereço.
+    /// Não bloqueia a interface; preserva campos que o usuário editou manualmente.
+    /// Não repete a consulta ao mesmo CEP (cache por instância de ViewModel).
+    /// </summary>
+    private async Task TentarConsultarCepAsync(string cepInput)
+    {
+        if (_cepService is null)
+            return;
+
+        _cepCancellationTokenSource?.Cancel();
+        _cepCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        var cep = CepMaskHelper.Normalizar(cepInput);
+
+        if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
+            return;
+
+        // Cache: não repetir consulta ao mesmo CEP na mesma sessão de edição
+        if (!_cepCache.ShouldQuery(cep))
+            return;
+
+        CepCarregando = true;
+        EditorMensagem = string.Empty;
+
+        try
+        {
+            var result = await _cepService.ConsultarAsync(cep, _cepCancellationTokenSource.Token);
+
+            if (result.Success)
+            {
+                if (!_cepLogradouroEditado) FormLogradouro = result.Logradouro ?? string.Empty;
+                if (!_cepBairroEditado) FormBairro = result.Bairro ?? string.Empty;
+                if (!_cepCidadeEditado) FormCidade = result.Cidade ?? string.Empty;
+                if (!_cepUfEditado) FormUf = result.Uf ?? string.Empty;
+            }
+            else
+            {
+                EditorMensagem = $"Não foi possível localizar o CEP '{CepMaskHelper.Formatar(cep)}'. Preencha o endereço manualmente.";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        finally
+        {
+            CepCarregando = false;
+        }
+    }
+
     private void AbrirNovo()
     {
         _editorNovo = true;
         _formId = 0;
+        _cepLogradouroEditado = false;
+        _cepBairroEditado = false;
+        _cepCidadeEditado = false;
+        _cepUfEditado = false;
+        _cepCache.Reset();
         EditorTitulo = "Novo técnico";
         FormCodigo = string.Empty;
         FormNome = string.Empty;
@@ -517,16 +613,21 @@ public class TecnicosViewModel : ViewModelBase
     private void PreencherFormulario(TecnicoDto tecnico)
     {
         _formId = tecnico.Id;
+        _cepLogradouroEditado = false;
+        _cepBairroEditado = false;
+        _cepCidadeEditado = false;
+        _cepUfEditado = false;
+        _cepCache.Reset();
         FormCodigo = tecnico.Codigo;
         FormNome = tecnico.Nome;
-        FormCpf = CpfCnpjValidator.Formatar(tecnico.Cpf);
+        FormCpf = CpfCnpjValidatorEx.Formatar(tecnico.Cpf);
         FormRg = tecnico.Rg ?? string.Empty;
-        FormTelefone = tecnico.Telefone ?? string.Empty;
-        FormCelular = tecnico.Celular ?? string.Empty;
+        FormTelefone = PhoneMaskHelper.Formatar(tecnico.Telefone);
+        FormCelular = PhoneMaskHelper.Formatar(tecnico.Celular);
         FormEmail = tecnico.Email ?? string.Empty;
         FormEspecialidade = tecnico.Especialidade ?? string.Empty;
         FormRegistroProfissional = tecnico.RegistroProfissional ?? string.Empty;
-        FormCep = tecnico.Cep ?? string.Empty;
+        FormCep = CepMaskHelper.Formatar(tecnico.Cep);
         FormLogradouro = tecnico.Logradouro ?? string.Empty;
         FormNumero = tecnico.Numero ?? string.Empty;
         FormComplemento = tecnico.Complemento ?? string.Empty;
@@ -561,13 +662,13 @@ public class TecnicosViewModel : ViewModelBase
         }
 
         // Validação de CPF já no formulário (mensagem imediata) e novamente no serviço.
-        if (!string.IsNullOrWhiteSpace(FormCpf) && !CpfCnpjValidator.EhValido(FormCpf))
+        if (!string.IsNullOrWhiteSpace(FormCpf) && !CpfCnpjValidatorEx.EhValido(FormCpf))
         {
             EditorMensagem = "O CPF informado é inválido. Confira os dígitos.";
             return;
         }
 
-        var nome = FormNome.Trim();
+        var nome = FormNome.Trim().ToUpperInvariant();
 
         try
         {
@@ -620,22 +721,22 @@ public class TecnicosViewModel : ViewModelBase
         return new CriarTecnicoDto
         {
             Codigo = EditorNovo ? null : FormCodigo,
-            Nome = FormNome.Trim(),
-            Cpf = FormCpf,
-            Rg = FormRg,
-            Telefone = FormTelefone,
-            Celular = FormCelular,
-            Email = FormEmail,
-            Especialidade = FormEspecialidade,
-            RegistroProfissional = FormRegistroProfissional,
-            Cep = FormCep,
-            Logradouro = FormLogradouro,
-            Numero = FormNumero,
-            Complemento = FormComplemento,
-            Bairro = FormBairro,
-            Cidade = FormCidade,
-            Uf = FormUf,
-            Observacoes = FormObservacoes,
+            Nome = FormNome.Trim().ToUpperInvariant(),
+            Cpf = CpfCnpjValidatorEx.Normalizar(FormCpf),
+            Rg = InputFormattingHelper.NormalizeText(FormRg),
+            Telefone = PhoneMaskHelper.Normalizar(FormTelefone),
+            Celular = PhoneMaskHelper.Normalizar(FormCelular),
+            Email = InputFormattingHelper.NormalizeEmail(FormEmail),
+            Especialidade = InputFormattingHelper.NormalizeText(FormEspecialidade),
+            RegistroProfissional = InputFormattingHelper.NormalizeText(FormRegistroProfissional),
+            Cep = CepMaskHelper.Normalizar(FormCep),
+            Logradouro = InputFormattingHelper.NormalizeText(FormLogradouro),
+            Numero = InputFormattingHelper.NormalizeText(FormNumero),
+            Complemento = InputFormattingHelper.NormalizeText(FormComplemento),
+            Bairro = InputFormattingHelper.NormalizeText(FormBairro),
+            Cidade = InputFormattingHelper.NormalizeText(FormCidade),
+            Uf = FormUf.Trim().ToUpperInvariant(),
+            Observacoes = InputFormattingHelper.NormalizeText(FormObservacoes),
             Ativo = FormAtivo
         };
     }

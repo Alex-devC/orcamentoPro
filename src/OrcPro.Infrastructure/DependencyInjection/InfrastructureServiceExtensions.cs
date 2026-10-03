@@ -5,6 +5,7 @@ using OrcPro.Infrastructure.Persistence;
 using OrcPro.Infrastructure.Persistence.Providers;
 using OrcPro.Infrastructure.Persistence.Repositories;
 using OrcPro.Infrastructure.Security;
+using OrcPro.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -50,6 +51,9 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IEmpresaService, EmpresaService>();
         services.AddScoped<IOrcamentoService, OrcamentoService>();
         services.AddScoped<IRelatorioService, RelatorioService>();
+
+        // External services
+        services.AddSingleton<ICepService, ViaCepService>();
 
         return services;
     }

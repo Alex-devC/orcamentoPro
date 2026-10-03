@@ -171,7 +171,7 @@ public class ClienteServiceTests
             Ativo = false
         });
 
-        Assert.Equal("Cliente 1 Atualizado", atualizado.NomeRazaoSocial);
+        Assert.Equal("CLIENTE 1 ATUALIZADO", atualizado.NomeRazaoSocial);
         Assert.Equal(CpfValido, atualizado.CpfCnpj);
         Assert.Equal("SP", atualizado.Uf);
         Assert.False(atualizado.Ativo);
@@ -270,10 +270,10 @@ public class TecnicoServiceTests
 
         Assert.StartsWith("TEC-", criado.Codigo);
         Assert.Equal(CpfValido, criado.Cpf); // gravado sem máscara
-        Assert.Equal("Elétrica", criado.Especialidade);
-        Assert.Equal("01001-000", criado.Cep);
-        Assert.Equal("Av. Paulista", criado.Logradouro);
-        Assert.Equal("Sala 5", criado.Complemento);
+        Assert.Equal("ELÉTRICA", criado.Especialidade);
+        Assert.Equal("01001000", criado.Cep);
+        Assert.Equal("AV. PAULISTA", criado.Logradouro);
+        Assert.Equal("SALA 5", criado.Complemento);
         Assert.Equal("SP", criado.Uf); // UF normalizada em maiúsculas
         Assert.True(criado.Ativo);
         Assert.Equal(0, criado.QuantidadeOrcamentos);
@@ -363,7 +363,7 @@ public class TecnicoServiceTests
             Cpf = "529.982.247-25"
         });
 
-        Assert.Equal("Técnico 1 Atualizado", atualizado.Nome);
+        Assert.Equal("TÉCNICO 1 ATUALIZADO", atualizado.Nome);
         Assert.Equal(CpfValido, atualizado.Cpf);
     }
 

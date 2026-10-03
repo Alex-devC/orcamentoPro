@@ -3,6 +3,7 @@ using OrcPro.Application.DTOs.Usuario;
 using OrcPro.Application.Exceptions;
 using OrcPro.Application.Interfaces.Repositories;
 using OrcPro.Application.Interfaces.Services;
+using OrcPro.Domain.Common.Formatters;
 using OrcPro.Domain.Entities.Seguranca;
 
 namespace OrcPro.Application.Services;
@@ -62,6 +63,7 @@ public class UsuarioService : IUsuarioService
         if (string.IsNullOrWhiteSpace(dto.Senha))
             throw new ValidationException("A senha inicial é obrigatória.");
 
+        // Username mantém regra original: minúsculo (não alterar login)
         var usernameNormalizado = dto.Username.Trim().ToLowerInvariant();
 
         if (await _usuarioRepository.ExistsUsernameAsync(usernameNormalizado, null, cancellationToken))
@@ -75,8 +77,8 @@ public class UsuarioService : IUsuarioService
         {
             Username = usernameNormalizado,
             PasswordHash = _passwordHasher.HashPassword(dto.Senha),
-            NomeCompleto = dto.NomeCompleto.Trim(),
-            Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim(),
+            NomeCompleto = dto.NomeCompleto.Trim().ToUpperInvariant(),
+            Email = InputFormattingHelper.NormalizeEmail(dto.Email),
             PerfilId = dto.PerfilId,
             Ativo = dto.Ativo,
             DataCriacao = DateTime.UtcNow
@@ -99,8 +101,8 @@ public class UsuarioService : IUsuarioService
         if (!perfilExiste)
             throw new NotFoundException("Perfil", dto.PerfilId);
 
-        usuario.NomeCompleto = dto.NomeCompleto.Trim();
-        usuario.Email = string.IsNullOrWhiteSpace(dto.Email) ? null : dto.Email.Trim();
+        usuario.NomeCompleto = dto.NomeCompleto.Trim().ToUpperInvariant();
+        usuario.Email = InputFormattingHelper.NormalizeEmail(dto.Email);
         usuario.PerfilId = dto.PerfilId;
         usuario.Ativo = dto.Ativo;
         usuario.DataAtualizacao = DateTime.UtcNow;

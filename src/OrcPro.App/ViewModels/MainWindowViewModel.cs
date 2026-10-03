@@ -33,6 +33,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly IClienteService _clienteService;
     private readonly ITecnicoService _tecnicoService;
     private readonly IPermissaoService _permissaoService;
+    private readonly ICepService _cepService;
     private ViewModelBase _currentView;
     private NavigationItemViewModel? _selectedNavigationItem;
     private string _moduleTitle = ModuleOverviewTitle;
@@ -53,6 +54,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _clienteService = _moduloScope.ServiceProvider.GetRequiredService<IClienteService>();
         _tecnicoService = _moduloScope.ServiceProvider.GetRequiredService<ITecnicoService>();
         _permissaoService = _moduloScope.ServiceProvider.GetRequiredService<IPermissaoService>();
+        _cepService = _moduloScope.ServiceProvider.GetRequiredService<ICepService>();
 
         RibbonActionCommand = new RelayCommand(parameter => UpdateStatus(parameter as string));
         OpenUsuariosPerfisCommand = new RelayCommand(parameter => OpenUsuariosPerfis(parameter as string));
@@ -243,7 +245,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        var modulo = new ClientesViewModel(_clienteService, _sessao, UpdateStatus);
+        var modulo = new ClientesViewModel(_clienteService, _sessao, _cepService, UpdateStatus);
         Navigate(ClientesModuleTitle, modulo, "Módulo de clientes carregado.");
     }
 
@@ -259,7 +261,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        var modulo = new TecnicosViewModel(_tecnicoService, _sessao, UpdateStatus);
+        var modulo = new TecnicosViewModel(_tecnicoService, _sessao, _cepService, UpdateStatus);
         Navigate(TecnicosModuleTitle, modulo, "Módulo de técnicos carregado.");
     }
 

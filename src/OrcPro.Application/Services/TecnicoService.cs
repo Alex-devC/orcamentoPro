@@ -4,7 +4,11 @@ using OrcPro.Application.Exceptions;
 using OrcPro.Application.Interfaces.Repositories;
 using OrcPro.Application.Interfaces.Services;
 using OrcPro.Domain.Common;
+using OrcPro.Domain.Common.Formatters;
 using OrcPro.Domain.Entities.Tecnico;
+
+// Alias to disambiguate between OrcPro.Domain.Common.CpfCnpjValidator (legacy) and OrcPro.Domain.Common.Formatters.CpfCnpjValidator (new)
+using CpfCnpjValidatorEx = OrcPro.Domain.Common.Formatters.CpfCnpjValidator;
 
 namespace OrcPro.Application.Services;
 
@@ -57,7 +61,7 @@ public class TecnicoService : ITecnicoService
 
         var codigo = string.IsNullOrWhiteSpace(dto.Codigo)
             ? await _tecnicoRepository.GerarProximoCodigoAsync(cancellationToken)
-            : dto.Codigo.Trim();
+            : dto.Codigo.Trim().ToUpperInvariant();
 
         if (await _tecnicoRepository.ExistsCodigoAsync(codigo, null, cancellationToken))
             throw new BusinessException($"Já existe um técnico cadastrado com o código '{codigo}'.");
@@ -67,15 +71,15 @@ public class TecnicoService : ITecnicoService
         var tecnico = new Tecnico
         {
             Codigo = codigo,
-            Nome = dto.Nome.Trim(),
+            Nome = dto.Nome.Trim().ToUpperInvariant(),
             Cpf = cpf,
-            Rg = dto.Rg?.Trim(),
-            Telefone = dto.Telefone?.Trim(),
-            Celular = dto.Celular?.Trim(),
-            Email = dto.Email?.Trim(),
-            Especialidade = dto.Especialidade?.Trim(),
-            RegistroProfissional = dto.RegistroProfissional?.Trim(),
-            Observacoes = dto.Observacoes?.Trim(),
+            Rg = NormalizarTexto(dto.Rg),
+            Telefone = PhoneMaskHelper.Normalizar(dto.Telefone),
+            Celular = PhoneMaskHelper.Normalizar(dto.Celular),
+            Email = InputFormattingHelper.NormalizeEmail(dto.Email),
+            Especialidade = NormalizarTexto(dto.Especialidade),
+            RegistroProfissional = NormalizarTexto(dto.RegistroProfissional),
+            Observacoes = NormalizarTexto(dto.Observacoes),
             Ativo = dto.Ativo,
             DataCriacao = DateTime.UtcNow
         };
@@ -96,25 +100,25 @@ public class TecnicoService : ITecnicoService
             throw new NotFoundException("Técnico", dto.Id);
 
         if (!string.IsNullOrWhiteSpace(dto.Codigo) &&
-            await _tecnicoRepository.ExistsCodigoAsync(dto.Codigo.Trim(), dto.Id, cancellationToken))
+            await _tecnicoRepository.ExistsCodigoAsync(dto.Codigo.Trim().ToUpperInvariant(), dto.Id, cancellationToken))
         {
             throw new BusinessException($"Já existe outro técnico cadastrado com o código '{dto.Codigo}'.");
         }
 
         if (!string.IsNullOrWhiteSpace(dto.Codigo))
-            tecnico.Codigo = dto.Codigo.Trim();
+            tecnico.Codigo = dto.Codigo.Trim().ToUpperInvariant();
 
         var cpf = await NormalizarCpfAsync(dto.Cpf, dto.Id, cancellationToken);
 
-        tecnico.Nome = dto.Nome.Trim();
+        tecnico.Nome = dto.Nome.Trim().ToUpperInvariant();
         tecnico.Cpf = cpf;
-        tecnico.Rg = dto.Rg?.Trim();
-        tecnico.Telefone = dto.Telefone?.Trim();
-        tecnico.Celular = dto.Celular?.Trim();
-        tecnico.Email = dto.Email?.Trim();
-        tecnico.Especialidade = dto.Especialidade?.Trim();
-        tecnico.RegistroProfissional = dto.RegistroProfissional?.Trim();
-        tecnico.Observacoes = dto.Observacoes?.Trim();
+        tecnico.Rg = NormalizarTexto(dto.Rg);
+        tecnico.Telefone = PhoneMaskHelper.Normalizar(dto.Telefone);
+        tecnico.Celular = PhoneMaskHelper.Normalizar(dto.Celular);
+        tecnico.Email = InputFormattingHelper.NormalizeEmail(dto.Email);
+        tecnico.Especialidade = NormalizarTexto(dto.Especialidade);
+        tecnico.RegistroProfissional = NormalizarTexto(dto.RegistroProfissional);
+        tecnico.Observacoes = NormalizarTexto(dto.Observacoes);
         tecnico.Ativo = dto.Ativo;
         tecnico.DataAtualizacao = DateTime.UtcNow;
 
@@ -159,11 +163,11 @@ public class TecnicoService : ITecnicoService
     /// </summary>
     private async Task<string?> NormalizarCpfAsync(string? cpf, int? ignorarId, CancellationToken cancellationToken)
     {
-        var normalizado = CpfCnpjValidator.Normalizar(cpf);
+        var normalizado = CpfCnpjValidatorEx.Normalizar(cpf);
         if (string.IsNullOrEmpty(normalizado))
             return null;
 
-        if (!CpfCnpjValidator.EhValido(normalizado))
+        if (!CpfCnpjValidatorEx.EhValido(normalizado))
             throw new ValidationException("O CPF informado é inválido. Confira os dígitos.");
 
         if (await _tecnicoRepository.ExistsCpfAsync(normalizado, ignorarId, cancellationToken))
@@ -176,7 +180,7 @@ public class TecnicoService : ITecnicoService
 
     private static void AplicarEndereco(Tecnico tecnico, CriarTecnicoDto dto)
     {
-        tecnico.Cep = NormalizarTexto(dto.Cep);
+        tecnico.Cep = CepMaskHelper.Normalizar(NormalizarTexto(dto.Cep));
         tecnico.Logradouro = NormalizarTexto(dto.Logradouro);
         tecnico.Numero = NormalizarTexto(dto.Numero);
         tecnico.Complemento = NormalizarTexto(dto.Complemento);
@@ -186,7 +190,7 @@ public class TecnicoService : ITecnicoService
     }
 
     private static string? NormalizarTexto(string? valor) =>
-        string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+        string.IsNullOrWhiteSpace(valor) ? null : valor.Trim().ToUpperInvariant();
 
     private async Task<TecnicoDto> MapearParaDtoAsync(Tecnico t, CancellationToken cancellationToken)
     {

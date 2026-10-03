@@ -4,7 +4,11 @@ using OrcPro.Application.Exceptions;
 using OrcPro.Application.Interfaces.Repositories;
 using OrcPro.Application.Interfaces.Services;
 using OrcPro.Domain.Common;
+using OrcPro.Domain.Common.Formatters;
 using OrcPro.Domain.Entities.Cliente;
+
+// Alias to disambiguate between OrcPro.Domain.Common.CpfCnpjValidator (legacy) and OrcPro.Domain.Common.Formatters.CpfCnpjValidator (new)
+using CpfCnpjValidatorEx = OrcPro.Domain.Common.Formatters.CpfCnpjValidator;
 
 namespace OrcPro.Application.Services;
 
@@ -31,7 +35,8 @@ public class ClienteService : IClienteService
 
     public async Task<ClienteDto?> ObterPorCpfCnpjAsync(string cpfCnpj, CancellationToken cancellationToken = default)
     {
-        var cliente = await _clienteRepository.GetByCpfCnpjAsync(CpfCnpjValidator.Normalizar(cpfCnpj), cancellationToken);
+        var normalizado = CpfCnpjValidatorEx.Normalizar(cpfCnpj);
+        var cliente = await _clienteRepository.GetByCpfCnpjAsync(normalizado, cancellationToken);
         return cliente == null ? null : MapearParaDto(cliente, 0);
     }
 
@@ -59,13 +64,13 @@ public class ClienteService : IClienteService
     {
         ValidarCliente(dto);
 
-        var cpfCnpj = CpfCnpjValidator.Normalizar(dto.CpfCnpj);
+        var cpfCnpj = CpfCnpjValidatorEx.Normalizar(dto.CpfCnpj);
 
         if (!string.IsNullOrEmpty(cpfCnpj) &&
             await _clienteRepository.ExistsCpfCnpjAsync(cpfCnpj, null, cancellationToken))
         {
             throw new BusinessException(
-                $"Já existe um cliente cadastrado com o CPF/CNPJ '{CpfCnpjValidator.Formatar(cpfCnpj)}'.");
+                $"Já existe um cliente cadastrado com o CPF/CNPJ '{CpfCnpjValidatorEx.Formatar(cpfCnpj)}'.");
         }
 
         var codigo = await ResolverCodigoAsync(dto.Codigo, null, cancellationToken);
@@ -74,17 +79,17 @@ public class ClienteService : IClienteService
         {
             Codigo = codigo,
             TipoPessoa = dto.TipoPessoa,
-            NomeRazaoSocial = dto.NomeRazaoSocial.Trim(),
+            NomeRazaoSocial = dto.NomeRazaoSocial.Trim().ToUpperInvariant(),
             NomeFantasia = NormalizarOpcional(dto.NomeFantasia),
             // Vazio (e não null) quando não informado: preserva compatibilidade com bases
             // existentes, cuja coluna CpfCnpj foi criada como NOT NULL.
             CpfCnpj = cpfCnpj,
             RgIe = NormalizarOpcional(dto.RgIe),
-            Telefone = NormalizarOpcional(dto.Telefone),
-            Celular = dto.Celular.Trim(),
-            Email = dto.Email.Trim(),
-            EmailFinanceiro = NormalizarOpcional(dto.EmailFinanceiro),
-            Cep = NormalizarOpcional(dto.Cep),
+            Telefone = PhoneMaskHelper.Normalizar(NormalizarOpcional(dto.Telefone)),
+            Celular = PhoneMaskHelper.Normalizar(dto.Celular),
+            Email = InputFormattingHelper.NormalizeEmail(dto.Email) ?? string.Empty,
+            EmailFinanceiro = InputFormattingHelper.NormalizeEmail(dto.EmailFinanceiro),
+            Cep = CepMaskHelper.Normalizar(NormalizarOpcional(dto.Cep)),
             Logradouro = NormalizarOpcional(dto.Logradouro),
             Numero = NormalizarOpcional(dto.Numero),
             Complemento = NormalizarOpcional(dto.Complemento),
@@ -108,25 +113,25 @@ public class ClienteService : IClienteService
         if (cliente == null)
             throw new NotFoundException("Cliente", dto.Id);
 
-        var cpfCnpj = CpfCnpjValidator.Normalizar(dto.CpfCnpj);
+        var cpfCnpj = CpfCnpjValidatorEx.Normalizar(dto.CpfCnpj);
 
         if (!string.IsNullOrEmpty(cpfCnpj) &&
             await _clienteRepository.ExistsCpfCnpjAsync(cpfCnpj, dto.Id, cancellationToken))
         {
             throw new BusinessException(
-                $"Já existe outro cliente cadastrado com o CPF/CNPJ '{CpfCnpjValidator.Formatar(cpfCnpj)}'.");
+                $"Já existe outro cliente cadastrado com o CPF/CNPJ '{CpfCnpjValidatorEx.Formatar(cpfCnpj)}'.");
         }
 
         cliente.TipoPessoa = dto.TipoPessoa;
-        cliente.NomeRazaoSocial = dto.NomeRazaoSocial.Trim();
+        cliente.NomeRazaoSocial = dto.NomeRazaoSocial.Trim().ToUpperInvariant();
         cliente.NomeFantasia = NormalizarOpcional(dto.NomeFantasia);
         cliente.CpfCnpj = cpfCnpj;
         cliente.RgIe = NormalizarOpcional(dto.RgIe);
-        cliente.Telefone = NormalizarOpcional(dto.Telefone);
-        cliente.Celular = dto.Celular.Trim();
-        cliente.Email = dto.Email.Trim();
-        cliente.EmailFinanceiro = NormalizarOpcional(dto.EmailFinanceiro);
-        cliente.Cep = NormalizarOpcional(dto.Cep);
+        cliente.Telefone = PhoneMaskHelper.Normalizar(NormalizarOpcional(dto.Telefone));
+        cliente.Celular = PhoneMaskHelper.Normalizar(dto.Celular);
+        cliente.Email = InputFormattingHelper.NormalizeEmail(dto.Email) ?? string.Empty;
+        cliente.EmailFinanceiro = InputFormattingHelper.NormalizeEmail(dto.EmailFinanceiro);
+        cliente.Cep = CepMaskHelper.Normalizar(NormalizarOpcional(dto.Cep));
         cliente.Logradouro = NormalizarOpcional(dto.Logradouro);
         cliente.Numero = NormalizarOpcional(dto.Numero);
         cliente.Complemento = NormalizarOpcional(dto.Complemento);
@@ -186,7 +191,7 @@ public class ClienteService : IClienteService
     }
 
     private static string? NormalizarOpcional(string? valor)
-        => string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+        => string.IsNullOrWhiteSpace(valor) ? null : valor.Trim().ToUpperInvariant();
 
     private static void ValidarCliente(CriarClienteDto dto)
     {
@@ -200,8 +205,9 @@ public class ClienteService : IClienteService
             throw new ValidationException("O E-mail principal é obrigatório.");
 
         // CPF/CNPJ é opcional, mas quando informado precisa ser válido.
-        var cpfCnpj = CpfCnpjValidator.Normalizar(dto.CpfCnpj);
-        if (!string.IsNullOrEmpty(cpfCnpj) && !CpfCnpjValidator.EhValido(cpfCnpj))
+        // Suporta CPF, CNPJ numérico e CNPJ alfanumérico oficial.
+        var cpfCnpj = CpfCnpjValidatorEx.Normalizar(dto.CpfCnpj);
+        if (!string.IsNullOrEmpty(cpfCnpj) && !CpfCnpjValidatorEx.EhValido(cpfCnpj))
             throw new ValidationException("O CPF/CNPJ informado é inválido. Confira os dígitos.");
 
         if (!string.IsNullOrWhiteSpace(dto.Uf) && dto.Uf.Trim().Length != 2)
