@@ -8,6 +8,7 @@ using OrcPro.Application.DTOs.Cliente;
 using OrcPro.Application.DTOs.Auth;
 using OrcPro.Application.DTOs.Common;
 using OrcPro.Application.Interfaces.Services;
+using OrcPro.Application.Services;
 using OrcPro.Domain.Common;
 using OrcPro.Domain.Common.Formatters;
 
@@ -439,11 +440,9 @@ public string FormEmailFinanceiro
     // ---------- CEP ----------
 
     /// <summary>
-    /// Quando o CEP é completado (8 dígitos), consulta automaticamente o endereço.
-    /// Não bloqueia a interface; preserva campos que o usuário editou manualmente.
-    /// Não repete a consulta ao mesmo CEP (cache por instância de ViewModel).
-    /// Ao limpar o campo CEP, o cache e os campos de endereço são limpos para
-    /// permitir nova consulta.
+    /// CONSULTA AUTOMÁTICA (origem: AUTOMÁTICA no log). Disparada quando o campo CEP
+    /// é completado com 8 dígitos. Usa o mesmo fluxo da consulta manual (serviço novo,
+    /// log completo em logcep.txt), mas respeita o cache da sessão de edição.
     /// </summary>
     private async Task TentarConsultarCepAsync(string cepInput)
     {
@@ -467,9 +466,17 @@ public string FormEmailFinanceiro
             return;
         }
 
-        // Cache: não repetir consulta ao mesmo CEP na mesma sessão de edição
+        // Cache da consulta AUTOMÁTICA: não repetir ao mesmo CEP na mesma sessão de edição.
+        // (A lupa/MANUAL ignora este cache — ver ConsultarCepManualmenteAsync.)
         if (!_cepCache.ShouldQuery(cep))
+        {
+            CepDiagnosticLogger.Linha(
+                $"[CEP] Origem da consulta: AUTOMÁTICA — cache ativo para {CepMaskHelper.Formatar(cep)}, consulta ignorada.");
             return;
+        }
+
+        CepDiagnosticLogger.Linha("[CEP] Origem da consulta: AUTOMÁTICA");
+        CepDiagnosticLogger.Linha($"[CEP] CEP a consultar: {CepMaskHelper.Formatar(cep)}");
 
         CepCarregando = true;
         EditorMensagem = string.Empty;
@@ -480,27 +487,18 @@ public string FormEmailFinanceiro
         try
         {
             var result = await _cepService.ConsultarAsync(cep, _cepCancellationTokenSource.Token);
-
-            if (result.Success)
-            {
-                if (!_cepLogradouroEditado) SetField(ref _formLogradouro, result.Logradouro ?? string.Empty);
-                if (!_cepBairroEditado) SetField(ref _formBairro, result.Bairro ?? string.Empty);
-                if (!_cepCidadeEditado) SetField(ref _formCidade, result.Cidade ?? string.Empty);
-                if (!_cepUfEditado) SetField(ref _formUf, result.Uf ?? string.Empty);
-
-                // Consulta bem-sucedida: remove o estado de erro do CEP (borda/tooltip/resumo).
-                LimparErroValidacao(CepCampo);
-            }
-            else
-            {
-                // CEP não encontrado ou serviço indisponível: limpa cache para permitir nova tentativa
-                _cepCache.Reset();
-                RegistrarErroCep(cep);
-            }
+            AplicarEndereco(result, "AUTOMÁTICA");
         }
         catch (OperationCanceledException)
         {
-            // Consulta cancelada - não é um erro
+            // Consulta cancelada (novo CEP digitado) - não é um erro
+            CepDiagnosticLogger.Linha("[CEP] Consulta automática cancelada.");
+        }
+        catch (Exception ex)
+        {
+            CepDiagnosticLogger.LogarException("[CEP] Falha inesperada na consulta automática", ex);
+            _cepCache.Reset();
+            RegistrarErroCep(cep);
         }
         finally
         {
@@ -531,18 +529,39 @@ public string FormEmailFinanceiro
     }
 
     /// <summary>
-    /// Consulta CEP manualmente via botão de lupa. Reutiliza a mesma lógica de cache
-    /// e preservação de campos do TentarConsultarCepAsync, mas ignora o cache para
-    /// forçar uma nova consulta quando solicitado pelo usuário.
+    /// CONSULTA MANUAL via botão de lupa (origem: MANUAL no log). É uma ação explícita
+    /// do usuário: SEMPRE executa uma consulta real, IGNORANDO o cache, e registra em
+    /// logcep.txt cada etapa — clique, valor do campo, comando, serviço e aplicação.
     /// </summary>
     private async Task ConsultarCepManualmenteAsync()
     {
-        if (_cepService is null || string.IsNullOrWhiteSpace(FormCep))
+        CepDiagnosticLogger.Linha("[CEP] BOTÃO LUPA CLICADO");
+        CepDiagnosticLogger.Linha($"[CEP] Valor atual do campo: '{FormCep}'");
+        CepDiagnosticLogger.Linha($"[CEP] CepPodeConsultarManualmente: {(CepPodeConsultarManualmente ? "true" : "false")}");
+
+        if (_cepService is null)
+        {
+            CepDiagnosticLogger.Linha("[CEP] Serviço disponível: false — comando abortado (ICepService não injetado).");
             return;
+        }
+
+        if (string.IsNullOrWhiteSpace(FormCep))
+        {
+            CepDiagnosticLogger.Linha("[CEP] Campo CEP vazio — comando abortado.");
+            return;
+        }
+
+        CepDiagnosticLogger.Linha("[CEP] ConsultarCepCommand iniciado");
+        CepDiagnosticLogger.Linha("[CEP] Serviço disponível: true");
+        CepDiagnosticLogger.Linha("[CEP] Origem da consulta: MANUAL");
+        CepDiagnosticLogger.Linha("[CEP] Consulta manual — IGNORANDO CACHE.");
 
         var cep = CepMaskHelper.Normalizar(FormCep);
+        CepDiagnosticLogger.Linha($"[CEP] CEP normalizado: {cep}");
+
         if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
         {
+            CepDiagnosticLogger.Linha($"[CEP] Falha: CEP com {cep.Length} dígito(s) — esperado 8.");
             // CEP incompleto: registra o formato inválido na validação (campo vermelho + resumo).
             EditorMensagem = "Digite um CEP com 8 dígitos para consultar.";
             DefinirErroValidacao(CepCampo, "O CEP deve ter 8 dígitos.");
@@ -552,18 +571,22 @@ public string FormEmailFinanceiro
         CepCarregando = true;
         EditorMensagem = string.Empty;
 
-        // A lupa é uma ação explícita: ignora o cache para forçar nova consulta e
+        // A lupa é uma ação explícita: ignora o cache para forçar consulta real e
         // descarta o endereço que pertencia ao CEP anterior (preserva campos editados).
         _cepCache.Reset();
         ClearStaleAddressFields();
 
         try
         {
+            CepDiagnosticLogger.Linha("[CEP] Chamando ICepService.ConsultarAsync");
             var result = await _cepService.ConsultarAsync(cep);
-            AplicarEndereco(result);
+            CepDiagnosticLogger.Linha(
+                $"[CEP] ICepService retornou: Success={result.Success.ToString().ToLowerInvariant()}, Cep={result.Cep}");
+            AplicarEndereco(result, "MANUAL");
         }
         catch (Exception ex)
         {
+            CepDiagnosticLogger.LogarException("[CEP] Exceção na consulta manual", ex);
             EditorMensagem = $"Erro na consulta de CEP: {ex.Message}";
             DefinirErroValidacao(CepCampo, "Não foi possível consultar o CEP. Tente novamente.");
         }
@@ -573,26 +596,61 @@ public string FormEmailFinanceiro
         }
     }
 
-    /// <summary>Aplica o resultado da consulta de CEP nos campos do formulário, preservando campos editados.</summary>
-    private void AplicarEndereco(CepAddressResult result)
+    /// <summary>
+    /// Aplica o resultado da consulta de CEP nos campos do formulário (sucesso ou falha),
+    /// preservando campos editados pelo usuário. Registra no logcep.txt os valores
+    /// anterior/novo de cada campo, as flags de edição e o estado de validação.
+    /// </summary>
+    private void AplicarEndereco(CepAddressResult result, string origem)
     {
+        CepDiagnosticLogger.Linha("=============== [APLICAÇÃO] ===============");
+        CepDiagnosticLogger.Linha($"[APLICAÇÃO] Origem: {origem}");
+        CepDiagnosticLogger.Linha($"[APLICAÇÃO] Success = {(result.Success ? "true" : "false")}");
+        CepDiagnosticLogger.Linha($"[APLICAÇÃO] CEP retornado: {CepMaskHelper.Formatar(result.Cep)}");
+        CepDiagnosticLogger.Linha(
+            $"[APLICAÇÃO] Flags de edição: logradouro={_cepLogradouroEditado}, bairro={_cepBairroEditado}, cidade={_cepCidadeEditado}, uf={_cepUfEditado}");
+
         if (result.Success)
         {
+            var logradouroAnterior = _formLogradouro;
+            var bairroAnterior = _formBairro;
+            var cidadeAnterior = _formCidade;
+            var ufAnterior = _formUf;
+
             if (!_cepLogradouroEditado) SetField(ref _formLogradouro, result.Logradouro ?? string.Empty);
             if (!_cepBairroEditado) SetField(ref _formBairro, result.Bairro ?? string.Empty);
             if (!_cepCidadeEditado) SetField(ref _formCidade, result.Cidade ?? string.Empty);
             if (!_cepUfEditado) SetField(ref _formUf, result.Uf ?? string.Empty);
 
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] Logradouro anterior: '{logradouroAnterior}'");
+            CepDiagnosticLogger.Linha(
+                $"[APLICAÇÃO] Logradouro novo: '{_formLogradouro}'{(_cepLogradouroEditado ? " (preservado: editado pelo usuário)" : string.Empty)}");
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] Bairro anterior: '{bairroAnterior}'");
+            CepDiagnosticLogger.Linha(
+                $"[APLICAÇÃO] Bairro novo: '{_formBairro}'{(_cepBairroEditado ? " (preservado: editado pelo usuário)" : string.Empty)}");
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] Cidade anterior: '{cidadeAnterior}'");
+            CepDiagnosticLogger.Linha(
+                $"[APLICAÇÃO] Cidade nova: '{_formCidade}'{(_cepCidadeEditado ? " (preservada: editada pelo usuário)" : string.Empty)}");
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] UF anterior: '{ufAnterior}'");
+            CepDiagnosticLogger.Linha(
+                $"[APLICAÇÃO] UF nova: '{_formUf}'{(_cepUfEditado ? " (preservada: editada pelo usuário)" : string.Empty)}");
+
             // Mantém o cache coerente com o CEP efetivamente aplicado.
             _cepCache.Registrar(result.Cep);
             LimparErroValidacao(CepCampo);
+            CepDiagnosticLogger.Linha("[APLICAÇÃO] Erro do CEP removido (borda vermelha e resumo limpos).");
+            CepDiagnosticLogger.Linha("[APLICAÇÃO] Endereço aplicado ao formulário.");
         }
         else
         {
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] Mensagem de erro: {result.ErrorMessage}");
             _cepCache.Reset();
             RegistrarErroCep(result.Cep);
+            CepDiagnosticLogger.Linha("[APLICAÇÃO] Erro registrado na infraestrutura de validação (borda vermelha + resumo no topo).");
+            CepDiagnosticLogger.Linha("[APLICAÇÃO] Endereço antigo não é mantido como pertencente ao novo CEP.");
         }
 
+        CepDiagnosticLogger.Linha("=============== FIM [APLICAÇÃO] ===============");
         OnPropertyChanged(nameof(CepPodeConsultarManualmente));
     }
 

@@ -42,6 +42,7 @@
                 Command="{Binding CepCommand, ElementName=Root}"
                 CommandParameter="{Binding CepText, ElementName=Root}"
                 IsEnabled="{Binding CanLookup, ElementName=Root}"
+                Click="OnLupaClick"
                 ToolTip="Consultar CEP (digite 8 dígitos)"
                 AutomationProperties.AutomationId="{Binding LupaAutomationId, ElementName=Root}">
             <Path Data="{StaticResource IconSearch}"
