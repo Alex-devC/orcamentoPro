@@ -1,0 +1,94 @@
+using System;
+using System.Windows;
+using System.Windows.Controls;
+
+namespace OrcPro.App.Controls;
+
+/// <summary>
+/// UserControl reutilizável que combina um TextBox de CEP (com máscara) e um
+/// botão de lupa para consulta manual.
+///
+/// Uso em XAML:
+/// <uc:CepComLookupControl CepText="{Binding FormCep}"
+///                         CepCommand="{Binding ConsultarCepCommand}"
+///                         CanLookup="{Binding CepPodeConsultarManualmente}"
+///                         TabIndex="10"
+///                         AutomationId="ClienteCepInput"
+///                         LupaAutomationId="ClienteCepLupa" />
+/// </summary>
+public partial class CepComLookupControl : UserControl
+{
+    public CepComLookupControl()
+    {
+        InitializeComponent();
+    }
+
+    #region Propriedades de Dependency
+
+    public static readonly DependencyProperty CepTextProperty =
+        DependencyProperty.Register(
+            nameof(CepText),
+            typeof(string),
+            typeof(CepComLookupControl),
+            new PropertyMetadata(string.Empty));
+
+    public string CepText
+    {
+        get => (string)GetValue(CepTextProperty);
+        set => SetValue(CepTextProperty, value);
+    }
+
+    public static readonly DependencyProperty CepCommandProperty =
+        DependencyProperty.Register(
+            nameof(CepCommand),
+            typeof(System.Windows.Input.ICommand),
+            typeof(CepComLookupControl),
+            new PropertyMetadata(null));
+
+    public System.Windows.Input.ICommand? CepCommand
+    {
+        get => (System.Windows.Input.ICommand?)GetValue(CepCommandProperty);
+        set => SetValue(CepCommandProperty, value);
+    }
+
+    public static readonly DependencyProperty CanLookupProperty =
+        DependencyProperty.Register(
+            nameof(CanLookup),
+            typeof(bool),
+            typeof(CepComLookupControl),
+            new PropertyMetadata(true));
+
+    public bool CanLookup
+    {
+        get => (bool)GetValue(CanLookupProperty);
+        set => SetValue(CanLookupProperty, value);
+    }
+
+    public static readonly DependencyProperty AutomationIdProperty =
+        DependencyProperty.Register(
+            nameof(AutomationId),
+            typeof(string),
+            typeof(CepComLookupControl),
+            new PropertyMetadata(string.Empty));
+
+    public string AutomationId
+    {
+        get => (string)GetValue(AutomationIdProperty);
+        set => SetValue(AutomationIdProperty, value);
+    }
+
+    public static readonly DependencyProperty LupaAutomationIdProperty =
+        DependencyProperty.Register(
+            nameof(LupaAutomationId),
+            typeof(string),
+            typeof(CepComLookupControl),
+            new PropertyMetadata("CepLupa"));
+
+    public string LupaAutomationId
+    {
+        get => (string)GetValue(LupaAutomationIdProperty);
+        set => SetValue(LupaAutomationIdProperty, value);
+    }
+
+    #endregion
+}

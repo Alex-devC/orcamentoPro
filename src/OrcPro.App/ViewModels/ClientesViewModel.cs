@@ -126,6 +126,7 @@ public class ClientesViewModel : ViewModelBase
         LimparBuscaCommand = new RelayCommand(_ => Busca = string.Empty);
         PaginaAnteriorCommand = new AsyncRelayCommand(_ => IrParaPagina(Pagina - 1), _ => PodePaginaAnterior);
         PaginaProximaCommand = new AsyncRelayCommand(_ => IrParaPagina(Pagina + 1), _ => PodePaginaProxima);
+        ConsultarCepCommand = new AsyncRelayCommand(_ => ConsultarCepManualmenteAsync());
     }
 
     // ---------- Permissões do módulo ----------
@@ -295,6 +296,7 @@ public string FormEmailFinanceiro
         set
         {
             if (!SetField(ref _formCep, value)) return;
+            OnPropertyChanged(nameof(CepPodeConsultarManualmente));
             _ = TentarConsultarCepAsync(value);
         }
     }
@@ -366,7 +368,11 @@ public string FormEmailFinanceiro
     public bool CepCarregando
     {
         get => _cepCarregando;
-        private set => SetField(ref _cepCarregando, value);
+        private set
+        {
+            if (SetField(ref _cepCarregando, value))
+                OnPropertyChanged(nameof(CepPodeConsultarManualmente));
+        }
     }
 
     /// <summary>Orçamentos vinculados (define exclusão ou apenas inativação).</summary>
@@ -461,6 +467,65 @@ public string FormEmailFinanceiro
         }
     }
 
+    /// <summary>
+    /// Consulta CEP manualmente via botão de lupa. Reutiliza a mesma lógica de cache
+    /// e preservação de campos do TentarConsultarCepAsync, mas ignora o cache para
+    /// forçar uma nova consulta quando solicitado pelo usuário.
+    /// </summary>
+    private async Task ConsultarCepManualmenteAsync()
+    {
+        if (_cepService is null || string.IsNullOrWhiteSpace(FormCep))
+            return;
+
+        var cep = CepMaskHelper.Normalizar(FormCep);
+        if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
+        {
+            EditorMensagem = "Digite um CEP com 8 dígitos para consultar.";
+            return;
+        }
+
+        CepCarregando = true;
+        EditorMensagem = string.Empty;
+
+        try
+        {
+            var result = await _cepService.ConsultarAsync(cep);
+            AplicarEndereco(result);
+        }
+        catch (Exception ex)
+        {
+            EditorMensagem = $"Erro na consulta de CEP: {ex.Message}";
+        }
+        finally
+        {
+            CepCarregando = false;
+        }
+    }
+
+    /// <summary>Aplica o resultado da consulta de CEP nos campos do formulário, preservando campos editados.</summary>
+    private void AplicarEndereco(CepAddressResult result)
+    {
+        if (result.Success)
+        {
+            if (!_cepLogradouroEditado) FormLogradouro = result.Logradouro ?? string.Empty;
+            if (!_cepBairroEditado) FormBairro = result.Bairro ?? string.Empty;
+            if (!_cepCidadeEditado) FormCidade = result.Cidade ?? string.Empty;
+            if (!_cepUfEditado) FormUf = result.Uf ?? string.Empty;
+        }
+        else
+        {
+            EditorMensagem = $"Não foi possível localizar o CEP '{CepMaskHelper.Formatar(result.Cep)}'. Preencha o endereço manualmente.";
+        }
+
+        OnPropertyChanged(nameof(CepPodeConsultarManualmente));
+    }
+
+    private bool CepTemOitoDigitos()
+    {
+        var cep = CepMaskHelper.Normalizar(_formCep);
+        return cep.Length == 8 && cep.All(char.IsDigit);
+    }
+
     // ---------- Comandos ----------
 
     public RelayCommand NovoCommand { get; }
@@ -477,6 +542,10 @@ public string FormEmailFinanceiro
     public RelayCommand LimparBuscaCommand { get; }
     public AsyncRelayCommand PaginaAnteriorCommand { get; }
     public AsyncRelayCommand PaginaProximaCommand { get; }
+    public AsyncRelayCommand ConsultarCepCommand { get; }
+
+    /// <summary>Indica se o botão de lupa de CEP pode ser clicado (serviço disponível, não carregando, CEP com 8 dígitos).</summary>
+    public bool CepPodeConsultarManualmente => _cepService is not null && !CepCarregando && CepTemOitoDigitos();
 // ---------- Carga de dados ----------
 
     public override async Task InitializeAsync()
