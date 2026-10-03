@@ -203,8 +203,8 @@
                 <ControlTemplate TargetType="TabControl">
                     <Border Background="{TemplateBinding Background}">
                         <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="28" />
+                             <Grid.RowDefinitions>
+                                <RowDefinition Height="56" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
                             <Border Grid.Row="0" Background="{StaticResource SurfaceAltBrush}"
@@ -228,9 +228,9 @@
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="TabItem">
+                        <ControlTemplate TargetType="TabItem">
                     <Border x:Name="Bd" Background="Transparent" BorderBrush="Transparent"
-                            BorderThickness="0,0,0,2" Padding="16,0" Margin="0,0,2,0">
+                            BorderThickness="0,0,0,2" Padding="16,8,16,8" Margin="0,0,2,0">
                         <ContentPresenter x:Name="CP" ContentSource="Header" VerticalAlignment="Center"
                                           HorizontalAlignment="Center"
                                           TextElement.Foreground="{TemplateBinding Foreground}" />

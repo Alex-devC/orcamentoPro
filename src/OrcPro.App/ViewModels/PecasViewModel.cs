@@ -460,25 +460,19 @@ public class PecasViewModel : ViewModelBase
         VisualizacaoAberta = false;
     }
 
-    private async Task SalvarAsync()
-    {
-        if (string.IsNullOrWhiteSpace(FormCodigo))
-        {
-            EditorMensagem = "Informe o código da peça.";
-            return;
-        }
+     private async Task SalvarAsync()
+     {
+         var validation = FormValidator.Create()
+             .Required(FormCodigo, "o código da peça")
+             .Required(FormDescricao, "a descrição da peça")
+             .DecimalNaoNegativo(FormPrecoVenda, "preço de venda")
+             .Build();
 
-        if (string.IsNullOrWhiteSpace(FormDescricao))
-        {
-            EditorMensagem = "Informe a descrição da peça.";
-            return;
-        }
-
-        if (FormPrecoVenda < 0)
-        {
-            EditorMensagem = "O preço de venda não pode ser negativo.";
-            return;
-        }
+         if (!validation.IsValid)
+         {
+             EditorMensagem = validation.FirstError;
+             return;
+         }
 
         try
         {

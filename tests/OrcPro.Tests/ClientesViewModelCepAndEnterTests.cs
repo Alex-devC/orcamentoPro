@@ -288,6 +288,132 @@ public class ClientesViewModelCepAndEnterTests
 
     #endregion
 
+    #region CEP Cache Reset Tests
+
+    /// <summary>
+    /// Ao limpar o campo CEP, o cache deve ser resetado para permitir nova consulta
+    /// ao mesmo CEP. Isso permite retry de CEPs que falharam ou foram alterados.
+    /// </summary>
+    [Fact]
+    public async Task FormCep_LimparCampo_DeveResetarCache_PermiteNovaConsulta()
+    {
+        // Arrange
+        var service = new FakeContadorCepService();
+        service.AddCepResult("01310-100", "Av. Teste", "Bairro", "Cidade", "SP");
+
+        var vm = CriarViewModel(service);
+        AbrirFormulario(vm);
+
+        // Act - primeira consulta
+        vm.FormCep = "01310-100";
+        await Task.Delay(50);
+        var contagemAposPrimeira = service.NumeroConsultas;
+
+        // Limpa o campo CEP
+        vm.FormCep = string.Empty;
+        await Task.Delay(50);
+
+        // Retype o mesmo CEP
+        vm.FormCep = "01310-100";
+        await Task.Delay(50);
+
+        // Assert - duas consultas foram feitas (cache foi resetado ao limpar)
+        Assert.Equal(2, service.NumeroConsultas);
+        Assert.Equal("Av. Teste", vm.FormLogradouro);
+    }
+
+    /// <summary>
+    /// Quando o CEP falha (não encontrado), limpar e reescrever deve permitir retry.
+    /// </summary>
+    [Fact]
+    public async Task FormCep_CepQueFalhou_LimparERetype_DeveConsultarNovamente()
+    {
+        // Arrange
+        var service = new FakeContadorCepService();
+        service.AddCepResult("01310-100", "Av. Teste", "Bairro", "Cidade", "SP");
+        // CEP 99999999 não configurado → falha
+
+        var vm = CriarViewModel(service);
+        AbrirFormulario(vm);
+
+        // Act - primeira consulta falha
+        vm.FormCep = "99999999";
+        await Task.Delay(50);
+        Assert.Contains("não foi possível localizar", vm.EditorMensagem, StringComparison.OrdinalIgnoreCase);
+        var contagemAposFalha = service.NumeroConsultas;
+
+        // Limpa e retenta
+        vm.FormCep = string.Empty;
+        await Task.Delay(50);
+        vm.FormCep = "99999999";
+        await Task.Delay(50);
+
+        // Assert - nova consulta foi feita após limpar
+        Assert.Equal(2, service.NumeroConsultas);
+    }
+
+    /// <summary>
+    /// Alterar para um CEP diferente deve limpar os campos de endereço antes da nova consulta.
+    /// </summary>
+    [Fact]
+    public async Task FormCep_MudarParaCepDiferente_DeveLimparEnderecoAntesNovaConsulta()
+    {
+        // Arrange
+        var service = new FakeCepService();
+        service.AddCepResult("01310-100", "Av. Paulista", "Bela Vista", "São Paulo", "SP");
+        service.AddCepResult("20040-000", "Av. Rio", "Centro", "Rio de Janeiro", "RJ");
+
+        var vm = CriarViewModel(service);
+        AbrirFormulario(vm);
+
+        // Act - primeiro CEP
+        vm.FormCep = "01310-100";
+        await Task.Delay(50);
+        Assert.Equal("Av. Paulista", vm.FormLogradouro);
+
+        // Altera para CEP diferente
+        vm.FormCep = "20040-000";
+        await Task.Delay(50);
+
+        // Assert - endereço atualizado com o novo CEP
+        Assert.Equal("Av. Rio", vm.FormLogradouro);
+        Assert.Equal("Centro", vm.FormBairro);
+        Assert.Equal("Rio de Janeiro", vm.FormCidade);
+        Assert.Equal("RJ", vm.FormUf);
+        Assert.Empty(vm.EditorMensagem);
+    }
+
+    /// <summary>
+    /// Limpar o campo CEP deve limpar todos os campos de endereço e resetar o cache.
+    /// </summary>
+    [Fact]
+    public async Task FormCep_LimparCampo_DeveLimparCamposEndereco()
+    {
+        // Arrange
+        var service = new FakeCepService();
+        service.AddCepResult("01310-100", "Av. Paulista", "Bela Vista", "São Paulo", "SP");
+
+        var vm = CriarViewModel(service);
+        AbrirFormulario(vm);
+
+        // Act - preenche CEP e obtém endereço
+        vm.FormCep = "01310-100";
+        await Task.Delay(50);
+        Assert.Equal("Av. Paulista", vm.FormLogradouro);
+
+        // Limpa o CEP
+        vm.FormCep = string.Empty;
+        await Task.Delay(10);
+
+        // Assert - campos de endereço limpos
+        Assert.Empty(vm.FormLogradouro);
+        Assert.Empty(vm.FormBairro);
+        Assert.Empty(vm.FormCidade);
+        Assert.Empty(vm.FormUf);
+    }
+
+    #endregion
+
     #region CEP Service Disponível / Indisponível
 
     [Fact]

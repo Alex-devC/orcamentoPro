@@ -505,6 +505,8 @@ public class TecnicosViewModel : ViewModelBase
     /// Quando o CEP é completado (8 dígitos), consulta automaticamente o endereço.
     /// Não bloqueia a interface; preserva campos que o usuário editou manualmente.
     /// Não repete a consulta ao mesmo CEP (cache por instância de ViewModel).
+    /// Ao limpar o campo CEP, o cache e os campos de endereço são limpos para
+    /// permitir nova consulta.
     /// </summary>
     private async Task TentarConsultarCepAsync(string cepInput)
     {
@@ -517,7 +519,15 @@ public class TecnicosViewModel : ViewModelBase
         var cep = CepMaskHelper.Normalizar(cepInput);
 
         if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
+        {
+            // CEP vazio ou incompleto: limpar cache e campos de endereço
+            if (string.IsNullOrEmpty(cep))
+            {
+                _cepCache.Reset();
+                ClearCepAddressFields();
+            }
             return;
+        }
 
         // Cache: não repetir consulta ao mesmo CEP na mesma sessão de edição
         if (!_cepCache.ShouldQuery(cep))
@@ -526,19 +536,24 @@ public class TecnicosViewModel : ViewModelBase
         CepCarregando = true;
         EditorMensagem = string.Empty;
 
+        // Limpar campos de endereço antes da nova consulta (preserva campos editados pelo usuário)
+        ClearStaleAddressFields();
+
         try
         {
             var result = await _cepService.ConsultarAsync(cep, _cepCancellationTokenSource.Token);
 
             if (result.Success)
             {
-                if (!_cepLogradouroEditado) FormLogradouro = result.Logradouro ?? string.Empty;
-                if (!_cepBairroEditado) FormBairro = result.Bairro ?? string.Empty;
-                if (!_cepCidadeEditado) FormCidade = result.Cidade ?? string.Empty;
-                if (!_cepUfEditado) FormUf = result.Uf ?? string.Empty;
+                if (!_cepLogradouroEditado) SetField(ref _formLogradouro, result.Logradouro ?? string.Empty);
+                if (!_cepBairroEditado) SetField(ref _formBairro, result.Bairro ?? string.Empty);
+                if (!_cepCidadeEditado) SetField(ref _formCidade, result.Cidade ?? string.Empty);
+                if (!_cepUfEditado) SetField(ref _formUf, result.Uf ?? string.Empty);
             }
             else
             {
+                // CEP não encontrado ou serviço indisponível: limpa cache para permitir nova tentativa
+                _cepCache.Reset();
                 EditorMensagem = $"Não foi possível localizar o CEP '{CepMaskHelper.Formatar(cep)}'. Preencha o endereço manualmente.";
             }
         }
@@ -549,6 +564,28 @@ public class TecnicosViewModel : ViewModelBase
         {
             CepCarregando = false;
         }
+    }
+
+    /// <summary>Limpa todos os campos de endereço e reseta as flags de edição manual.</summary>
+    private void ClearCepAddressFields()
+    {
+        _cepLogradouroEditado = false;
+        _cepBairroEditado = false;
+        _cepCidadeEditado = false;
+        _cepUfEditado = false;
+        SetField(ref _formLogradouro, string.Empty);
+        SetField(ref _formBairro, string.Empty);
+        SetField(ref _formCidade, string.Empty);
+        SetField(ref _formUf, string.Empty);
+    }
+
+    /// <summary>Limpa campos de endereço que não foram editados manualmente, antes de uma nova consulta.</summary>
+    private void ClearStaleAddressFields()
+    {
+        if (!_cepLogradouroEditado) SetField(ref _formLogradouro, string.Empty);
+        if (!_cepBairroEditado) SetField(ref _formBairro, string.Empty);
+        if (!_cepCidadeEditado) SetField(ref _formCidade, string.Empty);
+        if (!_cepUfEditado) SetField(ref _formUf, string.Empty);
     }
 
     private void AbrirNovo()
@@ -653,20 +690,18 @@ public class TecnicosViewModel : ViewModelBase
         VisualizacaoAberta = false;
     }
 
-    private async Task SalvarAsync()
-    {
-        if (string.IsNullOrWhiteSpace(FormNome))
-        {
-            EditorMensagem = "Informe o nome do técnico.";
-            return;
-        }
+     private async Task SalvarAsync()
+     {
+         var validation = FormValidator.Create()
+             .Required(FormNome, "o nome do técnico")
+             .CpfCnpj(FormCpf)
+             .Build();
 
-        // Validação de CPF já no formulário (mensagem imediata) e novamente no serviço.
-        if (!string.IsNullOrWhiteSpace(FormCpf) && !CpfCnpjValidatorEx.EhValido(FormCpf))
-        {
-            EditorMensagem = "O CPF informado é inválido. Confira os dígitos.";
-            return;
-        }
+         if (!validation.IsValid)
+         {
+             EditorMensagem = validation.FirstError;
+             return;
+         }
 
         var nome = FormNome.Trim().ToUpperInvariant();
 

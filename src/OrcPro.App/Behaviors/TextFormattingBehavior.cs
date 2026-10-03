@@ -78,8 +78,10 @@ public static class TextFormattingBehavior
             textBox.PreviewTextInput += OnPreviewTextInput;
         }
 
-        // Para CEP, o LostFocus é tratado via CepAutoQueryOnLostFocus property
-        // O handler OnLostFocus foi removido para evitar conflito com o caching
+        // Para CEP, o LostFocus é tratado via CepAutoQueryOnLostFocus property.
+        // Atende a controles TextBox que não delegam a consulta automática ao ViewModel.
+        // O cache por TextBox evita consultas duplicadas ao mesmo CEP, mas reseta
+        // quando o texto é alterado (permitindo nova consulta após edição).
     }
 
     #endregion
@@ -193,10 +195,26 @@ public static class TextFormattingBehavior
         if ((bool)e.NewValue)
         {
             textBox.LostFocus += OnCepLostFocus;
+            textBox.TextChanged += OnCepTextChanged;
         }
         else
         {
             textBox.LostFocus -= OnCepLostFocus;
+            textBox.TextChanged -= OnCepTextChanged;
+        }
+    }
+
+    private static void OnCepTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (sender is not TextBox textBox)
+            return;
+
+        var cep = CepMaskHelper.Normalizar(textBox.Text);
+
+        // Se o CEP foi limpo, reseta o cache para permitir nova consulta
+        if (string.IsNullOrEmpty(cep) && _ultimoCepConsultado.TryGetValue(textBox, out _))
+        {
+            _ultimoCepConsultado.Remove(textBox);
         }
     }
 
@@ -211,6 +229,13 @@ public static class TextFormattingBehavior
 
         var cepInput = textBox.Text;
         var cep = CepMaskHelper.Normalizar(cepInput);
+
+        // Se o CEP foi limpo, reseta o cache para permitir nova consulta
+        if (string.IsNullOrEmpty(cep))
+        {
+            _ultimoCepConsultado.Remove(textBox);
+            return;
+        }
 
         // Só consultar se tiver 8 dígitos válidos
         if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
