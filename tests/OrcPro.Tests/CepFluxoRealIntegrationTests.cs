@@ -16,17 +16,8 @@ using Xunit.Abstractions;
 
 namespace OrcPro.Tests;
 
-/// <summary>
-/// Teste de INTEGRAÇÃO do fluxo COMPLETO da lupa com o provedor REAL (ViaCepService ao
-/// vivo): digitação → consulta automática → clique na lupa → serviço real → aplicação do
-/// resultado, com a sequência A (15130-010) → B (15085-520) → A de novo.
-///
-/// Sem internet: INCONCLUSIVO (retorno controlado). Qualquer outra falha: FALHA o teste
-/// (erro de implementação não vira "offline"). O CEP 15085-520 existe na base → endereço
-/// obrigatório. Para 15130-010, valida-se EXATAMENTE a resposta oficial do provedor
-/// (endereço aplicado OU estado inválido na infra de validação), com JSON bruto no log.
-/// Toda a sequência HTTP/JSON/resultado fica registrada em logcep.txt.
-/// </summary>
+/// <summary> ... </summary>
+[Collection("CEP Log Serial")]
 public class CepFluxoRealIntegrationTests
 {
     private static readonly UsuarioSessaoDto AdminSessao = new()
@@ -66,20 +57,14 @@ public class CepFluxoRealIntegrationTests
         var vm = new ClientesViewModel(new StubClienteService(), AdminSessao, servico, null);
         vm.NovoCommand.Execute(null);
 
-        // 1) A = 15130-010: registra e valida EXATAMENTE o que o provedor responder.
-        //    Sucesso → endereço completo aplicado; resposta "erro" → estado inválido
-        //    (borda vermelha + resumo) e endereço antigo descartado. Ambos assertados.
+        // 1) A = 15130-010: lupa consulta real e valida EXATAMENTE o que o provedor responder.
         vm.FormCep = "15130-010";
-        if (!await ConcluirOuAbortar(vm, "15130-010 (automática)"))
-            return;
         if (!await ExecutarLupaEConcluir(vm, "15130-010 (lupa)"))
             return;
         ValidarRespostaDe15130_010(vm);
 
         // 2) B = 15085-520: EXISTE na base do provedor → endereço é OBRIGATÓRIO.
         vm.FormCep = "15085-520";
-        if (!await ConcluirOuAbortar(vm, "15085-520 (automática)"))
-            return;
         if (!await ExecutarLupaEConcluir(vm, "15085-520 (lupa)"))
             return;
         AssertEnderecoAplicado(vm, "15085-520");
@@ -87,8 +72,6 @@ public class CepFluxoRealIntegrationTests
 
         // 3) Volta para A = 15130-010: nova consulta real, mesmo tratamento do passo 1.
         vm.FormCep = "15130-010";
-        if (!await ConcluirOuAbortar(vm, "15130-010 volta (automática)"))
-            return;
         if (!await ExecutarLupaEConcluir(vm, "15130-010 volta (lupa)"))
             return;
         ValidarRespostaDe15130_010(vm);
@@ -124,7 +107,7 @@ public class CepFluxoRealIntegrationTests
     #region Helpers de espera / diagnóstico
 
     /// <summary>
-    /// Espera a consulta em andamento concluir (auto ou manual).
+    /// Espera a consulta em andamento concluir (via lupa).
     /// Retorna false quando deve abortar o teste por INCONCLUSIVIDADE (sem rede);
     /// lança Assert.Fail quando há falha de implementação com rede disponível.
     /// </summary>

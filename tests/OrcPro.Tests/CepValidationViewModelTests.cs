@@ -19,6 +19,7 @@ namespace OrcPro.Tests;
 /// (borda vermelha + resumo no topo), alterar o CEP limpa o estado anterior e a
 /// edição de cadastro existente atualiza o endereço corretamente.
 /// </summary>
+[Collection("CEP Log Serial")]
 public class CepValidationViewModelTests
 {
     private static readonly UsuarioSessaoDto AdminSessao = new()
@@ -69,6 +70,7 @@ public class CepValidationViewModelTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         Assert.True(vm.CepTemErro, "CEP não encontrado deveria marcar o campo como inválido.");
@@ -87,10 +89,12 @@ public class CepValidationViewModelTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
         Assert.True(vm.CepTemErro);
 
         vm.FormCep = "01310100";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         Assert.False(vm.CepTemErro, "Corrigir o CEP deveria limpar o estado de erro.");
@@ -106,7 +110,6 @@ public class CepValidationViewModelTests
         var vm = CriarCliente(CriarCepComDoisEnderecos());
         vm.NovoCommand.Execute(null);
         vm.FormCep = "01310";
-        await Task.Delay(20);
 
         vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
@@ -130,6 +133,7 @@ public class CepValidationViewModelTests
         Assert.Equal("Avenida Paulista", vm.FormLogradouro);
 
         vm.FormCep = "20040-000";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         Assert.Equal("Avenida Rio", vm.FormLogradouro);
@@ -148,6 +152,7 @@ public class CepValidationViewModelTests
         Assert.Equal("Avenida Paulista", vm.FormLogradouro);
 
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         Assert.True(vm.CepTemErro);
@@ -158,16 +163,19 @@ public class CepValidationViewModelTests
     }
 
     [Fact]
-    public async Task Clientes_Editar_LogradouroEditadoManualmente_DeveSerPreservado()
+    public async Task Clientes_Editar_LogradouroEditadoManualmente_LupaAtualizaEndereco()
     {
         var vm = CriarCliente(CriarCepComDoisEnderecos());
 
         vm.EditarCommand.Execute(ClienteComEndereco());
         vm.FormLogradouro = "Rua Editada Pelo Usuario";
+
         vm.FormCep = "20040-000";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
-        Assert.Equal("Rua Editada Pelo Usuario", vm.FormLogradouro);
+        // A lupa sempre limpa e refaz o preenchimento completo
+        Assert.Equal("Avenida Rio", vm.FormLogradouro);
         Assert.Equal("Centro", vm.FormBairro);
         Assert.Equal("Rio de Janeiro", vm.FormCidade);
     }
@@ -204,6 +212,7 @@ public class CepValidationViewModelTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
         Assert.True(vm.CepTemErro);
 
@@ -227,6 +236,7 @@ public class CepValidationViewModelTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
         Assert.True(vm.CepTemErro);
 
@@ -245,6 +255,7 @@ public class CepValidationViewModelTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
         Assert.True(vm.CepTemErro);
 
@@ -266,6 +277,7 @@ public class CepValidationViewModelTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         Assert.True(vm.CepTemErro);
@@ -282,6 +294,7 @@ public class CepValidationViewModelTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "01310-100";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         Assert.False(vm.CepTemErro);
@@ -302,6 +315,7 @@ public class CepValidationViewModelTests
         Assert.Equal("Avenida Paulista", vm.FormLogradouro);
 
         vm.FormCep = "20040-000";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         Assert.Equal("Avenida Rio", vm.FormLogradouro);
@@ -320,6 +334,7 @@ public class CepValidationViewModelTests
         Assert.Equal("Avenida Paulista", vm.FormLogradouro);
 
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         Assert.True(vm.CepTemErro);
@@ -354,6 +369,7 @@ public class CepValidationViewModelTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
         Assert.True(vm.CepTemErro);
 

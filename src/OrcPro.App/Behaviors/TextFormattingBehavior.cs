@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -105,34 +103,6 @@ public static class TextFormattingBehavior
     #endregion
 
 
-    #region CepAddressCallback (para CEP - callback quando endereço encontrado)
-
-    public static readonly DependencyProperty CepAddressCallbackProperty =
-        DependencyProperty.RegisterAttached(
-            "CepAddressCallback",
-            typeof(Action<CepAddressResult>),
-            typeof(TextFormattingBehavior),
-            new PropertyMetadata(null));
-
-    public static Action<CepAddressResult>? GetCepAddressCallback(DependencyObject obj) => (Action<CepAddressResult>?)obj.GetValue(CepAddressCallbackProperty);
-    public static void SetCepAddressCallback(DependencyObject obj, Action<CepAddressResult>? value) => obj.SetValue(CepAddressCallbackProperty, value);
-
-    #endregion
-
-    #region CepService (para injeção do serviço de CEP)
-
-    public static readonly DependencyProperty CepServiceProperty =
-        DependencyProperty.RegisterAttached(
-            "CepService",
-            typeof(OrcPro.Application.Interfaces.Services.ICepService),
-            typeof(TextFormattingBehavior),
-            new PropertyMetadata(null));
-
-    public static OrcPro.Application.Interfaces.Services.ICepService? GetCepService(DependencyObject obj) => (OrcPro.Application.Interfaces.Services.ICepService?)obj.GetValue(CepServiceProperty);
-    public static void SetCepService(DependencyObject obj, OrcPro.Application.Interfaces.Services.ICepService? value) => obj.SetValue(CepServiceProperty, value);
-
-    #endregion
-
     #region EnterBehavior (mover foco com ENTER seguindo TabIndex)
 
     /// <summary>
@@ -188,105 +158,28 @@ public static class TextFormattingBehavior
 
     #endregion
 
-    #region CepLostFocus (consulta CEP ao perder foco)
+    #region CepAutoQuery (REMOVIDO DEFINITIVAMENTE — lupa é a única porta de consulta)
 
     /// <summary>
-    /// Quando true e FormatMode=Cep, consulta CEP ao perder foco (LostFocus) se tiver 8 dígitos.
-    /// Usa cache interno para evitar consultas duplicadas ao mesmo CEP.
+    /// REMOVIDO: consulta automática de CEP via LostFocus/TextChanged/8 dígitos.
+    /// Digitar, apagar, sair do campo ou ENTER NUNCA consulta.
+    /// A lupa (ConsultarCepCommand) é a única porta de entrada.
+    /// Propriedade mantida apenas para compatibilidade de compilação/XAML legado;
+    /// definir este valor NÃO anexa handlers e NUNCA executa consulta.
     /// </summary>
+    [Obsolete("Consulta automática de CEP removida. A lupa é a única porta de consulta. Esta propriedade não tem efeito.")]
     public static readonly DependencyProperty CepAutoQueryOnLostFocusProperty =
         DependencyProperty.RegisterAttached(
             "CepAutoQueryOnLostFocus",
             typeof(bool),
             typeof(TextFormattingBehavior),
-            new PropertyMetadata(false, OnCepAutoQueryChanged));
+            new PropertyMetadata(false));
 
+    [Obsolete("Consulta automática de CEP removida. A lupa é a única porta de consulta. Esta propriedade não tem efeito.")]
     public static bool GetCepAutoQueryOnLostFocus(DependencyObject obj) => (bool)obj.GetValue(CepAutoQueryOnLostFocusProperty);
+
+    [Obsolete("Consulta automática de CEP removida. A lupa é a única porta de consulta. Esta propriedade não tem efeito.")]
     public static void SetCepAutoQueryOnLostFocus(DependencyObject obj, bool value) => obj.SetValue(CepAutoQueryOnLostFocusProperty, value);
-
-    private static readonly ConditionalWeakTable<TextBox, string> _ultimoCepConsultado = new();
-
-    private static void OnCepAutoQueryChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is not TextBox textBox)
-            return;
-
-        if ((bool)e.NewValue)
-        {
-            textBox.LostFocus += OnCepLostFocus;
-            textBox.TextChanged += OnCepTextChanged;
-        }
-        else
-        {
-            textBox.LostFocus -= OnCepLostFocus;
-            textBox.TextChanged -= OnCepTextChanged;
-        }
-    }
-
-    private static void OnCepTextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (sender is not TextBox textBox)
-            return;
-
-        var cep = CepMaskHelper.Normalizar(textBox.Text);
-
-        // Se o CEP foi limpo, reseta o cache para permitir nova consulta
-        if (string.IsNullOrEmpty(cep) && _ultimoCepConsultado.TryGetValue(textBox, out _))
-        {
-            _ultimoCepConsultado.Remove(textBox);
-        }
-    }
-
-    private static void OnCepLostFocus(object sender, RoutedEventArgs e)
-    {
-        if (sender is not TextBox textBox)
-            return;
-
-        var mode = GetFormatMode(textBox);
-        if (mode != FormatMode.Cep)
-            return;
-
-        var cepInput = textBox.Text;
-        var cep = CepMaskHelper.Normalizar(cepInput);
-
-        // Se o CEP foi limpo, reseta o cache para permitir nova consulta
-        if (string.IsNullOrEmpty(cep))
-        {
-            _ultimoCepConsultado.Remove(textBox);
-            return;
-        }
-
-        // Só consultar se tiver 8 dígitos válidos
-        if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
-            return;
-
-        // Cache: não repetir consulta ao mesmo CEP
-        if (_ultimoCepConsultado.TryGetValue(textBox, out var ultimoCep) && ultimoCep == cep)
-            return;
-
-        _ultimoCepConsultado.Remove(textBox);
-        _ultimoCepConsultado.Add(textBox, cep);
-
-        var service = GetCepService(textBox);
-        var callback = GetCepAddressCallback(textBox);
-
-        if (service == null || callback == null)
-            return;
-
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var result = await service.ConsultarAsync(cep);
-                System.Windows.Application.Current?.Dispatcher.Invoke(() => callback(result));
-            }
-            catch
-            {
-                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
-                    callback(CepAddressResult.FailureResult(cep, "Erro na consulta", service.ProviderName)));
-            }
-        });
-    }
 
     #endregion
 

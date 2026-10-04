@@ -201,10 +201,10 @@ public class ClientesViewModelCepAndEnterTests
 
     #endregion
 
-    #region CEP Auto-Query (FormCep PropertyChanged) Tests
+    #region CEP Manual Query (Lupa) Tests
 
     [Fact]
-    public async Task FormCep_CepCompleto_8Digitos_DeveConsultarAutomaticamente()
+    public async Task FormCep_DefinirValor_NaoDeveConsultarAutomaticamente()
     {
         // Arrange
         var service = new FakeCepService();
@@ -213,19 +213,19 @@ public class ClientesViewModelCepAndEnterTests
         var vm = CriarViewModel(service);
         AbrirFormulario(vm);
 
-        // Act - simula digitação completa do CEP
-        vm.FormCep = "01310-100"; // máscara aplicada pelo TextFormattingBehavior
+        // Act - simula digitação completa do CEP (sem clicar na lupa)
+        vm.FormCep = "01310-100";
         await Task.Delay(50);
 
-        // Assert - a query é disparada pelo setter do FormCep
-        Assert.Equal("Av. Paulista", vm.FormLogradouro);
-        Assert.Equal("Bela Vista", vm.FormBairro);
-        Assert.Equal("São Paulo", vm.FormCidade);
-        Assert.Equal("SP", vm.FormUf);
+        // Assert - NÃO consulta automaticamente: lupa é a única porta de entrada
+        Assert.Equal(string.Empty, vm.FormLogradouro);
+        Assert.Equal(string.Empty, vm.FormBairro);
+        Assert.Equal(string.Empty, vm.FormCidade);
+        Assert.Equal(string.Empty, vm.FormUf);
     }
 
     [Fact]
-    public async Task FormCep_CepIncompleto_NaoDeveConsultar()
+    public async Task FormCep_CepIncompleto_Lupa_DeveMostrarMensagemDe8Digitos()
     {
         // Arrange
         var service = new FakeCepService();
@@ -235,18 +235,18 @@ public class ClientesViewModelCepAndEnterTests
         AbrirFormulario(vm);
 
         // Act
-        vm.FormCep = "01310"; // CEP incompleto
+        vm.FormCep = "01310"; // CEP incompleto (5 dígitos)
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
-        // Assert - nada foi preenchido
+        // Assert - erro de validação mostrado
+        Assert.True(vm.CepTemErro);
+        Assert.Contains("8 dígitos", vm.CepMensagemErro, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(string.Empty, vm.FormLogradouro);
-        Assert.Equal(string.Empty, vm.FormBairro);
-        Assert.Equal(string.Empty, vm.FormCidade);
-        Assert.Equal(string.Empty, vm.FormUf);
     }
 
     [Fact]
-    public async Task FormCep_CepNaoEncontrado_DeveMostrarMensagemDeErro()
+    public async Task FormCep_CepNaoEncontrado_Lupa_DeveMostrarMensagemDeErro()
     {
         // Arrange
         var service = new FakeCepService();
@@ -257,14 +257,39 @@ public class ClientesViewModelCepAndEnterTests
 
         // Act
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         // Assert
         Assert.Contains("não foi possível localizar", vm.EditorMensagem, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(string.Empty, vm.FormLogradouro);
     }
 
     [Fact]
-    public async Task FormCep_CepRepetido_NaoDeveConsultarDuasVezes()
+    public async Task FormCep_CepCompleto_Lupa_DeveConsultarERepreencher()
+    {
+        // Arrange
+        var service = new FakeCepService();
+        service.AddCepResult("01310-100", "Av. Paulista", "Bela Vista", "São Paulo", "SP");
+
+        var vm = CriarViewModel(service);
+        AbrirFormulario(vm);
+
+        // Act
+        vm.FormCep = "01310-100";
+        vm.ConsultarCepCommand.Execute(null);
+        await Task.Delay(50);
+
+        // Assert
+        Assert.Equal("Av. Paulista", vm.FormLogradouro);
+        Assert.Equal("Bela Vista", vm.FormBairro);
+        Assert.Equal("São Paulo", vm.FormCidade);
+        Assert.Equal("SP", vm.FormUf);
+        Assert.False(vm.CepTemErro);
+    }
+
+    [Fact]
+    public async Task FormCep_CepRepetido_Lupa_DeveConsultarDuasVezes()
     {
         // Arrange
         var service = new FakeContadorCepService();
@@ -273,30 +298,31 @@ public class ClientesViewModelCepAndEnterTests
         var vm = CriarViewModel(service);
         AbrirFormulario(vm);
 
-        // Act - primeiro preenchimento
+        // Act - primeiro clique na lupa
         vm.FormCep = "01310-100";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         var contagemPrimeira = service.NumeroConsultas;
 
-        // Limpa e represetnha o mesmo CEP
-        vm.FormCep = "01310100";
+        // Segundo clique na lupa com o mesmo CEP — NÃO usa cache
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
-        // Assert - apenas 1 consulta foi feita (cache evita a segunda)
-        Assert.Equal(1, service.NumeroConsultas);
+        // Assert - duas consultas foram feitas (sem cache na lupa)
+        Assert.Equal(2, service.NumeroConsultas);
+        Assert.Equal("Av. Teste", vm.FormLogradouro);
     }
 
     #endregion
 
-    #region CEP Cache Reset Tests
+    #region CEP Lupa Behavior Tests
 
     /// <summary>
-    /// Ao limpar o campo CEP, o cache deve ser resetado para permitir nova consulta
-    /// ao mesmo CEP. Isso permite retry de CEPs que falharam ou foram alterados.
+    /// Ao limpar o campo CEP, NADA é consultado. Apenas permite digitar outro CEP.
     /// </summary>
     [Fact]
-    public async Task FormCep_LimparCampo_DeveResetarCache_PermiteNovaConsulta()
+    public async Task FormCep_LimparCampo_NaoDeveConsultarNada()
     {
         // Arrange
         var service = new FakeContadorCepService();
@@ -305,29 +331,30 @@ public class ClientesViewModelCepAndEnterTests
         var vm = CriarViewModel(service);
         AbrirFormulario(vm);
 
-        // Act - primeira consulta
+        // Act - encontra um CEP primeiro
         vm.FormCep = "01310-100";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
-        var contagemAposPrimeira = service.NumeroConsultas;
 
         // Limpa o campo CEP
         vm.FormCep = string.Empty;
         await Task.Delay(50);
 
-        // Retype o mesmo CEP
+        // Retype o mesmo CEP — NÃO consulta automaticamente
         vm.FormCep = "01310-100";
         await Task.Delay(50);
 
-        // Assert - duas consultas foram feitas (cache foi resetado ao limpar)
-        Assert.Equal(2, service.NumeroConsultas);
+        // Assert - apenas 1 consulta foi feita (a da lupa). Limpar não consulta.
+        Assert.Equal(1, service.NumeroConsultas);
         Assert.Equal("Av. Teste", vm.FormLogradouro);
     }
 
     /// <summary>
-    /// Quando o CEP falha (não encontrado), limpar e reescrever deve permitir retry.
+    /// Quando o CEP falha (não encontrado), limpar e clicar na lupa novamente deve
+    /// executar uma nova consulta real.
     /// </summary>
     [Fact]
-    public async Task FormCep_CepQueFalhou_LimparERetype_DeveConsultarNovamente()
+    public async Task FormCep_CepQueFalhou_LimparEClicarLupa_DeveConsultarNovamente()
     {
         // Arrange
         var service = new FakeContadorCepService();
@@ -337,27 +364,29 @@ public class ClientesViewModelCepAndEnterTests
         var vm = CriarViewModel(service);
         AbrirFormulario(vm);
 
-        // Act - primeira consulta falha
+        // Act - primeira consulta via lupa falha
         vm.FormCep = "99999999";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
         Assert.Contains("não foi possível localizar", vm.EditorMensagem, StringComparison.OrdinalIgnoreCase);
-        var contagemAposFalha = service.NumeroConsultas;
 
-        // Limpa e retenta
+        // Limpa e digita CEP válido, clica na lupa
         vm.FormCep = string.Empty;
         await Task.Delay(50);
-        vm.FormCep = "99999999";
+        vm.FormCep = "01310-100";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         // Assert - nova consulta foi feita após limpar
         Assert.Equal(2, service.NumeroConsultas);
+        Assert.Equal("Av. Teste", vm.FormLogradouro);
     }
 
     /// <summary>
-    /// Alterar para um CEP diferente deve limpar os campos de endereço antes da nova consulta.
+    /// Alterar para um CEP diferente e clicar na lupa deve atualizar os campos.
     /// </summary>
     [Fact]
-    public async Task FormCep_MudarParaCepDiferente_DeveLimparEnderecoAntesNovaConsulta()
+    public async Task FormCep_MudarParaCepDiferente_Lupa_DeveAtualizarEndereco()
     {
         // Arrange
         var service = new FakeCepService();
@@ -367,13 +396,15 @@ public class ClientesViewModelCepAndEnterTests
         var vm = CriarViewModel(service);
         AbrirFormulario(vm);
 
-        // Act - primeiro CEP
+        // Act - primeiro CEP via lupa
         vm.FormCep = "01310-100";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
         Assert.Equal("Av. Paulista", vm.FormLogradouro);
 
-        // Altera para CEP diferente
+        // Altera para CEP diferente e clica na lupa
         vm.FormCep = "20040-000";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
 
         // Assert - endereço atualizado com o novo CEP
@@ -385,10 +416,11 @@ public class ClientesViewModelCepAndEnterTests
     }
 
     /// <summary>
-    /// Limpar o campo CEP deve limpar todos os campos de endereço e resetar o cache.
+    /// Limpar o campo CEP não dispara consulta nem limpa os campos de endereço.
+    /// Apenas permite digitar outro CEP normalmente.
     /// </summary>
     [Fact]
-    public async Task FormCep_LimparCampo_DeveLimparCamposEndereco()
+    public async Task FormCep_LimparCampo_NaoDeveConsultarNemLimparEndereco()
     {
         // Arrange
         var service = new FakeCepService();
@@ -397,20 +429,21 @@ public class ClientesViewModelCepAndEnterTests
         var vm = CriarViewModel(service);
         AbrirFormulario(vm);
 
-        // Act - preenche CEP e obtém endereço
+        // Act - preenche CEP via lupa e obtém endereço
         vm.FormCep = "01310-100";
+        vm.ConsultarCepCommand.Execute(null);
         await Task.Delay(50);
         Assert.Equal("Av. Paulista", vm.FormLogradouro);
 
-        // Limpa o CEP
+        // Limpa o CEP — NÃO consulta, NÃO limpa endereço
         vm.FormCep = string.Empty;
         await Task.Delay(10);
 
-        // Assert - campos de endereço limpos
-        Assert.Empty(vm.FormLogradouro);
-        Assert.Empty(vm.FormBairro);
-        Assert.Empty(vm.FormCidade);
-        Assert.Empty(vm.FormUf);
+        // Assert - campos de endereço permanecem (não há auto-query nem limpeza)
+        Assert.Equal("Av. Paulista", vm.FormLogradouro);
+        Assert.Equal("Bela Vista", vm.FormBairro);
+        Assert.Equal("São Paulo", vm.FormCidade);
+        Assert.Equal("SP", vm.FormUf);
     }
 
     #endregion

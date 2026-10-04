@@ -6,10 +6,15 @@ using Xunit;
 
 namespace OrcPro.Tests;
 
+/// <summary>Impede que testes que escrevem no logcep.txt rodem em paralelo.</summary>
+[CollectionDefinition("CEP Log Serial")]
+public class CepLogSerialCollection;
+
 /// <summary>
 /// Testes do <see cref="CepDiagnosticLogger"/>: arquivo logcep.txt ao lado do executável
 /// (AppContext.BaseDirectory, nunca %APPDATA%), criação automática, append-only e UTF-8.
 /// </summary>
+[Collection("CEP Log Serial")]
 public class CepDiagnosticLoggerTests
 {
     [Fact]

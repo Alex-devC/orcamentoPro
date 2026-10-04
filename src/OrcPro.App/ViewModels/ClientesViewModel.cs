@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using OrcPro.Application.DTOs.Cliente;
@@ -34,15 +33,9 @@ public class ClientesViewModel : ViewModelBase
     private readonly Action<string>? _reportStatus;
     private readonly DispatcherTimer _buscaTimer;
     private bool _cepCarregando;
-    private CancellationTokenSource? _cepCancellationTokenSource;
-    private readonly CepQueryCache _cepCache = new();
 
-    // Track which fields the user has manually edited (to avoid overwriting on CEP lookup)
-    private bool _cepLogradouroEditado;
-    private bool _cepBairroEditado;
-    private bool _cepCidadeEditado;
-    private bool _cepUfEditado;
-    private bool _carregandoFormulario;
+    // Lupa é a ÚNICA porta de entrada de consulta (sem auto-consulta via setter,
+    // LostFocus, TextChanged ou 8 dígitos — ver ConsultarCepManualmenteAsync).
 
     private readonly bool _podeVisualizar;
     private readonly bool _podeCriar;
@@ -301,23 +294,17 @@ public string FormEmailFinanceiro
             if (!SetField(ref _formCep, value)) return;
             OnPropertyChanged(nameof(CepPodeConsultarManualmente));
 
-            // Ao alterar o CEP, o estado de erro anterior deixa de valer:
-            // o usuário precisa poder corrigir e tentar novamente.
+            // Lupa é a ÚNICA porta de consulta: digitar/apagar/sair do campo ou
+            // pressionar ENTER NUNCA consulta. Apenas limpa o erro anterior para
+            // permitir correção e nova tentativa via lupa.
             LimparErroValidacao(CepCampo);
-
-            if (!_carregandoFormulario)
-                _ = TentarConsultarCepAsync(value);
         }
     }
 
     public string FormLogradouro
     {
         get => _formLogradouro;
-        set
-        {
-            if (SetField(ref _formLogradouro, value))
-                _cepLogradouroEditado = true;
-        }
+        set => SetField(ref _formLogradouro, value);
     }
 
     public string FormNumero
@@ -335,31 +322,19 @@ public string FormEmailFinanceiro
     public string FormBairro
     {
         get => _formBairro;
-        set
-        {
-            if (SetField(ref _formBairro, value))
-                _cepBairroEditado = true;
-        }
+        set => SetField(ref _formBairro, value);
     }
 
     public string FormCidade
     {
         get => _formCidade;
-        set
-        {
-            if (SetField(ref _formCidade, value))
-                _cepCidadeEditado = true;
-        }
+        set => SetField(ref _formCidade, value);
     }
 
     public string FormUf
     {
         get => _formUf;
-        set
-        {
-            if (SetField(ref _formUf, value))
-                _cepUfEditado = true;
-        }
+        set => SetField(ref _formUf, value);
     }
 
     public string FormObservacoes
@@ -437,101 +412,14 @@ public string FormEmailFinanceiro
         ? string.Empty
         : $"Deseja excluir o cliente \"{_clienteParaExcluir.NomeRazaoSocial}\" ({_clienteParaExcluir.Codigo})? Esta ação não pode ser desfeita.";
 
-    // ---------- CEP ----------
+    // ---------- CEP (LUPA É A ÚNICA PORTA DE CONSULTA) ----------
 
     /// <summary>
-    /// CONSULTA AUTOMÁTICA (origem: AUTOMÁTICA no log). Disparada quando o campo CEP
-    /// é completado com 8 dígitos. Usa o mesmo fluxo da consulta manual (serviço novo,
-    /// log completo em logcep.txt), mas respeita o cache da sessão de edição.
-    /// </summary>
-    private async Task TentarConsultarCepAsync(string cepInput)
-    {
-        if (_cepService is null)
-            return;
-
-        _cepCancellationTokenSource?.Cancel();
-        _cepCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-
-        var cep = CepMaskHelper.Normalizar(cepInput);
-
-        // Só consultar quando tiver 8 dígitos completos
-        if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
-        {
-            // CEP vazio ou incompleto: limpar cache e campos de endereço
-            if (string.IsNullOrEmpty(cep))
-            {
-                _cepCache.Reset();
-                ClearCepAddressFields();
-            }
-            return;
-        }
-
-        // Cache da consulta AUTOMÁTICA: não repetir ao mesmo CEP na mesma sessão de edição.
-        // (A lupa/MANUAL ignora este cache — ver ConsultarCepManualmenteAsync.)
-        if (!_cepCache.ShouldQuery(cep))
-        {
-            CepDiagnosticLogger.Linha(
-                $"[CEP] Origem da consulta: AUTOMÁTICA — cache ativo para {CepMaskHelper.Formatar(cep)}, consulta ignorada.");
-            return;
-        }
-
-        CepDiagnosticLogger.Linha("[CEP] Origem da consulta: AUTOMÁTICA");
-        CepDiagnosticLogger.Linha($"[CEP] CEP a consultar: {CepMaskHelper.Formatar(cep)}");
-
-        CepCarregando = true;
-        EditorMensagem = string.Empty;
-
-        // Limpar campos de endereço antes da nova consulta (preserva campos editados pelo usuário)
-        ClearStaleAddressFields();
-
-        try
-        {
-            var result = await _cepService.ConsultarAsync(cep, _cepCancellationTokenSource.Token);
-            AplicarEndereco(result, "AUTOMÁTICA");
-        }
-        catch (OperationCanceledException)
-        {
-            // Consulta cancelada (novo CEP digitado) - não é um erro
-            CepDiagnosticLogger.Linha("[CEP] Consulta automática cancelada.");
-        }
-        catch (Exception ex)
-        {
-            CepDiagnosticLogger.LogarException("[CEP] Falha inesperada na consulta automática", ex);
-            _cepCache.Reset();
-            RegistrarErroCep(cep);
-        }
-        finally
-        {
-            CepCarregando = false;
-        }
-    }
-
-    /// <summary>Limpa todos os campos de endereço e reseta as flags de edição manual.</summary>
-    private void ClearCepAddressFields()
-    {
-        _cepLogradouroEditado = false;
-        _cepBairroEditado = false;
-        _cepCidadeEditado = false;
-        _cepUfEditado = false;
-        SetField(ref _formLogradouro, string.Empty);
-        SetField(ref _formBairro, string.Empty);
-        SetField(ref _formCidade, string.Empty);
-        SetField(ref _formUf, string.Empty);
-    }
-
-    /// <summary>Limpa campos de endereço que não foram editados manualmente, antes de uma nova consulta.</summary>
-    private void ClearStaleAddressFields()
-    {
-        if (!_cepLogradouroEditado) SetField(ref _formLogradouro, string.Empty);
-        if (!_cepBairroEditado) SetField(ref _formBairro, string.Empty);
-        if (!_cepCidadeEditado) SetField(ref _formCidade, string.Empty);
-        if (!_cepUfEditado) SetField(ref _formUf, string.Empty);
-    }
-
-    /// <summary>
-    /// CONSULTA MANUAL via botão de lupa (origem: MANUAL no log). É uma ação explícita
-    /// do usuário: SEMPRE executa uma consulta real, IGNORANDO o cache, e registra em
-    /// logcep.txt cada etapa — clique, valor do campo, comando, serviço e aplicação.
+    /// CONSULTA MANUAL via botão de lupa — ÚNICA porta de entrada de consulta de CEP.
+    /// Digitar, apagar, sair do campo ou pressionar ENTER NUNCA consulta.
+    /// Cada clique executa uma consulta real (sem cache) e aplica o endereço via
+    /// propriedades (SetField → PropertyChanged), garantindo atualização imediata da UI.
+    /// Log completo em logcep.txt (origem: MANUAL).
     /// </summary>
     private async Task ConsultarCepManualmenteAsync()
     {
@@ -571,10 +459,14 @@ public string FormEmailFinanceiro
         CepCarregando = true;
         EditorMensagem = string.Empty;
 
-        // A lupa é uma ação explícita: ignora o cache para forçar consulta real e
-        // descarta o endereço que pertencia ao CEP anterior (preserva campos editados).
-        _cepCache.Reset();
-        ClearStaleAddressFields();
+        // A lupa é explícita: descarta o endereço anterior via PROPRIEDADES
+        // (SetField → PropertyChanged) para a UI limpar/atualizar imediatamente,
+        // e sempre executa consulta real (sem cache).
+        CepDiagnosticLogger.Linha("[CEP] Limpando endereço anterior via propriedades (UI atualiza imediatamente).");
+        FormLogradouro = string.Empty;
+        FormBairro = string.Empty;
+        FormCidade = string.Empty;
+        FormUf = string.Empty;
 
         try
         {
@@ -597,9 +489,10 @@ public string FormEmailFinanceiro
     }
 
     /// <summary>
-    /// Aplica o resultado da consulta de CEP nos campos do formulário (sucesso ou falha),
-    /// preservando campos editados pelo usuário. Registra no logcep.txt os valores
-    /// anterior/novo de cada campo, as flags de edição e o estado de validação.
+    /// Aplica o resultado da consulta de CEP nos campos do formulário (sucesso ou falha)
+    /// SEMPRE via propriedades (FormLogradouro/FormBairro/FormCidade/FormUf), de modo que
+    /// SetField dispare PropertyChanged e a UI reflita imediatamente. Registra no
+    /// logcep.txt os valores anterior/novo e o estado de validação.
     /// </summary>
     private void AplicarEndereco(CepAddressResult result, string origem)
     {
@@ -607,8 +500,6 @@ public string FormEmailFinanceiro
         CepDiagnosticLogger.Linha($"[APLICAÇÃO] Origem: {origem}");
         CepDiagnosticLogger.Linha($"[APLICAÇÃO] Success = {(result.Success ? "true" : "false")}");
         CepDiagnosticLogger.Linha($"[APLICAÇÃO] CEP retornado: {CepMaskHelper.Formatar(result.Cep)}");
-        CepDiagnosticLogger.Linha(
-            $"[APLICAÇÃO] Flags de edição: logradouro={_cepLogradouroEditado}, bairro={_cepBairroEditado}, cidade={_cepCidadeEditado}, uf={_cepUfEditado}");
 
         if (result.Success)
         {
@@ -617,34 +508,40 @@ public string FormEmailFinanceiro
             var cidadeAnterior = _formCidade;
             var ufAnterior = _formUf;
 
-            if (!_cepLogradouroEditado) SetField(ref _formLogradouro, result.Logradouro ?? string.Empty);
-            if (!_cepBairroEditado) SetField(ref _formBairro, result.Bairro ?? string.Empty);
-            if (!_cepCidadeEditado) SetField(ref _formCidade, result.Cidade ?? string.Empty);
-            if (!_cepUfEditado) SetField(ref _formUf, result.Uf ?? string.Empty);
+            // CAUSA RAIZ do bug "salva mas não mostra": atribuir backing field
+            // (_formLogradouro = ...) NÃO dispara PropertyChanged → a tela não atualiza.
+            // Aqui SEMPRE usamos as propriedades → SetField → PropertyChanged.
+            FormLogradouro = result.Logradouro ?? string.Empty;
+            FormBairro = result.Bairro ?? string.Empty;
+            FormCidade = result.Cidade ?? string.Empty;
+            FormUf = result.Uf ?? string.Empty;
 
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Logradouro anterior: '{logradouroAnterior}'");
             CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] Logradouro novo: '{_formLogradouro}'{(_cepLogradouroEditado ? " (preservado: editado pelo usuário)" : string.Empty)}");
+                $"[APLICAÇÃO] Logradouro novo: '{_formLogradouro}' (via propriedade → PropertyChanged disparado)");
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Bairro anterior: '{bairroAnterior}'");
             CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] Bairro novo: '{_formBairro}'{(_cepBairroEditado ? " (preservado: editado pelo usuário)" : string.Empty)}");
+                $"[APLICAÇÃO] Bairro novo: '{_formBairro}' (via propriedade → PropertyChanged disparado)");
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Cidade anterior: '{cidadeAnterior}'");
             CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] Cidade nova: '{_formCidade}'{(_cepCidadeEditado ? " (preservada: editada pelo usuário)" : string.Empty)}");
+                $"[APLICAÇÃO] Cidade nova: '{_formCidade}' (via propriedade → PropertyChanged disparado)");
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] UF anterior: '{ufAnterior}'");
             CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] UF nova: '{_formUf}'{(_cepUfEditado ? " (preservada: editada pelo usuário)" : string.Empty)}");
+                $"[APLICAÇÃO] UF nova: '{_formUf}' (via propriedade → PropertyChanged disparado)");
 
-            // Mantém o cache coerente com o CEP efetivamente aplicado.
-            _cepCache.Registrar(result.Cep);
             LimparErroValidacao(CepCampo);
             CepDiagnosticLogger.Linha("[APLICAÇÃO] Erro do CEP removido (borda vermelha e resumo limpos).");
-            CepDiagnosticLogger.Linha("[APLICAÇÃO] Endereço aplicado ao formulário.");
+            CepDiagnosticLogger.Linha("[APLICAÇÃO] Endereço aplicado ao formulário via propriedades.");
         }
         else
         {
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Mensagem de erro: {result.ErrorMessage}");
-            _cepCache.Reset();
+            // Falha: limpa via propriedades para a UI não exibir endereço antigo
+            // como se pertencesse ao novo CEP.
+            FormLogradouro = string.Empty;
+            FormBairro = string.Empty;
+            FormCidade = string.Empty;
+            FormUf = string.Empty;
             RegistrarErroCep(result.Cep);
             CepDiagnosticLogger.Linha("[APLICAÇÃO] Erro registrado na infraestrutura de validação (borda vermelha + resumo no topo).");
             CepDiagnosticLogger.Linha("[APLICAÇÃO] Endereço antigo não é mantido como pertencente ao novo CEP.");
@@ -783,11 +680,6 @@ public string FormEmailFinanceiro
     {
         _editorNovo = true;
         _formId = 0;
-        _cepLogradouroEditado = false;
-        _cepBairroEditado = false;
-        _cepCidadeEditado = false;
-        _cepUfEditado = false;
-        _cepCache.Reset();
         LimparErrosValidacao();
         EditorTitulo = "Novo cliente";
         FormCodigo = string.Empty;
@@ -842,16 +734,9 @@ public string FormEmailFinanceiro
 
     private void PreencherFormulario(ClienteDto cliente)
     {
-        // Durante o carregamento de um cadastro existente não disparamos consulta automática
-        // de CEP e os campos de endereço não contam como edição manual do usuário — eles
-        // vêm do cadastro salvo. Sem isso, uma alteração posterior de CEP não atualizaria
-        // o endereço (os campos ficariam marcados como "editados manualmente").
-        _carregandoFormulario = true;
-        try
-        {
-            _formId = cliente.Id;
-            _cepCache.Reset();
-            FormCodigo = cliente.Codigo;
+        // Lupa é a ÚNICA porta de consulta: carregar cadastro NUNCA consulta.
+        _formId = cliente.Id;
+        FormCodigo = cliente.Codigo;
             FormTipoPessoa = cliente.TipoPessoa;
             FormNome = cliente.NomeRazaoSocial;
             FormNomeFantasia = cliente.NomeFantasia ?? string.Empty;
@@ -871,15 +756,6 @@ public string FormEmailFinanceiro
             FormObservacoes = cliente.Observacoes ?? string.Empty;
             FormAtivo = cliente.Ativo;
             _formQuantidadeOrcamentos = cliente.QuantidadeOrcamentos;
-        }
-        finally
-        {
-            _carregandoFormulario = false;
-            _cepLogradouroEditado = false;
-            _cepBairroEditado = false;
-            _cepCidadeEditado = false;
-            _cepUfEditado = false;
-        }
 
         LimparErrosValidacao();
         EditorMensagem = string.Empty;

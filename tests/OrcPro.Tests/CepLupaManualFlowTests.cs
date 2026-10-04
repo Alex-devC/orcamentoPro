@@ -23,6 +23,7 @@ namespace OrcPro.Tests;
 /// o cache; 6) toda a sequência é registrada em logcep.txt (borda vermelha/resumo em
 /// CepValidationViewModelTests).
 /// </summary>
+[Collection("CEP Log Serial")]
 public class CepLupaManualFlowTests
 {
     private static readonly UsuarioSessaoDto AdminSessao = new()
@@ -58,48 +59,44 @@ public class CepLupaManualFlowTests
         var vm = CriarCliente(service);
         vm.NovoCommand.Execute(null);
 
-        // --- 1) 15130-010: digitação dispara a consulta AUTOMÁTICA (1ª) ---
+        // --- 1) 15130-010: digitar NÃO consulta, lupa consulta (1ª) ---
         vm.FormCep = "15130-010";
+        await Task.Delay(50);
+        Assert.Equal(0, service.NumeroConsultas); // nada automático
+
+        vm.ConsultarCepCommand.Execute(null);
         await Aguardar(() => service.NumeroConsultas >= 1);
         Assert.Equal(1, service.NumeroConsultas);
-        Assert.Equal("Mirassol", vm.FormCidade);
-
-        // --- lupa: consulta MANUAL real (2ª), ignorando o cache ---
-        vm.ConsultarCepCommand.Execute(null);
-        await Aguardar(() => service.NumeroConsultas >= 2);
-        Assert.Equal(2, service.NumeroConsultas);
         Assert.Equal("Rua Coronel Paulino", vm.FormLogradouro);
         Assert.Equal("Centro", vm.FormBairro);
         Assert.Equal("Mirassol", vm.FormCidade);
         Assert.Equal("SP", vm.FormUf);
         Assert.False(vm.CepTemErro);
 
-        // --- 2) 15085-520: automática (3ª) + lupa (4ª) ---
+        // --- 2) 15085-520: lupa (2ª) ---
         vm.FormCep = "15085-520";
-        await Aguardar(() => service.NumeroConsultas >= 3);
-        Assert.Equal(3, service.NumeroConsultas);
-        Assert.Equal("São José dos Campos", vm.FormCidade);
+        await Task.Delay(50);
+        Assert.Equal(1, service.NumeroConsultas); // nada automático
 
         vm.ConsultarCepCommand.Execute(null);
-        await Aguardar(() => service.NumeroConsultas >= 4);
-        Assert.Equal(4, service.NumeroConsultas);
+        await Aguardar(() => service.NumeroConsultas >= 2);
+        Assert.Equal(2, service.NumeroConsultas);
         Assert.Equal("Rua das Acácias", vm.FormLogradouro);
         Assert.Equal("Jardim Inga", vm.FormBairro);
         Assert.Equal("São José dos Campos", vm.FormCidade);
         Assert.Equal("SP", vm.FormUf);
         Assert.False(vm.CepTemErro);
 
-        // --- 3) volta para 15130-010: automática (5ª) + lupa (6ª) ---
+        // --- 3) volta para 15130-010: lupa (3ª) — sempre consulta real ---
         vm.FormCep = "15130-010";
-        await Aguardar(() => service.NumeroConsultas >= 5);
-        Assert.Equal(5, service.NumeroConsultas);
-        Assert.Equal("Mirassol", vm.FormCidade);
+        await Task.Delay(50);
+        Assert.Equal(2, service.NumeroConsultas); // nada automático
 
         vm.ConsultarCepCommand.Execute(null);
-        await Aguardar(() => service.NumeroConsultas >= 6);
+        await Aguardar(() => service.NumeroConsultas >= 3);
 
-        // A lupa é uma consulta explícita: 6 consultas ao todo (3 automáticas + 3 manuais).
-        Assert.Equal(6, service.NumeroConsultas);
+        // A lupa é uma consulta explícita: 3 consultas ao todo (uma por clique).
+        Assert.Equal(3, service.NumeroConsultas);
         Assert.Equal("Rua Coronel Paulino", vm.FormLogradouro);
         Assert.Equal("Mirassol", vm.FormCidade);
         Assert.Equal("SP", vm.FormUf);
@@ -115,24 +112,30 @@ public class CepLupaManualFlowTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "15130-010";
-        await Aguardar(() => service.NumeroConsultas >= 1);
+        await Task.Delay(50);
+        Assert.Equal(0, service.NumeroConsultas); // nada automático
+
         vm.ConsultarCepCommand.Execute(null);
-        await Aguardar(() => service.NumeroConsultas >= 2);
-        Assert.Equal(2, service.NumeroConsultas);
+        await Aguardar(() => service.NumeroConsultas >= 1);
+        Assert.Equal(1, service.NumeroConsultas);
         Assert.Equal("Mirassol", vm.FormCidade);
 
         vm.FormCep = "15085-520";
-        await Aguardar(() => service.NumeroConsultas >= 3);
+        await Task.Delay(50);
+        Assert.Equal(1, service.NumeroConsultas); // nada automático
+
         vm.ConsultarCepCommand.Execute(null);
-        await Aguardar(() => service.NumeroConsultas >= 4);
-        Assert.Equal(4, service.NumeroConsultas);
+        await Aguardar(() => service.NumeroConsultas >= 2);
+        Assert.Equal(2, service.NumeroConsultas);
         Assert.Equal("São José dos Campos", vm.FormCidade);
 
         vm.FormCep = "15130-010";
-        await Aguardar(() => service.NumeroConsultas >= 5);
+        await Task.Delay(50);
+        Assert.Equal(2, service.NumeroConsultas); // nada automático
+
         vm.ConsultarCepCommand.Execute(null);
-        await Aguardar(() => service.NumeroConsultas >= 6);
-        Assert.Equal(6, service.NumeroConsultas);
+        await Aguardar(() => service.NumeroConsultas >= 3);
+        Assert.Equal(3, service.NumeroConsultas);
         Assert.Equal("Mirassol", vm.FormCidade);
         Assert.Equal("SP", vm.FormUf);
         Assert.False(vm.CepTemErro);
@@ -150,9 +153,10 @@ public class CepLupaManualFlowTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "15130-010";
-        await Aguardar(() => service.NumeroConsultas >= 1);
+        await Task.Delay(25);
+
         vm.ConsultarCepCommand.Execute(null);
-        await Aguardar(() => service.NumeroConsultas >= 2);
+        await Aguardar(() => service.NumeroConsultas >= 1);
 
         var log = AguardarConteudoLog("[CEP] BOTÃO LUPA CLICADO");
 
@@ -172,10 +176,7 @@ public class CepLupaManualFlowTests
         Assert.Contains("[APLICAÇÃO] Logradouro novo: 'Rua Coronel Paulino'", log);
         Assert.Contains("[APLICAÇÃO] Cidade nova: 'Mirassol'", log);
         Assert.Contains("[APLICAÇÃO] UF nova: 'SP'", log);
-        Assert.Contains("[APLICAÇÃO] Endereço aplicado ao formulário.", log);
-
-        // Consulta automática também é registrada com a origem
-        Assert.Contains("[CEP] Origem da consulta: AUTOMÁTICA", log);
+        Assert.Contains("[APLICAÇÃO] Endereço aplicado ao formulário via propriedades.", log);
     }
 
     [Fact]
@@ -186,8 +187,10 @@ public class CepLupaManualFlowTests
         vm.NovoCommand.Execute(null);
 
         vm.FormCep = "15130-010";
+        await Task.Delay(25);
+
         vm.ConsultarCepCommand.Execute(null);
-        await Aguardar(() => service.NumeroConsultas >= 2);
+        await Aguardar(() => service.NumeroConsultas >= 1);
 
         Assert.True(vm.CepTemErro, "Falha da lupa deve deixar o CEP em estado inválido (borda vermelha).");
         Assert.Contains("Não foi possível localizar o CEP", vm.CepMensagemErro, StringComparison.OrdinalIgnoreCase);

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using OrcPro.Application.DTOs.Auth;
@@ -80,13 +79,9 @@ public class TecnicosViewModel : ViewModelBase
     private bool _visualizacaoAberta;
     private bool _confirmacaoAberta;
     private bool _cepCarregando;
-    private CancellationTokenSource? _cepCancellationTokenSource;
-    private readonly CepQueryCache _cepCache = new();
-    private bool _cepLogradouroEditado;
-    private bool _cepBairroEditado;
-    private bool _cepCidadeEditado;
-    private bool _cepUfEditado;
-    private bool _carregandoFormulario;
+
+    // Lupa é a ÚNICA porta de entrada de consulta (sem auto-consulta via setter,
+    // LostFocus, TextChanged ou 8 dígitos — ver ConsultarCepManualmenteAsync).
 
     public TecnicosViewModel(
         ITecnicoService tecnicoService,
@@ -288,23 +283,17 @@ public class TecnicosViewModel : ViewModelBase
             if (!SetField(ref _formCep, value)) return;
             OnPropertyChanged(nameof(CepPodeConsultarManualmente));
 
-            // Ao alterar o CEP, o estado de erro anterior deixa de valer:
-            // o usuário precisa poder corrigir e tentar novamente.
+            // LUPA É A ÚNICA AÇÃO DE CONSULTA: digitar, apagar, sair do campo (LostFocus)
+            // ou pressionar ENTER NUNCA consulta. Apenas limpa o erro anterior para
+            // permitir correção e nova tentativa via lupa.
             LimparErroValidacao(CepCampo);
-
-            if (!_carregandoFormulario)
-                _ = TentarConsultarCepAsync(value);
         }
     }
 
     public string FormLogradouro
     {
         get => _formLogradouro;
-        set
-        {
-            if (SetField(ref _formLogradouro, value))
-                _cepLogradouroEditado = true;
-        }
+        set => SetField(ref _formLogradouro, value);
     }
 
     public string FormNumero
@@ -322,31 +311,19 @@ public class TecnicosViewModel : ViewModelBase
     public string FormBairro
     {
         get => _formBairro;
-        set
-        {
-            if (SetField(ref _formBairro, value))
-                _cepBairroEditado = true;
-        }
+        set => SetField(ref _formBairro, value);
     }
 
     public string FormCidade
     {
         get => _formCidade;
-        set
-        {
-            if (SetField(ref _formCidade, value))
-                _cepCidadeEditado = true;
-        }
+        set => SetField(ref _formCidade, value);
     }
 
     public string FormUf
     {
         get => _formUf;
-        set
-        {
-            if (SetField(ref _formUf, value))
-                _cepUfEditado = true;
-        }
+        set => SetField(ref _formUf, value);
     }
 
     public string FormObservacoes
@@ -538,97 +515,11 @@ public class TecnicosViewModel : ViewModelBase
     // ---------- Formulário ----------
 
     /// <summary>
-    /// CONSULTA AUTOMÁTICA (origem: AUTOMÁTICA no log). Disparada quando o campo CEP
-    /// é completado com 8 dígitos. Usa o mesmo fluxo da consulta manual (serviço novo,
-    /// log completo em logcep.txt), mas respeita o cache da sessão de edição.
-    /// </summary>
-    private async Task TentarConsultarCepAsync(string cepInput)
-    {
-        if (_cepService is null)
-            return;
-
-        _cepCancellationTokenSource?.Cancel();
-        _cepCancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-
-        var cep = CepMaskHelper.Normalizar(cepInput);
-
-        if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
-        {
-            // CEP vazio ou incompleto: limpar cache e campos de endereço
-            if (string.IsNullOrEmpty(cep))
-            {
-                _cepCache.Reset();
-                ClearCepAddressFields();
-            }
-            return;
-        }
-
-        // Cache da consulta AUTOMÁTICA: não repetir ao mesmo CEP na mesma sessão de edição.
-        // (A lupa/MANUAL ignora este cache — ver ConsultarCepManualmenteAsync.)
-        if (!_cepCache.ShouldQuery(cep))
-        {
-            CepDiagnosticLogger.Linha(
-                $"[CEP] Origem da consulta: AUTOMÁTICA — cache ativo para {CepMaskHelper.Formatar(cep)}, consulta ignorada.");
-            return;
-        }
-
-        CepDiagnosticLogger.Linha("[CEP] Origem da consulta: AUTOMÁTICA");
-        CepDiagnosticLogger.Linha($"[CEP] CEP a consultar: {CepMaskHelper.Formatar(cep)}");
-
-        CepCarregando = true;
-        EditorMensagem = string.Empty;
-
-        // Limpar campos de endereço antes da nova consulta (preserva campos editados pelo usuário)
-        ClearStaleAddressFields();
-
-        try
-        {
-            var result = await _cepService.ConsultarAsync(cep, _cepCancellationTokenSource.Token);
-            AplicarEndereco(result, "AUTOMÁTICA");
-        }
-        catch (OperationCanceledException)
-        {
-            // Consulta cancelada (novo CEP digitado) - não é um erro
-            CepDiagnosticLogger.Linha("[CEP] Consulta automática cancelada.");
-        }
-        catch (Exception ex)
-        {
-            CepDiagnosticLogger.LogarException("[CEP] Falha inesperada na consulta automática", ex);
-            _cepCache.Reset();
-            RegistrarErroCep(cep);
-        }
-        finally
-        {
-            CepCarregando = false;
-        }
-    }
-
-    /// <summary>Limpa todos os campos de endereço e reseta as flags de edição manual.</summary>
-    private void ClearCepAddressFields()
-    {
-        _cepLogradouroEditado = false;
-        _cepBairroEditado = false;
-        _cepCidadeEditado = false;
-        _cepUfEditado = false;
-        SetField(ref _formLogradouro, string.Empty);
-        SetField(ref _formBairro, string.Empty);
-        SetField(ref _formCidade, string.Empty);
-        SetField(ref _formUf, string.Empty);
-    }
-
-    /// <summary>Limpa campos de endereço que não foram editados manualmente, antes de uma nova consulta.</summary>
-    private void ClearStaleAddressFields()
-    {
-        if (!_cepLogradouroEditado) SetField(ref _formLogradouro, string.Empty);
-        if (!_cepBairroEditado) SetField(ref _formBairro, string.Empty);
-        if (!_cepCidadeEditado) SetField(ref _formCidade, string.Empty);
-        if (!_cepUfEditado) SetField(ref _formUf, string.Empty);
-    }
-
-    /// <summary>
-    /// CONSULTA MANUAL via botão de lupa (origem: MANUAL no log). É uma ação explícita
-    /// do usuário: SEMPRE executa uma consulta real, IGNORANDO o cache, e registra em
-    /// logcep.txt cada etapa — clique, valor do campo, comando, serviço e aplicação.
+    /// CONSULTA MANUAL via botão de lupa — ÚNICA porta de entrada de consulta de CEP.
+    /// Digitar, apagar, sair do campo ou pressionar ENTER NUNCA consulta.
+    /// Cada clique executa uma consulta real (sem cache) e aplica o endereço via
+    /// propriedades (SetField → PropertyChanged), garantindo atualização imediata da UI.
+    /// Log completo em logcep.txt (origem: MANUAL).
     /// </summary>
     private async Task ConsultarCepManualmenteAsync()
     {
@@ -668,10 +559,14 @@ public class TecnicosViewModel : ViewModelBase
         CepCarregando = true;
         EditorMensagem = string.Empty;
 
-        // A lupa é uma ação explícita: ignora o cache para forçar consulta real e
-        // descarta o endereço que pertencia ao CEP anterior (preserva campos editados).
-        _cepCache.Reset();
-        ClearStaleAddressFields();
+        // A lupa é explícita: descarta o endereço anterior via PROPRIEDADES
+        // (SetField → PropertyChanged) para a UI limpar/atualizar imediatamente,
+        // e sempre executa consulta real (sem cache).
+        CepDiagnosticLogger.Linha("[CEP] Limpando endereço anterior via propriedades (UI atualiza imediatamente).");
+        FormLogradouro = string.Empty;
+        FormBairro = string.Empty;
+        FormCidade = string.Empty;
+        FormUf = string.Empty;
 
         try
         {
@@ -694,9 +589,10 @@ public class TecnicosViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Aplica o resultado da consulta de CEP nos campos do formulário (sucesso ou falha),
-    /// preservando campos editados pelo usuário. Registra no logcep.txt os valores
-    /// anterior/novo de cada campo, as flags de edição e o estado de validação.
+    /// Aplica o resultado da consulta de CEP nos campos do formulário (sucesso ou falha)
+    /// SEMPRE via propriedades (FormLogradouro/FormBairro/FormCidade/FormUf → SetField →
+    /// PropertyChanged) para que o binding TwoWay atualize a UI imediatamente. Registra no
+    /// logcep.txt os valores anterior/novo e o estado de validação.
     /// </summary>
     private void AplicarEndereco(CepAddressResult result, string origem)
     {
@@ -704,8 +600,6 @@ public class TecnicosViewModel : ViewModelBase
         CepDiagnosticLogger.Linha($"[APLICAÇÃO] Origem: {origem}");
         CepDiagnosticLogger.Linha($"[APLICAÇÃO] Success = {(result.Success ? "true" : "false")}");
         CepDiagnosticLogger.Linha($"[APLICAÇÃO] CEP retornado: {CepMaskHelper.Formatar(result.Cep)}");
-        CepDiagnosticLogger.Linha(
-            $"[APLICAÇÃO] Flags de edição: logradouro={_cepLogradouroEditado}, bairro={_cepBairroEditado}, cidade={_cepCidadeEditado}, uf={_cepUfEditado}");
 
         if (result.Success)
         {
@@ -714,26 +608,24 @@ public class TecnicosViewModel : ViewModelBase
             var cidadeAnterior = _formCidade;
             var ufAnterior = _formUf;
 
-            if (!_cepLogradouroEditado) SetField(ref _formLogradouro, result.Logradouro ?? string.Empty);
-            if (!_cepBairroEditado) SetField(ref _formBairro, result.Bairro ?? string.Empty);
-            if (!_cepCidadeEditado) SetField(ref _formCidade, result.Cidade ?? string.Empty);
-            if (!_cepUfEditado) SetField(ref _formUf, result.Uf ?? string.Empty);
+            FormLogradouro = result.Logradouro ?? string.Empty;
+            FormBairro = result.Bairro ?? string.Empty;
+            FormCidade = result.Cidade ?? string.Empty;
+            FormUf = result.Uf ?? string.Empty;
 
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Logradouro anterior: '{logradouroAnterior}'");
             CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] Logradouro novo: '{_formLogradouro}'{(_cepLogradouroEditado ? " (preservado: editado pelo usuário)" : string.Empty)}");
+                $"[APLICAÇÃO] Logradouro novo: '{_formLogradouro}'");
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Bairro anterior: '{bairroAnterior}'");
             CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] Bairro novo: '{_formBairro}'{(_cepBairroEditado ? " (preservado: editado pelo usuário)" : string.Empty)}");
+                $"[APLICAÇÃO] Bairro novo: '{_formBairro}'");
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Cidade anterior: '{cidadeAnterior}'");
             CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] Cidade nova: '{_formCidade}'{(_cepCidadeEditado ? " (preservada: editada pelo usuário)" : string.Empty)}");
+                $"[APLICAÇÃO] Cidade nova: '{_formCidade}'");
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] UF anterior: '{ufAnterior}'");
             CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] UF nova: '{_formUf}'{(_cepUfEditado ? " (preservada: editada pelo usuário)" : string.Empty)}");
+                $"[APLICAÇÃO] UF nova: '{_formUf}'");
 
-            // Mantém o cache coerente com o CEP efetivamente aplicado.
-            _cepCache.Registrar(result.Cep);
             LimparErroValidacao(CepCampo);
             CepDiagnosticLogger.Linha("[APLICAÇÃO] Erro do CEP removido (borda vermelha e resumo limpos).");
             CepDiagnosticLogger.Linha("[APLICAÇÃO] Endereço aplicado ao formulário.");
@@ -741,7 +633,6 @@ public class TecnicosViewModel : ViewModelBase
         else
         {
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Mensagem de erro: {result.ErrorMessage}");
-            _cepCache.Reset();
             RegistrarErroCep(result.Cep);
             CepDiagnosticLogger.Linha("[APLICAÇÃO] Erro registrado na infraestrutura de validação (borda vermelha + resumo no topo).");
             CepDiagnosticLogger.Linha("[APLICAÇÃO] Endereço antigo não é mantido como pertencente ao novo CEP.");
@@ -781,11 +672,6 @@ public class TecnicosViewModel : ViewModelBase
     {
         _editorNovo = true;
         _formId = 0;
-        _cepLogradouroEditado = false;
-        _cepBairroEditado = false;
-        _cepCidadeEditado = false;
-        _cepUfEditado = false;
-        _cepCache.Reset();
         LimparErrosValidacao();
         EditorTitulo = "Novo técnico";
         FormCodigo = string.Empty;
@@ -839,15 +725,9 @@ public class TecnicosViewModel : ViewModelBase
 
     private void PreencherFormulario(TecnicoDto tecnico)
     {
-        // Durante o carregamento de um cadastro existente não disparamos consulta automática
-        // de CEP e os campos de endereço não contam como edição manual do usuário. Sem isso,
-        // uma alteração posterior de CEP não atualizaria o endereço.
-        _carregandoFormulario = true;
-        try
-        {
-            _formId = tecnico.Id;
-            _cepCache.Reset();
-            FormCodigo = tecnico.Codigo;
+        // Lupa é a ÚNICA porta de consulta: carregar cadastro NUNCA consulta.
+        _formId = tecnico.Id;
+        FormCodigo = tecnico.Codigo;
             FormNome = tecnico.Nome;
             FormCpf = CpfCnpjValidatorEx.Formatar(tecnico.Cpf);
             FormRg = tecnico.Rg ?? string.Empty;
@@ -866,15 +746,6 @@ public class TecnicosViewModel : ViewModelBase
             FormObservacoes = tecnico.Observacoes ?? string.Empty;
             FormAtivo = tecnico.Ativo;
             _formQuantidadeOrcamentos = tecnico.QuantidadeOrcamentos;
-        }
-        finally
-        {
-            _carregandoFormulario = false;
-            _cepLogradouroEditado = false;
-            _cepBairroEditado = false;
-            _cepCidadeEditado = false;
-            _cepUfEditado = false;
-        }
 
         LimparErrosValidacao();
         EditorMensagem = string.Empty;
