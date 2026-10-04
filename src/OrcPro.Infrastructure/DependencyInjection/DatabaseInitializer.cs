@@ -1,4 +1,4 @@
-﻿using OrcPro.Application.Interfaces.Services;
+using OrcPro.Application.Interfaces.Services;
 using OrcPro.Domain.Entities.Seguranca;
 using OrcPro.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +36,39 @@ internal static class SchemaUpgrade
             }
         };
 
+    /// <summary>
+    /// Tabelas introduzidas depois da criação inicial da base.
+    ///
+    /// <para>O <c>EnsureCreated</c> só cria o schema quando o banco ainda não existe; em uma
+    /// instalação anterior ao módulo, a tabela nova jamais seria criada. Aqui ela é criada
+    /// sob demanda com <c>IF NOT EXISTS</c> (operação idempotente, segura para rodar em toda
+    /// inicialização). O DDL é idêntico ao gerado pelo EF para esta entidade — inclusive o
+    /// tipo TEXT usado pelo provider SQLite para <c>decimal</c>.</para>
+    /// </summary>
+    private static readonly Dictionary<string, (string CriarTabela, string CriarIndice)> Tabelas =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Servicos"] = (
+                """
+                CREATE TABLE IF NOT EXISTS "Servicos" (
+                    "Id" INTEGER NOT NULL CONSTRAINT "PK_Servicos" PRIMARY KEY AUTOINCREMENT,
+                    "Codigo" TEXT NOT NULL,
+                    "Descricao" TEXT NOT NULL,
+                    "Categoria" TEXT NULL,
+                    "Valor" TEXT NOT NULL,
+                    "Unidade" TEXT NOT NULL,
+                    "TempoEstimado" TEXT NOT NULL,
+                    "Observacoes" TEXT NULL,
+                    "Ativo" INTEGER NOT NULL,
+                    "DataCriacao" TEXT NOT NULL,
+                    "DataAtualizacao" TEXT NULL
+                )
+                """,
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS "IX_Servicos_Codigo" ON "Servicos" ("Codigo")
+                """)
+        };
+
     public static async Task AplicarAsync(OrcProDbContext context, CancellationToken cancellationToken = default)
     {
         if (!context.Database.IsSqlite())
@@ -63,6 +96,17 @@ internal static class SchemaUpgrade
                     cancellationToken);
 #pragma warning restore EF1002
             }
+        }
+
+        foreach (var (tabela, (criarTabela, criarIndice)) in Tabelas)
+        {
+            var existentes = await LerColunasAsync(context, tabela, cancellationToken);
+            if (existentes.Count > 0)
+                continue;
+
+            // Tabela ausente em uma base já existente: EnsureCreated não a criaria.
+            await context.Database.ExecuteSqlRawAsync(criarTabela, cancellationToken);
+            await context.Database.ExecuteSqlRawAsync(criarIndice, cancellationToken);
         }
     }
 

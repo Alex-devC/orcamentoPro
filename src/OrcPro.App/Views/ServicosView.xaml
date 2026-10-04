@@ -1,0 +1,605 @@
+﻿<UserControl x:Class="OrcPro.App.Views.ServicosView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:b="clr-namespace:OrcPro.App.Behaviors">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OrcPro.App;component/Resources/CadastroModuleStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- ===== Cabeçalho da página ===== -->
+        <Border Grid.Row="0" Style="{StaticResource PanelCardStyle}" Padding="12,8" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Path Grid.Column="0" Data="{StaticResource IconTool}" Stroke="{StaticResource AccentBrush}"
+                      Style="{StaticResource IconPathStyle}" Width="18" Height="18" />
+                <TextBlock Grid.Column="1" Text="Serviços" Style="{StaticResource PageTitleStyle}" Margin="10,0,0,0" />
+                <TextBlock Grid.Column="2" Text="|" Margin="10,0"
+                           Foreground="{StaticResource BorderStrongBrush}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="3" Text="Cadastro de serviços e mão de obra"
+                           Style="{StaticResource PageSubtitleStyle}" />
+            </Grid>
+        </Border>
+
+        <!-- ===== Conteúdo: toolbar + grid + rodapé ===== -->
+        <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- ===== Barra de ferramentas (pesquisa, filtros e ações) ===== -->
+                <Border Grid.Row="0" Style="{StaticResource PanelHeaderBarStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Grid Width="230">
+                                <TextBox Style="{StaticResource SearchTextBoxStyle}"
+                                         Tag="Pesquisar por código, descrição ou categoria"
+                                         AutomationProperties.AutomationId="ServicosBusca"
+                                         Text="{Binding Busca, UpdateSourceTrigger=PropertyChanged}" />
+                                <Path Data="{StaticResource IconSearch}" Stroke="{StaticResource TextDisabledBrush}"
+                                      Style="{StaticResource IconPathStyle}" Width="13" Height="13"
+                                      HorizontalAlignment="Left" VerticalAlignment="Center" Margin="7,0,0,0"
+                                      IsHitTestVisible="False" />
+                            </Grid>
+
+                            <ComboBox Width="120" Margin="8,0,0,0" Style="{StaticResource FormComboBoxStyle}"
+                                      ItemContainerStyle="{StaticResource FormComboBoxItemStyle}"
+                                      Tag="Situação"
+                                      AutomationProperties.AutomationId="ServicosFiltroSituacao"
+                                      SelectedIndex="{Binding SituacaoFiltro, Mode=TwoWay}">
+                                <ComboBoxItem Content="Todos" />
+                                <ComboBoxItem Content="Somente ativos" />
+                                <ComboBoxItem Content="Somente inativos" />
+                            </ComboBox>
+
+                            <Button Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0"
+                                    Command="{Binding LimparBuscaCommand}" Content="Limpar busca"
+                                    AutomationProperties.AutomationId="ServicosLimparBusca" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Style="{StaticResource GhostButtonStyle}" Margin="0,0,6,0"
+                                    Command="{Binding AtualizarListaCommand}"
+                                    AutomationProperties.AutomationId="ServicosAtualizar"
+                                    ToolTip="Recarregar a listagem">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconRefresh}" Stroke="{StaticResource TextMutedBrush}"
+                                          Style="{StaticResource IconPathStyle}" Width="13" Height="13" />
+                                    <TextBlock Text="Atualizar" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="110"
+                                    Height="26" FontSize="11" FontWeight="Normal"
+                                    Command="{Binding NovoCommand}"
+                                    IsEnabled="{Binding PodeCriar}"
+                                    AutomationProperties.AutomationId="ServicosNovo">
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconPlus}" Stroke="{StaticResource WhiteBrush}"
+                                          Style="{StaticResource IconPathStyle}" Width="13" Height="13" />
+                                    <TextBlock Text="Novo serviço" Margin="6,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>                <!-- ===== Grid de serviços ===== -->
+                <Grid Grid.Row="1">
+                    <DataGrid x:Name="ServicosGrid"
+                              ItemsSource="{Binding Servicos}"
+                              SelectedItem="{Binding ServicoSelecionada, Mode=TwoWay}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False"
+                              IsReadOnly="True" HeadersVisibility="Column" RowHeaderWidth="0"
+                              SelectionMode="Single" SelectionUnit="FullRow"
+                              AlternationCount="2" BorderThickness="0"
+                              Background="{StaticResource SurfaceBrush}"
+                              RowStyle="{StaticResource DataGridRowStyle}"
+                              ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle}"
+                              CellStyle="{StaticResource DataGridCellStyle}"
+                              AutomationProperties.AutomationId="ServicosGrid"
+                              Sorting="OnGridServicosSorting"
+                              MouseDoubleClick="OnServicosGridDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="CÓDIGO" Binding="{Binding Codigo}" Width="100" SortMemberPath="Codigo" />
+                            <DataGridTextColumn Header="DESCRIÇÃO" Binding="{Binding Descricao}" Width="2*" SortMemberPath="Descricao" />
+                            <DataGridTextColumn Header="CATEGORIA" Binding="{Binding Categoria}" Width="140" SortMemberPath="Categoria" />
+                            <DataGridTextColumn Header="VALOR" Width="100" CanUserSort="False">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="Valor" StringFormat="N2" />
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="UN" Binding="{Binding Unidade}" Width="60" CanUserSort="False" />
+                            <DataGridTextColumn Header="TEMPO" Width="90" CanUserSort="False">
+                                <DataGridTextColumn.Binding>
+                                    <Binding Path="TempoEstimado" StringFormat="N2" />
+                                </DataGridTextColumn.Binding>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="SITUAÇÃO" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border x:Name="Badge" Style="{StaticResource StatusBadgeStyle}"
+                                                Background="{StaticResource AccentSoftBrush}"
+                                                BorderBrush="{StaticResource AccentBrush}">
+                                            <TextBlock x:Name="BadgeText" Text="Ativo"
+                                                       Style="{StaticResource StatusBadgeTextStyle}"
+                                                       Foreground="{StaticResource AccentBrush}" />
+                                        </Border>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding Ativo}" Value="False">
+                                                <Setter TargetName="Badge" Property="Background" Value="{StaticResource SurfaceHighBrush}" />
+                                                <Setter TargetName="Badge" Property="BorderBrush" Value="{StaticResource BorderStrongBrush}" />
+                                                <Setter TargetName="BadgeText" Property="Text" Value="Inativo" />
+                                                <Setter TargetName="BadgeText" Property="Foreground" Value="{StaticResource TextMutedBrush}" />
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="AÇÕES" Width="230">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Button Style="{StaticResource RowActionButtonStyle}"
+                                                    Command="{Binding DataContext.VisualizarCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="Visualizar"
+                                                    AutomationProperties.AutomationId="ServicoVisualizarLinha"
+                                                    ToolTip="Visualizar a ficha do serviço" />
+                                            <Button Style="{StaticResource RowActionButtonStyle}"
+                                                    Command="{Binding DataContext.EditarCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="Editar"
+                                                    AutomationProperties.AutomationId="ServicoEditarLinha"
+                                                    ToolTip="Editar serviço" />
+                                            <Button Command="{Binding DataContext.AlternarSituacaoCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    AutomationProperties.AutomationId="ServicoSituacaoLinha"
+                                                    ToolTip="Ativar ou inativar serviço">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource RowActionButtonStyle}">
+                                                        <Setter Property="Content" Value="Ativar" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Ativo}" Value="True">
+                                                                <Setter Property="Content" Value="Inativar" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+                                            <Button Style="{StaticResource RowActionButtonStyle}"
+                                                    Command="{Binding DataContext.ExcluirCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Content="Excluir"
+                                                    Foreground="{StaticResource DangerBrush}"
+                                                    AutomationProperties.AutomationId="ServicoExcluirLinha"
+                                                    ToolTip="Excluir serviço" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <!-- Estado vazio -->
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TemRegistros}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <Path Data="{StaticResource IconTool}" Stroke="{StaticResource TextDisabledBrush}"
+                              Style="{StaticResource IconPathStyle}" StrokeThickness="1.2"
+                              Width="28" Height="28" HorizontalAlignment="Center" />
+                        <TextBlock Text="Nenhum serviço encontrado com os filtros atuais."
+                                   FontSize="12" Foreground="{StaticResource TextMutedBrush}"
+                                   Margin="0,8,0,0" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- ===== Rodapé do grid: paginação ===== -->
+                <Border Grid.Row="2" Style="{StaticResource PanelFooterBarStyle}" BorderThickness="0,1,0,0">
+                    <Grid>
+                        <TextBlock Text="{Binding ResumoPaginacao}" FontSize="11"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   VerticalAlignment="Center" HorizontalAlignment="Left"
+                                   AutomationProperties.AutomationId="ServicosResumo" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource PagerButtonStyle}" Command="{Binding PaginaAnteriorCommand}"
+                                    AutomationProperties.Name="Página anterior de serviços">
+                                <Path Data="{StaticResource IconChevronLeft}" Stroke="{StaticResource TextMutedBrush}"
+                                      Style="{StaticResource IconPathStyle}" Width="11" Height="11" />
+                            </Button>
+                            <Button Style="{StaticResource PagerButtonStyle}" Command="{Binding PaginaProximaCommand}"
+                                    AutomationProperties.Name="Próxima página de serviços" Margin="4,0,0,0">
+                                <Path Data="{StaticResource IconChevronRight}" Stroke="{StaticResource TextMutedBrush}"
+                                      Style="{StaticResource IconPathStyle}" Width="11" Height="11" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+        <!-- ===== Modal: cadastro/edição de serviço ===== -->
+        <Border Grid.Row="0" Grid.RowSpan="2">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource ModalOverlayStyle}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding EditorAberto}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Border Style="{StaticResource PanelCardStyle}" Width="640" MaxHeight="680"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource PanelHeaderBarStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconTool}" Stroke="{StaticResource AccentBrush}"
+                                  Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                            <TextBlock Text="{Binding EditorTitulo}" Style="{StaticResource PanelHeaderStyle}"
+                                       Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,12">
+                        <StackPanel>
+                            <!-- Resumo de validação (topo do formulário) -->
+                            <ItemsControl ItemsSource="{Binding ResumoValidacao}"
+                                          AutomationProperties.AutomationId="ServicoResumoValidacao">
+                                <ItemsControl.Style>
+                                    <Style TargetType="ItemsControl" BasedOn="{StaticResource ValidationSummaryStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TemResumoValidacao}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ItemsControl.Style>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" Style="{StaticResource ValidationErrorTextStyle}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Text="IDENTIFICAÇÃO" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="CÓDIGO" Style="{StaticResource FormLabelStyle}" />
+                                    <!-- Código gerado pelo sistema: somente leitura, nunca digitado. -->
+                                    <TextBox Style="{StaticResource FormReadOnlyInputStyle}"
+                                             TabIndex="1"
+                                             Tag="Codigo"
+                                             AutomationProperties.AutomationId="ServicoCodigoInput"
+                                             b:TextFormattingBehavior.CampoInvalido="{Binding CodigoTemErro}"
+                                             Text="{Binding FormCodigo, Mode=OneWay}" />
+                                    <TextBlock Style="{StaticResource FormHintStyle}"
+                                               Text="Código gerado automaticamente pelo sistema." />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="UNIDADE" Style="{StaticResource FormLabelStyle}" />
+                                    <ComboBox Style="{StaticResource FormComboBoxStyle}"
+                                              AutomationProperties.AutomationId="ServicoUnidadeInput"
+                                              IsEditable="True"
+                                              SelectedItem="{Binding FormUnidade, Mode=TwoWay}"
+                                              Text="{Binding FormUnidade, Mode=TwoWay}">
+                                        <ComboBoxItem Content="UN" />
+                                        <ComboBoxItem Content="HR" />
+                                        <ComboBoxItem Content="DIA" />
+                                        <ComboBoxItem Content="VIS" />
+                                        <ComboBoxItem Content="SRV" />
+                                        <ComboBoxItem Content="MTS" />
+                                    </ComboBox>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Margin="0,12,0,0">
+                                <TextBlock Text="DESCRIÇÃO" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="2"
+                                         Tag="Descricao"
+                                         AutomationProperties.AutomationId="ServicoDescricaoInput"
+                                         b:TextFormattingBehavior.CampoInvalido="{Binding DescricaoTemErro}"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormDescricao, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <TextBlock Text="CLASSIFICAÇÃO" Style="{StaticResource SectionLabelStyle}" Margin="0,16,0,6" />
+                            <StackPanel>
+                                <TextBlock Text="CATEGORIA" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="3"
+                                         Tag="Categoria"
+                                         AutomationProperties.AutomationId="ServicoCategoriaInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormCategoria, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <TextBlock Text="EXECUÇÃO" Style="{StaticResource SectionLabelStyle}" Margin="0,16,0,6" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="VALOR" Style="{StaticResource FormLabelStyle}" />
+                                    <TextBox Style="{StaticResource FormInputStyle}"
+                                             TabIndex="4"
+                                             Tag="Valor"
+                                             AutomationProperties.AutomationId="ServicoValorInput"
+                                             b:TextFormattingBehavior.CampoInvalido="{Binding ValorTemErro}"
+                                             b:TextFormattingBehavior.EnterNavigation="True"
+                                             Text="{Binding FormValorTexto, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Style="{StaticResource FormHintStyle}"
+                                               Text="Use vírgula para os centavos (ex.: 1250,75)." />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="TEMPO ESTIMADO (H)" Style="{StaticResource FormLabelStyle}" />
+                                    <TextBox Style="{StaticResource FormInputStyle}"
+                                             TabIndex="5"
+                                             Tag="TempoEstimado"
+                                             AutomationProperties.AutomationId="ServicoTempoEstimadoInput"
+                                             b:TextFormattingBehavior.CampoInvalido="{Binding TempoEstimadoTemErro}"
+                                             b:TextFormattingBehavior.EnterNavigation="True"
+                                             Text="{Binding FormTempoEstimadoTexto, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Style="{StaticResource FormHintStyle}"
+                                               Text="Horas estimadas de execução (ex.: 1,5)." />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="OBSERVAÇÕES" Style="{StaticResource SectionLabelStyle}" Margin="0,16,0,6" />
+                            <TextBox Style="{StaticResource FormMultilineInputStyle}" Height="70"
+                                     TabIndex="6"
+                                     Tag="Observacoes"
+                                     AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                     AutomationProperties.AutomationId="ServicoObservacoesInput"
+                                     b:TextFormattingBehavior.FormatMode="UpperCase"
+                                     Text="{Binding FormObservacoes, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <CheckBox Content="Ativo" Style="{StaticResource FormCheckBoxStyle}"
+                                      TabIndex="7"
+                                      AutomationProperties.AutomationId="ServicoAtivoInput"
+                                      IsChecked="{Binding FormAtivo, Mode=TwoWay}" />
+
+                            <!-- Erro de operação (falha ao salvar / gerar código) -->
+                            <Border Margin="0,14,0,0">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource FormErrorBadgeStyle}">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding EditorMensagemVisivel}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource DangerBrush}"
+                                          Style="{StaticResource FormErrorIconStyle}" Width="14" Height="14" />
+                                    <TextBlock Text="{Binding EditorMensagem}" Style="{StaticResource FormErrorMessageStyle}"
+                                               TextWrapping="Wrap" Margin="6,0,0,0" VerticalAlignment="Center"
+                                               AutomationProperties.AutomationId="ServicoMensagemErro" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" Style="{StaticResource PanelFooterBarStyle}" Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource GhostButtonStyle}" MinWidth="90"
+                                    Content="Cancelar"
+                                    Command="{Binding CancelarEditorCommand}"
+                                    AutomationProperties.AutomationId="ServicoCancelar" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="110" Margin="8,0,0,0"
+                                    Content="Salvar"
+                                    Command="{Binding SalvarCommand}"
+                                    AutomationProperties.AutomationId="ServicoSalvar" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Border>
+        <!-- ===== Modal: visualização da ficha (somente leitura) ===== -->
+        <Border Grid.Row="0" Grid.RowSpan="2">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource ModalOverlayStyle}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding VisualizacaoAberta}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Border Style="{StaticResource PanelCardStyle}" Width="560" MaxHeight="640"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource PanelHeaderBarStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconDocument}" Stroke="{StaticResource AccentBrush}"
+                                  Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                            <TextBlock Text="Ficha do serviço" Style="{StaticResource PanelHeaderStyle}"
+                                       Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="16" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="IDENTIFICAÇÃO" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6" />
+                                <TextBlock Text="Código" Style="{StaticResource FormLabelStyle}" />
+                                <TextBlock Text="{Binding FormCodigo}" FontSize="12" Margin="0,0,0,8"
+                                           AutomationProperties.AutomationId="ServicoVisualizacaoCodigo" />
+                                <TextBlock Text="Descrição" Style="{StaticResource FormLabelStyle}" />
+                                <TextBlock Text="{Binding FormDescricao}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"
+                                           AutomationProperties.AutomationId="ServicoVisualizacaoDescricao" />
+                                <TextBlock Text="Unidade" Style="{StaticResource FormLabelStyle}" />
+                                <TextBlock Text="{Binding FormUnidade}" FontSize="12" Margin="0,0,0,8" />
+                                <TextBlock Text="Situação" Style="{StaticResource FormLabelStyle}" />
+                                <TextBlock FontSize="12" Margin="0,0,0,8">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Ativo" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FormAtivo}" Value="False">
+                                                    <Setter Property="Text" Value="Inativo" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="CLASSIFICAÇÃO" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6" />
+                                <TextBlock Text="Categoria" Style="{StaticResource FormLabelStyle}" />
+                                <TextBlock Text="{Binding FormCategoria}" FontSize="12" Margin="0,0,8,0"
+                                           AutomationProperties.AutomationId="ServicoVisualizacaoCategoria" />
+
+                                <TextBlock Text="EXECUÇÃO" Style="{StaticResource SectionLabelStyle}" Margin="0,8,0,6" />
+                                <TextBlock Text="Valor" Style="{StaticResource FormLabelStyle}" />
+                                <TextBlock FontSize="12" Margin="0,0,8,0"
+                                           AutomationProperties.AutomationId="ServicoVisualizacaoValor">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0:N2}">
+                                            <Binding Path="FormValor" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                                <TextBlock Text="Tempo estimado (h)" Style="{StaticResource FormLabelStyle}" />
+                                <TextBlock FontSize="12" Margin="0,0,8,0">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0:N2}">
+                                            <Binding Path="FormTempoEstimado" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+
+                                <TextBlock Text="OBSERVAÇÕES" Style="{StaticResource SectionLabelStyle}" Margin="0,8,0,6" />
+                                <TextBlock Text="{Binding FormObservacoes}" FontSize="12" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" Style="{StaticResource PanelFooterBarStyle}" Margin="0,12,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource GhostButtonStyle}" MinWidth="110"
+                                    Content="Fechar"
+                                    Command="{Binding FecharVisualizacaoCommand}"
+                                    AutomationProperties.AutomationId="ServicoVisualizacaoFechar" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="110" Margin="8,0,0,0"
+                                    Content="Editar"
+                                    Command="{Binding EditarCommand}"
+                                    CommandParameter="{Binding ServicoSelecionada}"
+                                    AutomationProperties.AutomationId="ServicoVisualizacaoEditar" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Border>
+
+        <!-- ===== Modal: confirmação de exclusão ===== -->
+        <Border Grid.Row="0" Grid.RowSpan="2">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource ModalOverlayStyle}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ConfirmacaoAberta}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+
+            <Border Style="{StaticResource PanelCardStyle}" Width="400" HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <StackPanel>
+                    <Border Style="{StaticResource PanelHeaderBarStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconCancelCircle}" Stroke="{StaticResource DangerBrush}"
+                                  Style="{StaticResource IconPathStyle}" Width="15" Height="15" />
+                            <TextBlock Text="Excluir serviço" Style="{StaticResource PanelHeaderStyle}"
+                                       Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="{Binding ConfirmacaoMensagem}" TextWrapping="Wrap" FontSize="12"
+                               Foreground="{StaticResource TextBrush}" Margin="16,14,16,0"
+                               AutomationProperties.AutomationId="ServicoExcluirMensagem" />
+
+                    <Border Style="{StaticResource PanelFooterBarStyle}" Margin="0,14,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource GhostButtonStyle}" MinWidth="90"
+                                    Content="Cancelar"
+                                    Command="{Binding CancelarExclusaoCommand}"
+                                    AutomationProperties.AutomationId="ServicoExcluirCancelar" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="110" Margin="8,0,0,0"
+                                    Background="{StaticResource DangerBrush}"
+                                    Content="Excluir"
+                                    Command="{Binding ConfirmarExclusaoCommand}"
+                                    AutomationProperties.AutomationId="ServicoExcluirConfirmar" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

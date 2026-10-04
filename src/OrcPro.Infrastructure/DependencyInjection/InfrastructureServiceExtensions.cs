@@ -32,6 +32,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IClienteRepository, ClienteRepository>();
         services.AddScoped<ITecnicoRepository, TecnicoRepository>();
         services.AddScoped<IPecaRepository, PecaRepository>();
+        services.AddScoped<IServicoRepository, ServicoRepository>();
         services.AddScoped<IOrcamentoRepository, OrcamentoRepository>();
         services.AddScoped<IOrcamentoStatusRepository, OrcamentoStatusRepository>();
         services.AddScoped<IOrcamentoHistoricoRepository, OrcamentoHistoricoRepository>();
@@ -48,6 +49,7 @@ public static class InfrastructureServiceExtensions
         services.AddScoped<IClienteService, ClienteService>();
         services.AddScoped<ITecnicoService, TecnicoService>();
         services.AddScoped<IPecaService, PecaService>();
+        services.AddScoped<IServicoService, ServicoService>();
         services.AddScoped<IEmpresaService, EmpresaService>();
         services.AddScoped<IOrcamentoService, OrcamentoService>();
         services.AddScoped<IRelatorioService, RelatorioService>();

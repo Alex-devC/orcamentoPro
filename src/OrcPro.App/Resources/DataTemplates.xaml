@@ -23,6 +23,11 @@
         <views:PecasView />
     </DataTemplate>
 
+    <!-- Cadastro de Serviços / Mão de Obra -->
+    <DataTemplate DataType="{x:Type vm:ServicosViewModel}">
+        <views:ServicosView />
+    </DataTemplate>
+
     <!-- Cadastro de Usuários e Perfis (abas Usuários / Perfis) -->
     <DataTemplate DataType="{x:Type vm:UsuariosPerfisViewModel}">
         <views:UsuariosPerfisView />

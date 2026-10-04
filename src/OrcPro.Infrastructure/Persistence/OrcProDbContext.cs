@@ -1,9 +1,10 @@
-﻿using OrcPro.Domain.Entities.Cliente;
+using OrcPro.Domain.Entities.Cliente;
 using OrcPro.Domain.Entities.Configuracao;
 using OrcPro.Domain.Entities.Empresa;
 using OrcPro.Domain.Entities.Orcamento;
 using OrcPro.Domain.Entities.Peca;
 using OrcPro.Domain.Entities.Seguranca;
+using OrcPro.Domain.Entities.Servico;
 using OrcPro.Domain.Entities.Tecnico;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +27,7 @@ public class OrcProDbContext : DbContext
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<Tecnico> Tecnicos => Set<Tecnico>();
     public DbSet<Peca> Pecas => Set<Peca>();
+    public DbSet<Servico> Servicos => Set<Servico>();
 
     // Orçamentos
     public DbSet<Orcamento> Orcamentos => Set<Orcamento>();

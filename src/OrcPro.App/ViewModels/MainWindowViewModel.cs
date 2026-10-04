@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +18,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private const string ClientesModuleTitle = "Clientes";
     private const string TecnicosModuleTitle = "Técnicos";
     private const string PecasModuleTitle = "Peças / Itens";
+    private const string ServicosModuleTitle = "Serviços";
     private const string ProductName = "OrcPro";
     private const string CompanyName = "ALEX T.I. Tecnologia e Assistência";
     private const string DatabaseProfileName = "[Base de Dados: Produção]";
@@ -34,6 +35,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly IClienteService _clienteService;
     private readonly ITecnicoService _tecnicoService;
     private readonly IPecaService _pecaService;
+    private readonly IServicoService _servicoService;
     private readonly IPermissaoService _permissaoService;
     private readonly ICepService _cepService;
     private ViewModelBase _currentView;
@@ -56,6 +58,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _clienteService = _moduloScope.ServiceProvider.GetRequiredService<IClienteService>();
         _tecnicoService = _moduloScope.ServiceProvider.GetRequiredService<ITecnicoService>();
         _pecaService = _moduloScope.ServiceProvider.GetRequiredService<IPecaService>();
+        _servicoService = _moduloScope.ServiceProvider.GetRequiredService<IServicoService>();
         _permissaoService = _moduloScope.ServiceProvider.GetRequiredService<IPermissaoService>();
         _cepService = _moduloScope.ServiceProvider.GetRequiredService<ICepService>();
 
@@ -64,6 +67,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         OpenClientesCommand = new RelayCommand(_ => OpenClientes());
         OpenTecnicosCommand = new RelayCommand(_ => OpenTecnicos());
         OpenPecasCommand = new RelayCommand(_ => OpenPecas());
+        OpenServicosCommand = new RelayCommand(_ => OpenServicos());
 
         NavigationItems = new ObservableCollection<NavigationItemViewModel>
         {
@@ -113,6 +117,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Abre o módulo Peças / Itens (Ribbon Cadastros → Peças / Itens).</summary>
     public ICommand OpenPecasCommand { get; }
+
+    /// <summary>Abre o módulo de Serviços / Mão de Obra (Ribbon Cadastros → Serviços).</summary>
+    public ICommand OpenServicosCommand { get; }
 
     /// <summary>Itens do menu lateral "Navegação do Módulo".</summary>
     public ObservableCollection<NavigationItemViewModel> NavigationItems { get; }
@@ -170,6 +177,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Acesso ao módulo Peças / Itens (PECAS.VISUALIZAR).</summary>
     public bool PodeAcessarPecas => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Pecas.Visualizar);
+
+    /// <summary>Acesso ao módulo Serviços (SERVICOS.VISUALIZAR).</summary>
+    public bool PodeAcessarServicos => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Servicos.Visualizar);
 
     /// <summary>Acesso ao módulo Usuários e Perfis (USUARIOS_PERFIS.VISUALIZAR).</summary>
     public bool PodeAcessarUsuariosPerfis => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.UsuariosPerfis.Visualizar);
@@ -289,6 +299,22 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         var modulo = new PecasViewModel(_pecaService, _sessao, UpdateStatus);
         Navigate(PecasModuleTitle, modulo, "Módulo de peças e itens carregado.");
+    }
+
+    /// <summary>
+    /// Módulo de Serviços / Mão de Obra (Ribbon Cadastros → Serviços). Nova instância a cada
+    /// abertura para que a listagem sempre reflita a base.
+    /// </summary>
+    private void OpenServicos()
+    {
+        if (!PodeAcessarServicos)
+        {
+            UpdateStatus("Você não possui a permissão SERVICOS.VISUALIZAR.");
+            return;
+        }
+
+        var modulo = new ServicosViewModel(_servicoService, _sessao, UpdateStatus);
+        Navigate(ServicosModuleTitle, modulo, "Módulo de serviços carregado.");
     }
 
     private void UpdateStatus(string? message)

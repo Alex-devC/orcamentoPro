@@ -329,12 +329,17 @@
                                          <TextBlock Text="Peças / Itens" Style="{StaticResource RibbonButtonLabelStyle}" />
                                      </StackPanel>
                                  </Button>
-                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding RibbonActionCommand}" CommandParameter="Cadastro de serviços (módulo em desenvolvimento).">
-                                    <StackPanel>
-                                        <Path Data="{StaticResource IconTool}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
-                                        <TextBlock Text="Serviços" Style="{StaticResource RibbonButtonLabelStyle}" />
-                                    </StackPanel>
-                                </Button>
+                                 <!-- Módulo implementado: Serviços / Mão de Obra -->
+                                 <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding OpenServicosCommand}"
+                                         IsEnabled="{Binding PodeAcessarServicos}"
+                                         AutomationProperties.AutomationId="OpenServicosRibbon"
+                                         AutomationProperties.Name="Serviços"
+                                         ToolTip="Cadastro de serviços e mão de obra">
+                                     <StackPanel>
+                                         <Path Data="{StaticResource IconTool}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
+                                         <TextBlock Text="Serviços" Style="{StaticResource RibbonButtonLabelStyle}" />
+                                     </StackPanel>
+                                 </Button>
                                 <!-- Módulo implementado: Usuários e Perfis -->
                                 <Button Style="{StaticResource RibbonLargeButtonStyle}"
                                         Command="{Binding OpenUsuariosPerfisCommand}" CommandParameter="usuarios"

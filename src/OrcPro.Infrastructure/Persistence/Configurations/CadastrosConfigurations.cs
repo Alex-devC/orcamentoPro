@@ -1,7 +1,8 @@
-﻿using OrcPro.Domain.Entities.Cliente;
+using OrcPro.Domain.Entities.Cliente;
 using OrcPro.Domain.Entities.Configuracao;
 using OrcPro.Domain.Entities.Empresa;
 using OrcPro.Domain.Entities.Peca;
+using OrcPro.Domain.Entities.Servico;
 using OrcPro.Domain.Entities.Tecnico;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -123,6 +124,27 @@ public class PecaConfiguration : IEntityTypeConfiguration<Peca>
         builder.Property(p => p.CodigoBarras).HasMaxLength(50);
 
         builder.Property(p => p.Observacoes).HasMaxLength(1000);
+    }
+}
+
+public class ServicoConfiguration : IEntityTypeConfiguration<Servico>
+{
+    public void Configure(EntityTypeBuilder<Servico> builder)
+    {
+        builder.ToTable("Servicos");
+        builder.HasKey(s => s.Id);
+
+        builder.Property(s => s.Codigo).IsRequired().HasMaxLength(50);
+        builder.HasIndex(s => s.Codigo).IsUnique();
+
+        builder.Property(s => s.Descricao).IsRequired().HasMaxLength(200);
+        builder.Property(s => s.Unidade).IsRequired().HasMaxLength(10);
+
+        builder.Property(s => s.Valor).HasPrecision(18, 2);
+        builder.Property(s => s.TempoEstimado).HasPrecision(18, 3);
+
+        builder.Property(s => s.Categoria).HasMaxLength(100);
+        builder.Property(s => s.Observacoes).HasMaxLength(1000);
     }
 }
 

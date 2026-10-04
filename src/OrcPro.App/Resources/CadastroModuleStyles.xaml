@@ -361,7 +361,6 @@
         <Style x:Key="FormErrorIconStyle" TargetType="Path">
             <Setter Property="Data" Value="{StaticResource IconInfo}" />
             <Setter Property="Stroke" Value="{StaticResource DangerBrush}" />
-            <Setter Property="Style" Value="{StaticResource IconPathStyle}" />
             <Setter Property="StrokeThickness" Value="1.4" />
             <Setter Property="Width" Value="14" />
             <Setter Property="Height" Value="14" />

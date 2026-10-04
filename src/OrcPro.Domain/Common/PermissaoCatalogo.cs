@@ -69,6 +69,15 @@ public static class PermissaoCatalogo
             public const string Excluir = "PECAS.EXCLUIR";
             public const string AtivarInativar = "PECAS.ATIVAR_INATIVAR";
         }
+
+        public static class Servicos
+        {
+            public const string Visualizar = "SERVICOS.VISUALIZAR";
+            public const string Criar = "SERVICOS.CRIAR";
+            public const string Editar = "SERVICOS.EDITAR";
+            public const string Excluir = "SERVICOS.EXCLUIR";
+            public const string AtivarInativar = "SERVICOS.ATIVAR_INATIVAR";
+        }
     }
 
     public const string ModuloDashboard = "DASHBOARD";
@@ -76,6 +85,7 @@ public static class PermissaoCatalogo
     public const string ModuloUsuariosPerfis = "USUARIOS_PERFIS";
     public const string ModuloTecnicos = "TECNICOS";
     public const string ModuloPecas = "PECAS";
+    public const string ModuloServicos = "SERVICOS";
 
     /// <summary>Nome do perfil que recebe todas as permissões do catálogo.</summary>
     public const string PerfilAdministrador = "Administrador";
@@ -107,7 +117,13 @@ public static class PermissaoCatalogo
         new PermissaoDefinicao(Codigos.Pecas.Criar, ModuloPecas, "Cadastrar peças e itens"),
         new PermissaoDefinicao(Codigos.Pecas.Editar, ModuloPecas, "Editar peças e itens"),
         new PermissaoDefinicao(Codigos.Pecas.Excluir, ModuloPecas, "Excluir peças e itens"),
-        new PermissaoDefinicao(Codigos.Pecas.AtivarInativar, ModuloPecas, "Ativar / inativar peças e itens")
+        new PermissaoDefinicao(Codigos.Pecas.AtivarInativar, ModuloPecas, "Ativar / inativar peças e itens"),
+
+        new PermissaoDefinicao(Codigos.Servicos.Visualizar, ModuloServicos, "Visualizar serviços"),
+        new PermissaoDefinicao(Codigos.Servicos.Criar, ModuloServicos, "Cadastrar serviços"),
+        new PermissaoDefinicao(Codigos.Servicos.Editar, ModuloServicos, "Editar serviços"),
+        new PermissaoDefinicao(Codigos.Servicos.Excluir, ModuloServicos, "Excluir serviços"),
+        new PermissaoDefinicao(Codigos.Servicos.AtivarInativar, ModuloServicos, "Ativar / inativar serviços")
     };
 
     private static readonly IReadOnlyDictionary<string, string> RotulosModulo =
@@ -117,7 +133,8 @@ public static class PermissaoCatalogo
             [ModuloClientes] = "Clientes",
             [ModuloUsuariosPerfis] = "Usuários e Perfis",
             [ModuloTecnicos] = "Técnicos",
-            [ModuloPecas] = "Peças e Itens"
+            [ModuloPecas] = "Peças e Itens",
+            [ModuloServicos] = "Serviços"
         };
 
     /// <summary>Rótulo amigável do módulo (fallback: o próprio código do módulo).</summary>
