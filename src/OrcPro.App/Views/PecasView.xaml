@@ -536,26 +536,26 @@
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="CLASSIFICAÇÃO" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6" />
                                 <TextBlock Text="Categoria" Style="{StaticResource FormLabelStyle}" />
-                                <TextBlock Text="{Binding FormCategoria}" FontSize="12" Margin="0,0,8"
+                                <TextBlock Text="{Binding FormCategoria}" FontSize="12" Margin="0,0,8,0"
                                            AutomationProperties.AutomationId="PecaVisualizacaoCategoria" />
                                 <TextBlock Text="Marca" Style="{StaticResource FormLabelStyle}" />
-                                <TextBlock Text="{Binding FormMarca}" FontSize="12" Margin="0,0,8" />
+                                <TextBlock Text="{Binding FormMarca}" FontSize="12" Margin="0,0,8,0" />
                                 <TextBlock Text="Modelo" Style="{StaticResource FormLabelStyle}" />
-                                <TextBlock Text="{Binding FormModelo}" FontSize="12" Margin="0,0,8" />
+                                <TextBlock Text="{Binding FormModelo}" FontSize="12" Margin="0,0,8,0" />
                                 <TextBlock Text="Código de Barras" Style="{StaticResource FormLabelStyle}" />
-                                <TextBlock Text="{Binding FormCodigoBarras}" FontSize="12" Margin="0,0,8" />
+                                <TextBlock Text="{Binding FormCodigoBarras}" FontSize="12" Margin="0,0,8,0" />
 
                                 <TextBlock Text="PREÇOS" Style="{StaticResource SectionLabelStyle}" Margin="0,8,0,6" />
                                 <TextBlock Text="Preço de Custo" Style="{StaticResource FormLabelStyle}" />
-                                <TextBlock Text="{Binding FormPrecoCusto, StringFormat=N2}" FontSize="12" Margin="0,0,8" />
+                                <TextBlock Text="{Binding FormPrecoCusto, StringFormat=N2}" FontSize="12" Margin="0,0,8,0" />
                                 <TextBlock Text="Preço de Venda" Style="{StaticResource FormLabelStyle}" />
-                                <TextBlock Text="{Binding FormPrecoVenda, StringFormat=N2}" FontSize="12" Margin="0,0,8" />
+                                <TextBlock Text="{Binding FormPrecoVenda, StringFormat=N2}" FontSize="12" Margin="0,0,8,0" />
 
                                 <TextBlock Text="ESTOQUE" Style="{StaticResource SectionLabelStyle}" Margin="0,8,0,6" />
                                 <TextBlock Text="Estoque Atual" Style="{StaticResource FormLabelStyle}" />
-                                <TextBlock Text="{Binding FormEstoqueAtual, StringFormat=N3}" FontSize="12" Margin="0,0,8" />
+                                <TextBlock Text="{Binding FormEstoqueAtual, StringFormat=N3}" FontSize="12" Margin="0,0,8,0" />
                                 <TextBlock Text="Estoque Mínimo" Style="{StaticResource FormLabelStyle}" />
-                                <TextBlock Text="{Binding FormEstoqueMinimo, StringFormat=N3}" FontSize="12" Margin="0,0,8" />
+                                <TextBlock Text="{Binding FormEstoqueMinimo, StringFormat=N3}" FontSize="12" Margin="0,0,8,0" />
 
                                 <TextBlock Text="OBSERVAÇÕES" Style="{StaticResource SectionLabelStyle}" Margin="0,8,0,6" />
                                 <TextBlock Text="{Binding FormObservacoes}" FontSize="12" TextWrapping="Wrap"

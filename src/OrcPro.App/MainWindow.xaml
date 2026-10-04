@@ -320,6 +320,7 @@
                                 </Button>
                 <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding OpenPecasCommand}"
                                          IsEnabled="{Binding PodeAcessarPecas}"
+                                         AutomationProperties.AutomationId="OpenPecasRibbon"
                                          AutomationProperties.Name="Peças / Itens"
                                          ToolTip="Cadastro de peças e itens">
                                      <StackPanel>

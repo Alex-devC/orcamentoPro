@@ -128,7 +128,22 @@ public class PecaRepository : BaseRepository<Peca>, IPecaRepository
             var term = request.SearchTerm.Trim().ToLower();
             query = query.Where(p => 
                 p.Codigo.ToLower().Contains(term) || 
-                p.Descricao.ToLower().Contains(term));
+                p.Descricao.ToLower().Contains(term) ||
+                (p.Categoria != null && p.Categoria.ToLower().Contains(term)) ||
+                (p.Marca != null && p.Marca.ToLower().Contains(term)) ||
+                (p.Modelo != null && p.Modelo.ToLower().Contains(term)) ||
+                (p.CodigoBarras != null && p.CodigoBarras.Contains(term)));
+        }
+
+        foreach (var filter in request.Filters)
+        {
+            if (filter.PropertyName.Equals("Status", StringComparison.OrdinalIgnoreCase))
+            {
+                if (filter.Value.Equals("ativos", StringComparison.OrdinalIgnoreCase))
+                    query = query.Where(p => p.Ativo);
+                else if (filter.Value.Equals("inativos", StringComparison.OrdinalIgnoreCase))
+                    query = query.Where(p => !p.Ativo);
+            }
         }
 
         return query;

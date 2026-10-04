@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using Xunit;
 
 namespace OrcPro.Tests;
@@ -43,6 +44,74 @@ public static class WpfTestSupport
             throw tcs.Task.Exception.InnerException ?? tcs.Task.Exception;
     }
 
+    /// <summary>
+    /// Executa a fábrica na thread STA e devolve o valor produzido. Usado para criar
+    /// ViewModels (que dependem do <c>Dispatcher</c>) diretamente nos testes.
+    /// </summary>
+    public static T RunOnStaThread<T>(Func<T> func)
+    {
+        T? resultado = default;
+        Exception? erro = null;
+
+        RunOnStaThread(() =>
+        {
+            try
+            {
+                EnsureApplicationResources();
+                resultado = func();
+            }
+            catch (Exception ex)
+            {
+                erro = ex;
+            }
+        });
+
+        if (erro != null)
+            throw erro;
+
+        return resultado!;
+    }
+
+    /// <summary>
+    /// Executa a ação na thread STA e mantém a fila do <see cref="Dispatcher"/> ativa até a
+    /// condição informada ser satisfeita. Necessário para os comandos assíncronos dos
+    /// ViewModels (<c>AsyncRelayCommand.Execute</c> é <c>async void</c>): sem bombear a fila
+    /// do Dispatcher as continuações após <c>await</c> nunca executam.
+    /// </summary>
+    public static void RunOnStaThreadUntil(Action action, Func<bool> condicao, int timeoutMs = 15000)
+    {
+        Exception? erro = null;
+        bool concluida = false;
+
+        RunOnStaThread(() =>
+        {
+            try
+            {
+                action();
+
+                var limite = Environment.TickCount64 + timeoutMs;
+                while (!condicao() && Environment.TickCount64 < limite)
+                {
+                    Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.Background);
+                    Thread.Sleep(10);
+                }
+
+                concluida = condicao();
+            }
+            catch (Exception ex)
+            {
+                erro = ex;
+            }
+        });
+
+        if (erro != null)
+            throw erro;
+
+        if (!concluida)
+            throw new TimeoutException(
+                $"A condição não foi satisfeita em {timeoutMs}ms na thread de UI.");
+    }
+
     /// <summary>Application é singleton por AppDomain: a criação é feita sob lock.</summary>
     private static readonly object ApplicationLock = new();
 
@@ -67,6 +136,14 @@ public static class WpfTestSupport
                 new System.Windows.ResourceDictionary
                 {
                     Source = new Uri("/OrcPro.App;component/Resources/CadastroModuleStyles.xaml", UriKind.Relative)
+                });
+
+            // Mesmo dicionário do App.xaml: permite validar que o DataTemplate do
+            // ViewModel do módulo resolve e instancia a View correspondente.
+            app.Resources.MergedDictionaries.Add(
+                new System.Windows.ResourceDictionary
+                {
+                    Source = new Uri("/OrcPro.App;component/Resources/DataTemplates.xaml", UriKind.Relative)
                 });
         }
     }
