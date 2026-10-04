@@ -40,6 +40,9 @@ public class PecaService : IPecaService
         return pecas.Select(MapearParaDto).ToList();
     }
 
+    public Task<string> GerarProximoCodigoAsync(CancellationToken cancellationToken = default)
+        => _pecaRepository.GerarProximoCodigoAsync(cancellationToken);
+
     public async Task<PecaDto> CriarAsync(CriarPecaDto dto, CancellationToken cancellationToken = default)
     {
         ValidarPeca(dto);

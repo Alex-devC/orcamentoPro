@@ -98,6 +98,12 @@ public class TecnicoRepository : BaseRepository<Tecnico>, ITecnicoRepository
 
 public class PecaRepository : BaseRepository<Peca>, IPecaRepository
 {
+    /// <summary>Prefixo dos códigos gerados automaticamente.</summary>
+    private const string PrefixoCodigo = "PEC-";
+
+    /// <summary>Largura da parte numérica do código (PEC-0001).</summary>
+    private const int CasasNumero = 4;
+
     public PecaRepository(OrcProDbContext context) : base(context) { }
 
     public async Task<Peca?> GetByCodigoAsync(string codigo, CancellationToken cancellationToken = default)
@@ -110,6 +116,42 @@ public class PecaRepository : BaseRepository<Peca>, IPecaRepository
     public async Task<bool> ExistsCodigoAsync(string codigo, int? ignorarId = null, CancellationToken cancellationToken = default)
     {
         return await DbSet.AnyAsync(p => p.Codigo == codigo && (!ignorarId.HasValue || p.Id != ignorarId.Value), cancellationToken);
+    }
+
+    /// <summary>
+    /// Gera o próximo código sequencial seguro no formato PEC-0001.
+    ///
+    /// <para>Não usa "quantidade de registros + 1": consultas a quantidade quebram a
+    /// sequência sempre que houver exclusões ou lacunas. Em vez disso, examina os
+    /// <b>maiores</b> códigos já existentes (inclusive inativos) e avança a partir do
+    /// maior número encontrado. Códigos não numéricos ou de outro prefixo são ignorados.</para>
+    /// </summary>
+    public async Task<string> GerarProximoCodigoAsync(CancellationToken cancellationToken = default)
+    {
+        // Considera todos os registros (ativos e inativos): código nunca é reaproveitado.
+        var codigos = await DbSet
+            .AsNoTracking()
+            .Select(p => p.Codigo)
+            .ToListAsync(cancellationToken);
+
+        var maiorNumero = 0;
+
+        foreach (var codigo in codigos)
+        {
+            if (string.IsNullOrWhiteSpace(codigo))
+                continue;
+
+            var texto = codigo.Trim();
+
+            if (texto.StartsWith(PrefixoCodigo, StringComparison.OrdinalIgnoreCase))
+                texto = texto[PrefixoCodigo.Length..];
+
+            if (int.TryParse(texto, out var numero) && numero > maiorNumero)
+                maiorNumero = numero;
+        }
+
+        // Zeros à ESQUERDA da parte numérica: "PEC-" + "0001" => "PEC-0001".
+        return $"{PrefixoCodigo}{(maiorNumero + 1).ToString().PadLeft(CasasNumero, '0')}";
     }
 
     public async Task<IReadOnlyList<Peca>> GetAllAtivosAsync(CancellationToken cancellationToken = default)

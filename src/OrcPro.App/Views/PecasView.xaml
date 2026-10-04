@@ -1,6 +1,7 @@
 <UserControl x:Class="OrcPro.App.Views.PecasView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:b="clr-namespace:OrcPro.App.Behaviors">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -297,11 +298,12 @@
 
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="CÓDIGO" Style="{StaticResource FormLabelStyle}" />
-                                    <TextBox Style="{StaticResource FormInputStyle}"
+                                    <!-- Código gerado pelo sistema: somente leitura, nunca digitado. -->
+                                    <TextBox Style="{StaticResource FormReadOnlyInputStyle}"
                                              AutomationProperties.AutomationId="PecaCodigoInput"
-                                             Text="{Binding FormCodigo, UpdateSourceTrigger=PropertyChanged}" />
+                                             Text="{Binding FormCodigo, Mode=OneWay}" />
                                     <TextBlock Style="{StaticResource FormHintStyle}"
-                                               Text="Código único de referência da peça." />
+                                               Text="Código gerado automaticamente pelo sistema." />
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
@@ -325,6 +327,7 @@
                                 <TextBlock Text="DESCRIÇÃO" Style="{StaticResource FormLabelStyle}" />
                                 <TextBox Style="{StaticResource FormInputStyle}"
                                          AutomationProperties.AutomationId="PecaDescricaoInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
                                          Text="{Binding FormDescricao, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
@@ -340,6 +343,7 @@
                                     <TextBlock Text="CATEGORIA" Style="{StaticResource FormLabelStyle}" />
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              AutomationProperties.AutomationId="PecaCategoriaInput"
+                                             b:TextFormattingBehavior.FormatMode="UpperCase"
                                              Text="{Binding FormCategoria, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
 
@@ -347,6 +351,7 @@
                                     <TextBlock Text="CÓDIGO DE BARRAS" Style="{StaticResource FormLabelStyle}" />
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              AutomationProperties.AutomationId="PecaCodigoBarrasInput"
+                                             b:TextFormattingBehavior.FormatMode="UpperCase"
                                              Text="{Binding FormCodigoBarras, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </Grid>
@@ -362,6 +367,7 @@
                                     <TextBlock Text="MARCA" Style="{StaticResource FormLabelStyle}" />
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              AutomationProperties.AutomationId="PecaMarcaInput"
+                                             b:TextFormattingBehavior.FormatMode="UpperCase"
                                              Text="{Binding FormMarca, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
 
@@ -369,6 +375,7 @@
                                     <TextBlock Text="MODELO" Style="{StaticResource FormLabelStyle}" />
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              AutomationProperties.AutomationId="PecaModeloInput"
+                                             b:TextFormattingBehavior.FormatMode="UpperCase"
                                              Text="{Binding FormModelo, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </Grid>
@@ -385,14 +392,14 @@
                                     <TextBlock Text="PREÇO DE CUSTO" Style="{StaticResource FormLabelStyle}" />
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              AutomationProperties.AutomationId="PecaPrecoCustoInput"
-                                             Text="{Binding FormPrecoCusto, StringFormat=N2, UpdateSourceTrigger=PropertyChanged}" />
+                                             Text="{Binding FormPrecoCustoTexto, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="PREÇO DE VENDA" Style="{StaticResource FormLabelStyle}" />
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              AutomationProperties.AutomationId="PecaPrecoVendaInput"
-                                             Text="{Binding FormPrecoVenda, StringFormat=N2, UpdateSourceTrigger=PropertyChanged}" />
+                                             Text="{Binding FormPrecoVendaTexto, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </Grid>
 
@@ -408,14 +415,14 @@
                                     <TextBlock Text="ESTOQUE ATUAL" Style="{StaticResource FormLabelStyle}" />
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              AutomationProperties.AutomationId="PecaEstoqueAtualInput"
-                                             Text="{Binding FormEstoqueAtual, StringFormat=N3, UpdateSourceTrigger=PropertyChanged}" />
+                                             Text="{Binding FormEstoqueAtualTexto, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="ESTOQUE MÍNIMO" Style="{StaticResource FormLabelStyle}" />
                                     <TextBox Style="{StaticResource FormInputStyle}"
                                              AutomationProperties.AutomationId="PecaEstoqueMinimoInput"
-                                             Text="{Binding FormEstoqueMinimo, StringFormat=N3, UpdateSourceTrigger=PropertyChanged}" />
+                                             Text="{Binding FormEstoqueMinimoTexto, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </Grid>
 
@@ -423,6 +430,7 @@
                             <TextBox Style="{StaticResource FormMultilineInputStyle}" Height="70"
                                      AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
                                      AutomationProperties.AutomationId="PecaObservacoesInput"
+                                     b:TextFormattingBehavior.FormatMode="UpperCase"
                                      Text="{Binding FormObservacoes, UpdateSourceTrigger=PropertyChanged}" />
 
                             <CheckBox Content="Ativo" Style="{StaticResource FormCheckBoxStyle}"

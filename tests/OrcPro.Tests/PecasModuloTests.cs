@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Data;
 using Microsoft.Extensions.DependencyInjection;
 using OrcPro.App.ViewModels;
 using OrcPro.App.Views;
@@ -284,9 +285,9 @@ public sealed class PecasModuloTests : IDisposable
         vm.FormCategoria = "ferragens";
         vm.FormMarca = "tramontina";
         vm.FormUnidadeMedida = "pc";
-        vm.FormPrecoVenda = 12.34m;
-        vm.FormEstoqueAtual = 5m;
-        vm.FormEstoqueMinimo = 1m;
+        vm.FormPrecoVendaTexto = "12,34";
+        vm.FormEstoqueAtualTexto = "5";
+        vm.FormEstoqueMinimoTexto = "1";
 
         Salvar(vm);
 
@@ -299,6 +300,8 @@ public sealed class PecasModuloTests : IDisposable
         Assert.Equal("TRAMONTINA", dto.Marca);
         Assert.Equal("PC", dto.UnidadeMedida);
         Assert.Equal(12.34m, dto.PrecoVenda);
+        Assert.Equal(5m, dto.EstoqueAtual);
+        Assert.Equal(1m, dto.EstoqueMinimo);
     }
 
     [Fact]
@@ -354,7 +357,7 @@ public sealed class PecasModuloTests : IDisposable
         Assert.Equal("BROCA", vm.FormDescricao);
 
         vm.FormDescricao = "broca de impacto";
-        vm.FormPrecoVenda = 199.90m;
+        vm.FormPrecoVendaTexto = "199,90";
         Salvar(vm);
 
         Assert.False(vm.EditorAberto);
@@ -768,6 +771,423 @@ public sealed class PecasModuloTests : IDisposable
         }
     }
 
+// ======================= Geração automática de código =======================
+
+    [Fact]
+    public async Task Codigo_AoAbrirNovo_DeveSerGeradoAutomaticamente()
+    {
+        var vm = await CriarViewModelAsync();
+
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        Assert.True(vm.EditorAberto);
+        Assert.True(vm.EditorNovo);
+        Assert.Equal("PEC-0001", vm.FormCodigo);
+    }
+
+    [Fact]
+    public void Codigo_DeveSerSomenteLeituraNaView()
+    {
+        WpfTestSupport.RunOnStaThread(() =>
+        {
+            var arvore = ObterArvoreLogica(new PecasView()).ToList();
+
+            var codigo = arvore.OfType<TextBox>()
+                .FirstOrDefault(e => AutomationProperties.GetAutomationId(e) == "PecaCodigoInput");
+            Assert.NotNull(codigo);
+
+            Assert.True(codigo!.IsReadOnly, "O código é gerado pelo sistema e não pode ser digitado.");
+
+            var binding = codigo.GetBindingExpression(TextBox.TextProperty)?.ParentBinding;
+            Assert.NotEqual(BindingMode.TwoWay, binding?.Mode);
+        });
+    }
+
+    [Fact]
+    public async Task Codigo_DeveSequenciarAposExclusaoEInativacao()
+    {
+        await Servico.CriarAsync(Nova("PEC-0001", "PARAFUSO"));
+        await Servico.CriarAsync(Nova("PEC-0002", "PORCA"));
+        await Servico.CriarAsync(Nova("PEC-0003", "ARRUELA"));
+
+        var vm = await CriarViewModelAsync();
+        await vm.InitializeAsync();
+
+        // Exclui um código INTERMEDIÁRIO: a sequência não pode voltar a usá-lo.
+        vm.ExcluirCommand.Execute(vm.Pecas.First(p => p.Codigo == "PEC-0002"));
+        ExecutarComando(vm.ConfirmarExclusaoCommand, null, () => !vm.ConfirmacaoAberta);
+
+        // Inativa o maior código (PEC-0003): inativos continuam ocupando número.
+        ExecutarComando(vm.AlternarSituacaoCommand, vm.Pecas.First(p => p.Codigo == "PEC-0003"),
+            () => vm.Pecas.Any(p => p.Codigo == "PEC-0003" && !p.Ativo));
+
+        // Novo cadastro avança a partir do maior código existente.
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+        Assert.Equal("PEC-0004", vm.FormCodigo);
+    }
+
+    [Fact]
+    public async Task Codigo_NuncaDeveReutilizarCodigoExistente()
+    {
+        // Gera e salva várias peças; nenhum código pode se repetir nem colidir.
+        var usados = new HashSet<string>();
+
+        for (int i = 1; i <= 5; i++)
+        {
+            var vm = await CriarViewModelAsync();
+            await vm.InitializeAsync();
+
+            ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+            Assert.True(usados.Add(vm.FormCodigo), $"Código repetido: {vm.FormCodigo}");
+
+            vm.FormDescricao = $"PECA {i}";
+            Salvar(vm);
+        }
+
+        Assert.Equal(5, usados.Count);
+        Assert.Contains("PEC-0001", usados);
+        Assert.Contains("PEC-0005", usados);
+    }
+
+    [Fact]
+    public async Task Codigo_EditarNaoAlteraOCodigo()
+    {
+        await Servico.CriarAsync(Nova("PEC-0001", "PARAFUSO"));
+        var vm = await CriarViewModelAsync();
+        await vm.InitializeAsync();
+
+        vm.EditarCommand.Execute(vm.Pecas.Single());
+        Assert.Equal("PEC-0001", vm.FormCodigo);
+
+        vm.FormDescricao = "PARAFUSO EDITADO";
+        vm.FormPrecoVendaTexto = "9,99";
+        Salvar(vm);
+
+        Assert.Equal("PEC-0001", vm.Pecas.Single().Codigo);
+        Assert.Equal("PARAFUSO EDITADO", vm.Pecas.Single().Descricao);
+    }
+
+    [Fact]
+    public async Task Codigo_DeveConsiderarMaiorNumeroExistente()
+    {
+        // Lacuna proposital: com "quantidade + 1" o próximo seria PEC-0003, reaproveitando
+        // PEC-0002 (já excluída). O correto é avançar a partir do maior código, PEC-0005.
+        var repo = _escopo.ServiceProvider
+            .GetRequiredService<OrcPro.Application.Interfaces.Repositories.IPecaRepository>();
+
+        await Servico.CriarAsync(Nova("PEC-0001", "A"));
+        await Servico.CriarAsync(Nova("PEC-0003", "C"));
+        await Servico.CriarAsync(Nova("PEC-0005", "E"));
+
+        var primeira = (await Servico.ListarTodasAtivasAsync()).First(p => p.Codigo == "PEC-0001");
+        await Servico.ExcluirAsync(primeira.Id);
+
+        Assert.Equal("PEC-0006", await repo.GerarProximoCodigoAsync());
+    }
+
+    [Fact]
+    public async Task Codigo_DeveIgnorarCodigosNaoNumericos()
+    {
+        await Servico.CriarAsync(Nova("PEC-0007", "A"));
+        await Servico.CriarAsync(Nova("MANUAL-XYZ", "B"));
+
+        Assert.Equal("PEC-0008", await Servico.GerarProximoCodigoAsync());
+    }
+
+    [Fact]
+    public async Task Codigo_DevePermanecerEstavelAoFecharEAbrirOModulo()
+    {
+        await Servico.CriarAsync(Nova("PEC-0001", "A"));
+
+        // Simula fechar e abrir o módulo: nova instância do ViewModel, mesma base.
+        for (int i = 0; i < 3; i++)
+        {
+            var instancia = await CriarViewModelAsync();
+            await instancia.InitializeAsync();
+
+            ExecutarComando(instancia.NovoCommand, null, () => instancia.EditorAberto);
+            Assert.Equal("PEC-0002", instancia.FormCodigo);
+
+            instancia.CancelarEditorCommand.Execute(null);
+        }
+    }
+// ======================= MAIÚSCULO =======================
+
+    [Fact]
+    public async Task Maiusculo_TodosOsCamposTextuais_SaoNormalizadosAoSalvar()
+    {
+        var vm = await CriarViewModelAsync();
+
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        vm.FormDescricao = "parafuso philips";
+        vm.FormCategoria = "ferragens";
+        vm.FormMarca = "tramontina";
+        vm.FormModelo = "philips x";
+        vm.FormCodigoBarras = "7891234567890";
+        vm.FormUnidadeMedida = "pc";
+        vm.FormObservacoes = "uso geral";
+
+        Salvar(vm);
+
+        var dto = Assert.Single(await Servico.ListarTodasAtivasAsync());
+        Assert.Equal("PARAFUSO PHILIPS", dto.Descricao);
+        Assert.Equal("FERRAGENS", dto.Categoria);
+        Assert.Equal("TRAMONTINA", dto.Marca);
+        Assert.Equal("PHILIPS X", dto.Modelo);
+        Assert.Equal("7891234567890", dto.CodigoBarras);
+        Assert.Equal("PC", dto.UnidadeMedida);
+        Assert.Equal("USO GERAL", dto.Observacoes);
+    }
+
+    [Fact]
+    public void Maiusculo_ComportamentoGlobal_ConverteDuranteDigitacao()
+    {
+        // Usa a infraestrutura global (TextFormattingBehavior), como as demais telas.
+        WpfTestSupport.RunOnStaThread(() =>
+        {
+            var box = new TextBox();
+            OrcPro.App.Behaviors.TextFormattingBehavior.SetFormatMode(
+                box, OrcPro.App.Behaviors.TextFormattingBehavior.FormatMode.UpperCase);
+
+            box.Text = "parafuso philips";
+            Assert.Equal("PARAFUSO PHILIPS", box.Text);
+
+            box.Text = string.Empty;
+            box.Text = "b osch";
+            Assert.Equal("B OSCH", box.Text);
+        });
+    }
+
+    [Fact]
+    public void Maiusculo_CamposDaView_EstaoConfiguradosParaMaiusculo()
+    {
+        WpfTestSupport.RunOnStaThread(() =>
+        {
+            var arvore = ObterArvoreLogica(new PecasView()).ToList();
+
+            foreach (var id in new[]
+            {
+                "PecaDescricaoInput", "PecaCategoriaInput", "PecaMarcaInput",
+                "PecaModeloInput", "PecaCodigoBarrasInput", "PecaObservacoesInput"
+            })
+            {
+                var campo = arvore.OfType<TextBox>()
+                    .FirstOrDefault(e => AutomationProperties.GetAutomationId(e) == id);
+                Assert.NotNull(campo);
+
+                Assert.Equal(OrcPro.App.Behaviors.TextFormattingBehavior.FormatMode.UpperCase,
+                    OrcPro.App.Behaviors.TextFormattingBehavior.GetFormatMode(campo!));
+            }
+        });
+    }
+[Fact]
+    public async Task Valores_ApagarSubstituirEcolar()
+    {
+        var vm = await CriarViewModelAsync();
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        vm.FormDescricao = "PECA";
+
+        vm.FormPrecoVendaTexto = "999";
+        Assert.Equal(999m, vm.PrecoVendaValor);
+
+        vm.FormPrecoVendaTexto = string.Empty;          // apagar
+        Assert.Equal(0m, vm.PrecoVendaValor);
+
+        vm.FormPrecoVendaTexto = "1250,75";            // colar / substituir
+        Assert.Equal(1250.75m, vm.PrecoVendaValor);
+
+        Salvar(vm);
+        Assert.Equal(1250.75m, vm.Pecas.Single().PrecoVenda);
+    }
+
+    [Fact]
+    public async Task Valores_ComSalvarEVerificarPersistenciaAposReabrir()
+    {
+        var vm = await CriarViewModelAsync();
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        vm.FormDescricao = "PECA DE TESTE";
+        vm.FormPrecoCustoTexto = "1250,75";
+        vm.FormPrecoVendaTexto = "10,50";
+        vm.FormEstoqueAtualTexto = "1000";
+        vm.FormEstoqueMinimoTexto = "1,5";
+
+        Salvar(vm);
+
+        // Reabre o módulo (nova instância) e edita: valores devem voltar corretos.
+        var reaberto = await CriarViewModelAsync();
+        await reaberto.InitializeAsync();
+
+        reaberto.EditarCommand.Execute(reaberto.Pecas.Single());
+
+        // O texto volta pronto para edição e representa exatamente o valor gravado.
+        Assert.Equal("1250,75", reaberto.FormPrecoCustoTexto);
+        Assert.Equal(1250.75m, reaberto.PrecoCustoValor);
+        Assert.Equal(10.50m, reaberto.PrecoVendaValor);
+        Assert.Equal(1000m, reaberto.EstoqueAtualValor);
+        Assert.Equal(1.5m, reaberto.EstoqueMinimoValor);
+
+        // Os campos de texto continuam preenchidos para nova edição.
+        Assert.Equal("1000", reaberto.FormEstoqueAtualTexto);
+        Assert.Equal("1,5", reaberto.FormEstoqueMinimoTexto);
+
+        // A ficha de visualização mantém os decimais.
+        Assert.Equal(1250.75m, reaberto.FormPrecoCusto);
+        Assert.Equal(10.50m, reaberto.FormPrecoVenda);
+    }
+
+    [Fact]
+    public async Task Valores_Invalidos_DeveExibirMensagemENaoSalvar()
+    {
+        var vm = await CriarViewModelAsync();
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        vm.FormDescricao = "PECA";
+        vm.FormPrecoVendaTexto = "abc";
+
+        Salvar(vm);
+
+        Assert.True(vm.EditorAberto);
+        Assert.True(vm.EditorMensagemVisivel);
+        Assert.Empty(vm.Pecas);
+    }
+
+    [Fact]
+    public async Task Valores_Negativos_DeveSerRejeitados()
+    {
+        var vm = await CriarViewModelAsync();
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        vm.FormDescricao = "PECA";
+        vm.FormPrecoVendaTexto = "-5";
+
+        Salvar(vm);
+
+        Assert.True(vm.EditorAberto);
+        Assert.Empty(vm.Pecas);
+    }
+// ======================= Entrada numérica =======================
+
+    [Theory]
+    [InlineData("1", 1.0)]
+    [InlineData("10", 10.0)]
+    [InlineData("10,50", 10.50)]
+    [InlineData("1000", 1000.0)]
+    [InlineData("1250,75", 1250.75)]
+    public async Task Valores_Custo_DeveConverterSemAlterarODigitado(string digitado, double esperado)
+    {
+        var vm = await CriarViewModelAsync();
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        vm.FormDescricao = "PECA";
+        vm.FormPrecoCustoTexto = digitado;
+
+        // O texto permanece exatamente como digitado.
+        Assert.Equal(digitado, vm.FormPrecoCustoTexto);
+        Assert.Equal((decimal)esperado, vm.PrecoCustoValor);
+
+        Salvar(vm);
+
+        Assert.Equal((decimal)esperado, vm.Pecas.Single().PrecoCusto);
+    }
+
+    [Theory]
+    [InlineData("1", 1.0)]
+    [InlineData("10", 10.0)]
+    [InlineData("10,50", 10.50)]
+    [InlineData("1000", 1000.0)]
+    [InlineData("1250,75", 1250.75)]
+    public async Task Valores_Venda_DeveConverterSemAlterarODigitado(string digitado, double esperado)
+    {
+        var vm = await CriarViewModelAsync();
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        vm.FormDescricao = "PECA";
+        vm.FormPrecoVendaTexto = digitado;
+
+        Assert.Equal(digitado, vm.FormPrecoVendaTexto);
+        Assert.Equal((decimal)esperado, vm.PrecoVendaValor);
+
+        Salvar(vm);
+
+        Assert.Equal((decimal)esperado, vm.Pecas.Single().PrecoVenda);
+    }
+
+    [Theory]
+    [InlineData("1", 1.0)]
+    [InlineData("10", 10.0)]
+    [InlineData("100", 100.0)]
+    [InlineData("1000", 1000.0)]
+    [InlineData("1,5", 1.5)]
+    [InlineData("10,50", 10.50)]
+    public async Task Valores_Quantidade_DeveConverterSemAlterarODigitado(string digitado, double esperado)
+    {
+        var vm = await CriarViewModelAsync();
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        vm.FormDescricao = "PECA";
+        vm.FormEstoqueAtualTexto = digitado;
+        vm.FormEstoqueMinimoTexto = digitado;
+
+        Assert.Equal(digitado, vm.FormEstoqueAtualTexto);
+        Assert.Equal((decimal)esperado, vm.EstoqueAtualValor);
+        Assert.Equal((decimal)esperado, vm.EstoqueMinimoValor);
+
+        Salvar(vm);
+
+        Assert.Equal((decimal)esperado, vm.Pecas.Single().EstoqueAtual);
+        Assert.Equal((decimal)esperado, vm.Pecas.Single().EstoqueMinimo);
+    }
+
+    /// <summary>Regressão direta do sintoma reportado: digitar "1" não pode virar "1000".</summary>
+    [Fact]
+    public async Task Regressao_DigitarUm_NaoPodeVirarMil()
+    {
+        var vm = await CriarViewModelAsync();
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        vm.FormDescricao = "PECA";
+        vm.FormPrecoCustoTexto = "1";
+        Assert.Equal("1", vm.FormPrecoCustoTexto);
+        Assert.Equal(1m, vm.PrecoCustoValor);
+
+        vm.FormPrecoVendaTexto = "1";
+        Assert.Equal("1", vm.FormPrecoVendaTexto);
+        Assert.Equal(1m, vm.PrecoVendaValor);
+
+        vm.FormEstoqueAtualTexto = "1";
+        Assert.Equal("1", vm.FormEstoqueAtualTexto);
+        Assert.Equal(1m, vm.EstoqueAtualValor);
+
+        Salvar(vm);
+
+        var dto = vm.Pecas.Single();
+        Assert.Equal(1m, dto.PrecoCusto);
+        Assert.Equal(1m, dto.PrecoVenda);
+        Assert.Equal(1m, dto.EstoqueAtual);
+    }
+
+    [Fact]
+    public async Task Regressao_DezComVirgulaNaoVirarMilQuinhentos()
+    {
+        var vm = await CriarViewModelAsync();
+        ExecutarComando(vm.NovoCommand, null, () => vm.EditorAberto);
+
+        vm.FormDescricao = "PECA";
+        vm.FormPrecoCustoTexto = "10,50";
+        vm.FormPrecoVendaTexto = "10,50";
+
+        Assert.Equal(10.50m, vm.PrecoCustoValor);
+        Assert.Equal(10.50m, vm.PrecoVendaValor);
+
+        Salvar(vm);
+
+        Assert.Equal(10.50m, vm.Pecas.Single().PrecoCusto);
+        Assert.Equal(10.50m, vm.Pecas.Single().PrecoVenda);
+    }
     // ============================ Auxiliares ============================
 
     /// <summary>Percorre a árvore lógica (elementos declarados no XAML) sem exigir layout.</summary>

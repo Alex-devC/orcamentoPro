@@ -57,6 +57,11 @@ public class PecasViewModel : ViewModelBase
     private decimal _formPrecoVenda;
     private decimal _formEstoqueAtual;
     private decimal _formEstoqueMinimo;
+
+    private string _formPrecoCustoTexto = string.Empty;
+    private string _formPrecoVendaTexto = string.Empty;
+    private string _formEstoqueAtualTexto = string.Empty;
+    private string _formEstoqueMinimoTexto = string.Empty;
     private string _formObservacoes = string.Empty;
     private bool _formAtivo = true;
     private string _editorMensagem = string.Empty;
@@ -81,7 +86,7 @@ public class PecasViewModel : ViewModelBase
         _buscaTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(DebounceBuscaMilissegundos) };
         _buscaTimer.Tick += OnBuscaTimerTick;
 
-        NovoCommand = new RelayCommand(_ => AbrirNovo(), _ => _podeCriar);
+        NovoCommand = new AsyncRelayCommand(_ => AbrirNovoAsync(), _ => _podeCriar);
         EditarCommand = new RelayCommand(p => AbrirEdicao(p as PecaDto ?? PecaSelecionada), _ => _podeEditar);
         VisualizarCommand = new RelayCommand(p => AbrirVisualizacao(p as PecaDto ?? PecaSelecionada), _ => _podeVisualizar);
         SalvarCommand = new AsyncRelayCommand(_ => SalvarAsync());
@@ -246,6 +251,57 @@ public class PecasViewModel : ViewModelBase
         set => SetField(ref _formEstoqueMinimo, value);
     }
 
+    // ======================= Campos numéricos editáveis =======================
+    //
+    // Os campos de preço e quantidade do formulário são editáveis como TEXTO, e não
+    // como decimal com StringFormat. Usar `{Binding decimal, StringFormat=N2}` em um
+    // TextBox TwoWay reescreve o texto a cada tecla na cultura pt-BR: "10,50" virava
+    // "1.050,00" e "1" podia virar "1.000". Aqui o usuário digita livremente
+    // (1, 10, 10,50, 1000, 1250,75) e a conversão para decimal acontece só na
+    // validação, via <see cref="DecimalInputHelper"/>. As propriedades decimais acima
+    // seguem existindo para a ficha de visualização (somente leitura).
+    // ============================================================================
+
+    /// <summary>Preço de custo digitado pelo usuário (texto livre).</summary>
+    public string FormPrecoCustoTexto
+    {
+        get => _formPrecoCustoTexto;
+        set => SetField(ref _formPrecoCustoTexto, value);
+    }
+
+    /// <summary>Preço de venda digitado pelo usuário (texto livre).</summary>
+    public string FormPrecoVendaTexto
+    {
+        get => _formPrecoVendaTexto;
+        set => SetField(ref _formPrecoVendaTexto, value);
+    }
+
+    /// <summary>Estoque atual digitado pelo usuário (texto livre).</summary>
+    public string FormEstoqueAtualTexto
+    {
+        get => _formEstoqueAtualTexto;
+        set => SetField(ref _formEstoqueAtualTexto, value);
+    }
+
+    /// <summary>Estoque mínimo digitado pelo usuário (texto livre).</summary>
+    public string FormEstoqueMinimoTexto
+    {
+        get => _formEstoqueMinimoTexto;
+        set => SetField(ref _formEstoqueMinimoTexto, value);
+    }
+
+    /// <summary>Preço de custo já convertido para decimal.</summary>
+    public decimal PrecoCustoValor => DecimalInputHelper.ConverterOuPadrao(FormPrecoCustoTexto);
+
+    /// <summary>Preço de venda já convertido para decimal.</summary>
+    public decimal PrecoVendaValor => DecimalInputHelper.ConverterOuPadrao(FormPrecoVendaTexto);
+
+    /// <summary>Estoque atual já convertido para decimal.</summary>
+    public decimal EstoqueAtualValor => DecimalInputHelper.ConverterOuPadrao(FormEstoqueAtualTexto);
+
+    /// <summary>Estoque mínimo já convertido para decimal.</summary>
+    public decimal EstoqueMinimoValor => DecimalInputHelper.ConverterOuPadrao(FormEstoqueMinimoTexto);
+
     public string FormObservacoes
     {
         get => _formObservacoes;
@@ -286,7 +342,7 @@ public class PecasViewModel : ViewModelBase
         ? string.Empty
         : $"Deseja excluir a peça \"{_pecaParaExcluir.Descricao}\" ({_pecaParaExcluir.Codigo})? Esta ação não pode ser desfeita.";
 
-    public RelayCommand NovoCommand { get; }
+    public AsyncRelayCommand NovoCommand { get; }
     public RelayCommand EditarCommand { get; }
     public RelayCommand VisualizarCommand { get; }
     public AsyncRelayCommand SalvarCommand { get; }
@@ -383,29 +439,69 @@ public class PecasViewModel : ViewModelBase
         await CarregarAsync();
     }
 
-    private void AbrirNovo()
+    /// <summary>
+    /// Abre o formulário de cadastro já com o próximo código disponível preenchido.
+    /// O código é gerado pelo sistema (<see cref="IPecaService.GerarProximoCodigoAsync"/>)
+    /// e o campo fica somente leitura — o usuário nunca digita o código.
+    /// </summary>
+    private async Task AbrirNovoAsync()
     {
         _editorNovo = true;
         _formId = 0;
         EditorTitulo = "Nova peça";
-        FormCodigo = string.Empty;
         FormDescricao = string.Empty;
         FormCategoria = string.Empty;
         FormMarca = string.Empty;
         FormModelo = string.Empty;
         FormCodigoBarras = string.Empty;
         FormUnidadeMedida = "UN";
-        FormPrecoCusto = 0;
-        FormPrecoVenda = 0;
-        FormEstoqueAtual = 0;
-        FormEstoqueMinimo = 0;
+        FormPrecoCustoTexto = string.Empty;
+        FormPrecoVendaTexto = string.Empty;
+        FormEstoqueAtualTexto = string.Empty;
+        FormEstoqueMinimoTexto = string.Empty;
+        SincronizarValoresNumericos();
         FormObservacoes = string.Empty;
         FormAtivo = true;
         EditorMensagem = string.Empty;
-        EditorAberto = true;
 
+        try
+        {
+            FormCodigo = await _pecaService.GerarProximoCodigoAsync();
+        }
+        catch (Exception ex)
+        {
+            // Sem código o cadastro não pode prosseguir: informa e não abre o editor.
+            EditorMensagem = $"Não foi possível gerar o código da peça: {ex.Message}";
+            _reportStatus?.Invoke(EditorMensagem);
+            return;
+        }
+
+        EditorAberto = true;
         OnPropertyChanged(nameof(EditorNovo));
     }
+
+    /// <summary>
+    /// Copia os textos digitados para as propriedades decimais usadas na ficha de
+    /// visualização, mantendo as duas visões (edição e leitura) coerentes.
+    /// </summary>
+    private void SincronizarValoresNumericos()
+    {
+        FormPrecoCusto = PrecoCustoValor;
+        FormPrecoVenda = PrecoVendaValor;
+        FormEstoqueAtual = EstoqueAtualValor;
+        FormEstoqueMinimo = EstoqueMinimoValor;
+    }
+
+    /// <summary>Converte um decimal para o texto de edição sem separador de milhar.</summary>
+    private static string ParaTextoDeEdicao(decimal valor)
+        => DecimalInputHelper.FormatarQuantidade(valor).Replace(".", string.Empty);
+
+    /// <summary>
+    /// Um campo numérico vazio é tratado como zero (ainda não digitado); só reprova
+    /// quando há texto que não representa número.
+    /// </summary>
+    private static bool EhValido(string? texto)
+        => string.IsNullOrWhiteSpace(texto) || DecimalInputHelper.EhValido(texto);
 
     private void AbrirEdicao(PecaDto? peca)
     {
@@ -440,10 +536,11 @@ public class PecasViewModel : ViewModelBase
         FormModelo = peca.Modelo ?? string.Empty;
         FormCodigoBarras = peca.CodigoBarras ?? string.Empty;
         FormUnidadeMedida = peca.UnidadeMedida ?? "UN";
-        FormPrecoCusto = peca.PrecoCusto;
-        FormPrecoVenda = peca.PrecoVenda;
-        FormEstoqueAtual = peca.EstoqueAtual;
-        FormEstoqueMinimo = peca.EstoqueMinimo;
+        FormPrecoCustoTexto = ParaTextoDeEdicao(peca.PrecoCusto);
+        FormPrecoVendaTexto = ParaTextoDeEdicao(peca.PrecoVenda);
+        FormEstoqueAtualTexto = ParaTextoDeEdicao(peca.EstoqueAtual);
+        FormEstoqueMinimoTexto = ParaTextoDeEdicao(peca.EstoqueMinimo);
+        SincronizarValoresNumericos();
         FormObservacoes = peca.Observacoes ?? string.Empty;
         FormAtivo = peca.Ativo;
         EditorMensagem = string.Empty;
@@ -462,10 +559,24 @@ public class PecasViewModel : ViewModelBase
 
      private async Task SalvarAsync()
      {
+         // Converte o texto digitado uma única vez, aqui na validação — a digitação
+         // em si nunca é reformatada.
+         var custo = PrecoCustoValor;
+         var venda = PrecoVendaValor;
+         var estoqueAtual = EstoqueAtualValor;
+         var estoqueMinimo = EstoqueMinimoValor;
+
          var validation = FormValidator.Create()
              .Required(FormCodigo, "o código da peça")
              .Required(FormDescricao, "a descrição da peça")
-             .DecimalNaoNegativo(FormPrecoVenda, "preço de venda")
+             .DecimalNaoNegativo(custo, "preço de custo")
+             .DecimalNaoNegativo(venda, "preço de venda")
+             .DecimalNaoNegativo(estoqueAtual, "estoque atual")
+             .DecimalNaoNegativo(estoqueMinimo, "estoque mínimo")
+             .Custom(!EhValido(FormPrecoCustoTexto), "Informe um preço de custo numérico válido.")
+             .Custom(!EhValido(FormPrecoVendaTexto), "Informe um preço de venda numérico válido.")
+             .Custom(!EhValido(FormEstoqueAtualTexto), "Informe um estoque atual numérico válido.")
+             .Custom(!EhValido(FormEstoqueMinimoTexto), "Informe um estoque mínimo numérico válido.")
              .Build();
 
          if (!validation.IsValid)
@@ -525,10 +636,10 @@ public class PecasViewModel : ViewModelBase
             Modelo = InputFormattingHelper.NormalizeText(FormModelo),
             CodigoBarras = InputFormattingHelper.NormalizeText(FormCodigoBarras),
             UnidadeMedida = FormUnidadeMedida.Trim().ToUpperInvariant(),
-            PrecoCusto = FormPrecoCusto,
-            PrecoVenda = FormPrecoVenda,
-            EstoqueAtual = FormEstoqueAtual,
-            EstoqueMinimo = FormEstoqueMinimo,
+            PrecoCusto = PrecoCustoValor,
+            PrecoVenda = PrecoVendaValor,
+            EstoqueAtual = EstoqueAtualValor,
+            EstoqueMinimo = EstoqueMinimoValor,
             Observacoes = InputFormattingHelper.NormalizeText(FormObservacoes),
             Ativo = FormAtivo
         };

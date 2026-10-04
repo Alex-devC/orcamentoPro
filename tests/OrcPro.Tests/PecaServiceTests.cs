@@ -20,6 +20,28 @@ public class InMemoryPecaRepository : InMemoryRepository<Peca>, IPecaRepository
 
     public Task<IReadOnlyList<Peca>> GetAllAtivosAsync(CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<Peca>>(Items.Where(p => p.Ativo).ToList());
+
+    /// <summary>
+    /// Réplica da regra do <c>PecaRepository</c>: maior código numérico + 1, considerando
+    /// todos os registros (inclusive inativos), nunca a quantidade de itens.
+    /// </summary>
+    public Task<string> GerarProximoCodigoAsync(CancellationToken cancellationToken = default)
+    {
+        var maior = 0;
+
+        foreach (var peca in Items)
+        {
+            var texto = (peca.Codigo ?? string.Empty).Trim();
+
+            if (texto.StartsWith("PEC-", StringComparison.OrdinalIgnoreCase))
+                texto = texto[4..];
+
+            if (int.TryParse(texto, out var numero) && numero > maior)
+                maior = numero;
+        }
+
+        return Task.FromResult($"PEC-{(maior + 1).ToString().PadLeft(4, '0')}");
+    }
 }
 
 public class PecaServiceTests
