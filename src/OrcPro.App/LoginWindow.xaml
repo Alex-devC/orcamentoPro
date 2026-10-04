@@ -1,6 +1,7 @@
 ﻿<Window x:Class="OrcPro.App.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Icon="Assets/favicon.ico"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:controls="clr-namespace:OrcPro.App.Controls"
         Title="OrcPro — Acesso"

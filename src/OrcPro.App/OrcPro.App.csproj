@@ -12,6 +12,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <!-- Icone do executavel (Explorer, barra de tarefas, Alt+Tab). Copia de ux/favico.ico. -->
+    <ApplicationIcon>Assets\favicon.ico</ApplicationIcon>
     <!-- Saída da build apontada para a pasta publish/ na raiz do projeto (mesmo destino do publish). -->
     <OutputPath>$(MSBuildThisFileDirectory)..\..\publish\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -19,5 +21,10 @@
     <PublishDir>$(MSBuildThisFileDirectory)..\..\publish\</PublishDir>
     <GenerateManifestsForSelfContainedApplication>false</GenerateManifestsForSelfContainedApplication>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Mesma arte como recurso WPF, para Icon="Assets/favicon.ico" nas janelas. -->
+    <Resource Include="Assets\favicon.ico" />
+  </ItemGroup>
 
 </Project>
