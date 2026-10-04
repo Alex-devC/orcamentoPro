@@ -512,9 +512,13 @@ public string FormEmailFinanceiro
             // (_formLogradouro = ...) NÃO dispara PropertyChanged → a tela não atualiza.
             // Aqui SEMPRE usamos as propriedades → SetField → PropertyChanged.
             FormLogradouro = result.Logradouro ?? string.Empty;
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormLogradouro = '{_formLogradouro}'");
             FormBairro = result.Bairro ?? string.Empty;
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormBairro = '{_formBairro}'");
             FormCidade = result.Cidade ?? string.Empty;
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormCidade = '{_formCidade}'");
             FormUf = result.Uf ?? string.Empty;
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormUf = '{_formUf}'");
 
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Logradouro anterior: '{logradouroAnterior}'");
             CepDiagnosticLogger.Linha(

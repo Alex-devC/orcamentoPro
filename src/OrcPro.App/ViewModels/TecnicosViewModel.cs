@@ -609,9 +609,13 @@ public class TecnicosViewModel : ViewModelBase
             var ufAnterior = _formUf;
 
             FormLogradouro = result.Logradouro ?? string.Empty;
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormLogradouro = '{_formLogradouro}'");
             FormBairro = result.Bairro ?? string.Empty;
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormBairro = '{_formBairro}'");
             FormCidade = result.Cidade ?? string.Empty;
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormCidade = '{_formCidade}'");
             FormUf = result.Uf ?? string.Empty;
+            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormUf = '{_formUf}'");
 
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Logradouro anterior: '{logradouroAnterior}'");
             CepDiagnosticLogger.Linha(
@@ -633,6 +637,10 @@ public class TecnicosViewModel : ViewModelBase
         else
         {
             CepDiagnosticLogger.Linha($"[APLICAÇÃO] Mensagem de erro: {result.ErrorMessage}");
+            FormLogradouro = string.Empty;
+            FormBairro = string.Empty;
+            FormCidade = string.Empty;
+            FormUf = string.Empty;
             RegistrarErroCep(result.Cep);
             CepDiagnosticLogger.Linha("[APLICAÇÃO] Erro registrado na infraestrutura de validação (borda vermelha + resumo no topo).");
             CepDiagnosticLogger.Linha("[APLICAÇÃO] Endereço antigo não é mantido como pertencente ao novo CEP.");
