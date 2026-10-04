@@ -419,38 +419,19 @@ public string FormEmailFinanceiro
     /// Digitar, apagar, sair do campo ou pressionar ENTER NUNCA consulta.
     /// Cada clique executa uma consulta real (sem cache) e aplica o endereço via
     /// propriedades (SetField → PropertyChanged), garantindo atualização imediata da UI.
-    /// Log completo em logcep.txt (origem: MANUAL).
     /// </summary>
     private async Task ConsultarCepManualmenteAsync()
     {
-        CepDiagnosticLogger.Linha("[CEP] BOTÃO LUPA CLICADO");
-        CepDiagnosticLogger.Linha($"[CEP] Valor atual do campo: '{FormCep}'");
-        CepDiagnosticLogger.Linha($"[CEP] CepPodeConsultarManualmente: {(CepPodeConsultarManualmente ? "true" : "false")}");
-
         if (_cepService is null)
-        {
-            CepDiagnosticLogger.Linha("[CEP] Serviço disponível: false — comando abortado (ICepService não injetado).");
             return;
-        }
 
         if (string.IsNullOrWhiteSpace(FormCep))
-        {
-            CepDiagnosticLogger.Linha("[CEP] Campo CEP vazio — comando abortado.");
             return;
-        }
-
-        CepDiagnosticLogger.Linha("[CEP] ConsultarCepCommand iniciado");
-        CepDiagnosticLogger.Linha("[CEP] Serviço disponível: true");
-        CepDiagnosticLogger.Linha("[CEP] Origem da consulta: MANUAL");
-        CepDiagnosticLogger.Linha("[CEP] Consulta manual — IGNORANDO CACHE.");
 
         var cep = CepMaskHelper.Normalizar(FormCep);
-        CepDiagnosticLogger.Linha($"[CEP] CEP normalizado: {cep}");
 
         if (!CepMaskHelper.EstaCompletoParaConsulta(cep))
         {
-            CepDiagnosticLogger.Linha($"[CEP] Falha: CEP com {cep.Length} dígito(s) — esperado 8.");
-            // CEP incompleto: registra o formato inválido na validação (campo vermelho + resumo).
             EditorMensagem = "Digite um CEP com 8 dígitos para consultar.";
             DefinirErroValidacao(CepCampo, "O CEP deve ter 8 dígitos.");
             return;
@@ -459,10 +440,6 @@ public string FormEmailFinanceiro
         CepCarregando = true;
         EditorMensagem = string.Empty;
 
-        // A lupa é explícita: descarta o endereço anterior via PROPRIEDADES
-        // (SetField → PropertyChanged) para a UI limpar/atualizar imediatamente,
-        // e sempre executa consulta real (sem cache).
-        CepDiagnosticLogger.Linha("[CEP] Limpando endereço anterior via propriedades (UI atualiza imediatamente).");
         FormLogradouro = string.Empty;
         FormBairro = string.Empty;
         FormCidade = string.Empty;
@@ -470,15 +447,11 @@ public string FormEmailFinanceiro
 
         try
         {
-            CepDiagnosticLogger.Linha("[CEP] Chamando ICepService.ConsultarAsync");
             var result = await _cepService.ConsultarAsync(cep);
-            CepDiagnosticLogger.Linha(
-                $"[CEP] ICepService retornou: Success={result.Success.ToString().ToLowerInvariant()}, Cep={result.Cep}");
-            AplicarEndereco(result, "MANUAL");
+            AplicarEndereco(result);
         }
         catch (Exception ex)
         {
-            CepDiagnosticLogger.LogarException("[CEP] Exceção na consulta manual", ex);
             EditorMensagem = $"Erro na consulta de CEP: {ex.Message}";
             DefinirErroValidacao(CepCampo, "Não foi possível consultar o CEP. Tente novamente.");
         }
@@ -491,67 +464,28 @@ public string FormEmailFinanceiro
     /// <summary>
     /// Aplica o resultado da consulta de CEP nos campos do formulário (sucesso ou falha)
     /// SEMPRE via propriedades (FormLogradouro/FormBairro/FormCidade/FormUf), de modo que
-    /// SetField dispare PropertyChanged e a UI reflita imediatamente. Registra no
-    /// logcep.txt os valores anterior/novo e o estado de validação.
+    /// SetField dispare PropertyChanged e a UI reflita imediatamente.
     /// </summary>
-    private void AplicarEndereco(CepAddressResult result, string origem)
+    private void AplicarEndereco(CepAddressResult result)
     {
-        CepDiagnosticLogger.Linha("=============== [APLICAÇÃO] ===============");
-        CepDiagnosticLogger.Linha($"[APLICAÇÃO] Origem: {origem}");
-        CepDiagnosticLogger.Linha($"[APLICAÇÃO] Success = {(result.Success ? "true" : "false")}");
-        CepDiagnosticLogger.Linha($"[APLICAÇÃO] CEP retornado: {CepMaskHelper.Formatar(result.Cep)}");
-
         if (result.Success)
         {
-            var logradouroAnterior = _formLogradouro;
-            var bairroAnterior = _formBairro;
-            var cidadeAnterior = _formCidade;
-            var ufAnterior = _formUf;
-
-            // CAUSA RAIZ do bug "salva mas não mostra": atribuir backing field
-            // (_formLogradouro = ...) NÃO dispara PropertyChanged → a tela não atualiza.
-            // Aqui SEMPRE usamos as propriedades → SetField → PropertyChanged.
             FormLogradouro = result.Logradouro ?? string.Empty;
-            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormLogradouro = '{_formLogradouro}'");
             FormBairro = result.Bairro ?? string.Empty;
-            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormBairro = '{_formBairro}'");
             FormCidade = result.Cidade ?? string.Empty;
-            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormCidade = '{_formCidade}'");
             FormUf = result.Uf ?? string.Empty;
-            CepDiagnosticLogger.Linha($"[APLICAÇÃO] PropertyChanged confirmado: FormUf = '{_formUf}'");
-
-            CepDiagnosticLogger.Linha($"[APLICAÇÃO] Logradouro anterior: '{logradouroAnterior}'");
-            CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] Logradouro novo: '{_formLogradouro}' (via propriedade → PropertyChanged disparado)");
-            CepDiagnosticLogger.Linha($"[APLICAÇÃO] Bairro anterior: '{bairroAnterior}'");
-            CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] Bairro novo: '{_formBairro}' (via propriedade → PropertyChanged disparado)");
-            CepDiagnosticLogger.Linha($"[APLICAÇÃO] Cidade anterior: '{cidadeAnterior}'");
-            CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] Cidade nova: '{_formCidade}' (via propriedade → PropertyChanged disparado)");
-            CepDiagnosticLogger.Linha($"[APLICAÇÃO] UF anterior: '{ufAnterior}'");
-            CepDiagnosticLogger.Linha(
-                $"[APLICAÇÃO] UF nova: '{_formUf}' (via propriedade → PropertyChanged disparado)");
 
             LimparErroValidacao(CepCampo);
-            CepDiagnosticLogger.Linha("[APLICAÇÃO] Erro do CEP removido (borda vermelha e resumo limpos).");
-            CepDiagnosticLogger.Linha("[APLICAÇÃO] Endereço aplicado ao formulário via propriedades.");
         }
         else
         {
-            CepDiagnosticLogger.Linha($"[APLICAÇÃO] Mensagem de erro: {result.ErrorMessage}");
-            // Falha: limpa via propriedades para a UI não exibir endereço antigo
-            // como se pertencesse ao novo CEP.
             FormLogradouro = string.Empty;
             FormBairro = string.Empty;
             FormCidade = string.Empty;
             FormUf = string.Empty;
             RegistrarErroCep(result.Cep);
-            CepDiagnosticLogger.Linha("[APLICAÇÃO] Erro registrado na infraestrutura de validação (borda vermelha + resumo no topo).");
-            CepDiagnosticLogger.Linha("[APLICAÇÃO] Endereço antigo não é mantido como pertencente ao novo CEP.");
         }
 
-        CepDiagnosticLogger.Linha("=============== FIM [APLICAÇÃO] ===============");
         OnPropertyChanged(nameof(CepPodeConsultarManualmente));
     }
 

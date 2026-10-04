@@ -19,7 +19,6 @@ namespace OrcPro.Tests;
 /// (borda vermelha + resumo no topo), alterar o CEP limpa o estado anterior e a
 /// edição de cadastro existente atualiza o endereço corretamente.
 /// </summary>
-[Collection("CEP Log Serial")]
 public class CepValidationViewModelTests
 {
     private static readonly UsuarioSessaoDto AdminSessao = new()

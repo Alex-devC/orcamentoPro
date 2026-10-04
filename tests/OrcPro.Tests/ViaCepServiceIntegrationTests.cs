@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
-using OrcPro.Application.Services;
 using OrcPro.Domain.Common.Formatters;
 using OrcPro.Infrastructure.Services;
 using Xunit;
@@ -11,8 +9,7 @@ namespace OrcPro.Tests;
 
 /// <summary>
 /// Teste de INTEGRAÇÃO real do <see cref="ViaCepService"/> contra o provedor ViaCEP.
-/// Consulta obrigatoriamente os CEPs 15130-010 e 15085-520 e registra HTTP, JSON e
-/// resultado via ITestOutputHelper + logcep.txt (gerado pelo próprio serviço).
+/// Consulta obrigatoriamente os CEPs 15130-010 e 15085-520.
 ///
 /// Sem internet o teste é tratado como INCONCLUSIVO (retorno controlado), mas qualquer
 /// falha que NÃO seja de conectividade (ex.: JSON mal interpretado, CEP válido tratado
@@ -43,7 +40,6 @@ public class ViaCepServiceIntegrationTests
         _output.WriteLine($"Endereço= {result.Logradouro} | {result.Bairro}");
         _output.WriteLine($"Cidade  = {result.Cidade} / {result.Uf}");
         _output.WriteLine($"Erro    = {result.ErrorMessage}");
-        _output.WriteLine($"Log completo: {CepDiagnosticLogger.CaminhoArquivo}");
 
         if (!result.Success)
         {
@@ -54,22 +50,18 @@ public class ViaCepServiceIntegrationTests
             }
 
             // O provedor respondeu HTTP 200 com o campo "erro" — é a RESPOSTA OFICIAL do
-            // servidor (JSON bruto registrado em logcep.txt). O CEP não consta na base do
-            // provedor; a corretude da interpretação do campo "erro" é coberta pelos
-            // testes mockados (string "true", boolean true, ausente).
+            // servidor. O CEP não consta na base do provedor; a corretude da interpretação
+            // do campo "erro" é coberta pelos testes mockados.
             if (result.ErrorMessage == "CEP não encontrado")
             {
                 _output.WriteLine("RESPOSTA OFICIAL DO PROVEDOR: CEP não encontrado (HTTP 200 com campo \"erro\").");
-                _output.WriteLine("Isto NÃO é falha de rede nem erro de implementação — veja o JSON bruto no log:");
-                RegistrarUltimaSequenciaDoLog();
                 return;
             }
 
             // Qualquer outra falha que NÃO seja de rede = erro de implementação: falha o
-            // teste e manda o usuário para o logcep.txt com a sequência completa.
+            // teste.
             Assert.Fail(
-                $"Falha de IMPLEMENTAÇÃO (não é conectividade): {result.ErrorMessage}. " +
-                $"Veja {CepDiagnosticLogger.CaminhoArquivo}");
+                $"Falha de IMPLEMENTAÇÃO (não é conectividade): {result.ErrorMessage}.");
         }
 
         var cepNormalizado = CepMaskHelper.Normalizar(cep);
@@ -81,10 +73,6 @@ public class ViaCepServiceIntegrationTests
         Assert.False(string.IsNullOrWhiteSpace(result.Uf),
             "UF deveria vir preenchida do ViaCEP.");
         Assert.Equal("ViaCEP", result.Source);
-
-        // Registra no output do teste o trecho de log gerado por esta consulta
-        // (HTTP status + JSON bruto + interpretação), para diagnóstico claro.
-        RegistrarUltimaSequenciaDoLog();
     }
 
     [Fact]
@@ -121,28 +109,5 @@ public class ViaCepServiceIntegrationTests
         return erro.Contains(FalhaDeConectividadeEsperada, StringComparison.OrdinalIgnoreCase)
             || erro.Contains(TimeoutEsperado, StringComparison.OrdinalIgnoreCase)
             || erro.Contains(CancelamentoEsperado, StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>Imprime a última sequência registrada em logcep.txt (HTTP, JSON, resultado).</summary>
-    private void RegistrarUltimaSequenciaDoLog()
-    {
-        try
-        {
-            var conteudo = File.ReadAllText(CepDiagnosticLogger.CaminhoArquivo);
-            var indice = conteudo.LastIndexOf("INÍCIO DA CONSULTA CEP", StringComparison.Ordinal);
-            if (indice < 0)
-                return;
-
-            var trecho = conteudo[indice..];
-            if (trecho.Length > 2000)
-                trecho = trecho[..2000] + "\n... (truncado)";
-
-            _output.WriteLine("--- logcep.txt (última sequência) ---");
-            _output.WriteLine(trecho);
-        }
-        catch (Exception ex)
-        {
-            _output.WriteLine($"Não foi possível ler o logcep.txt: {ex.Message}");
-        }
     }
 }

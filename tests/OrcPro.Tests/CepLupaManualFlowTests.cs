@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,10 +19,8 @@ namespace OrcPro.Tests;
 /// Fluxo da lupa de CEP (Consulta manual) com os CEPs obrigatórios 15130-010 e 15085-520:
 /// 1) clicar na lupa executa o comando; 2) o serviço é chamado; 3) o resultado é recebido;
 /// 4) o endereço é aplicado; 5) a lupa SEMPRE executa consulta real (A → B → A), ignorando
-/// o cache; 6) toda a sequência é registrada em logcep.txt (borda vermelha/resumo em
-/// CepValidationViewModelTests).
+/// o cache.
 /// </summary>
-[Collection("CEP Log Serial")]
 public class CepLupaManualFlowTests
 {
     private static readonly UsuarioSessaoDto AdminSessao = new()
@@ -143,89 +140,7 @@ public class CepLupaManualFlowTests
 
     #endregion
 
-    #region Diagnóstico em logcep.txt
-
-    [Fact]
-    public async Task Clientes_Lupa_DeveRegistrarSequenciaCompletaNoLog()
-    {
-        var service = CriarServicoComOsDoisCeps();
-        var vm = CriarCliente(service);
-        vm.NovoCommand.Execute(null);
-
-        vm.FormCep = "15130-010";
-        await Task.Delay(25);
-
-        vm.ConsultarCepCommand.Execute(null);
-        await Aguardar(() => service.NumeroConsultas >= 1);
-
-        var log = AguardarConteudoLog("[CEP] BOTÃO LUPA CLICADO");
-
-        // Lupa → comando → serviço (nível ViewModel)
-        Assert.Contains("[CEP] BOTÃO LUPA CLICADO", log);
-        Assert.Contains("[CEP] Valor atual do campo: '15130-010'", log);
-        Assert.Contains("[CEP] ConsultarCepCommand iniciado", log);
-        Assert.Contains("[CEP] Serviço disponível: true", log);
-        Assert.Contains("[CEP] Origem da consulta: MANUAL", log);
-        Assert.Contains("[CEP] Consulta manual — IGNORANDO CACHE.", log);
-        Assert.Contains("[CEP] Chamando ICepService.ConsultarAsync", log);
-
-        // Aplicação do resultado (ViewModel → formulário)
-        Assert.Contains("[APLICAÇÃO] Origem: MANUAL", log);
-        Assert.Contains("[APLICAÇÃO] Success = true", log);
-        Assert.Contains("[APLICAÇÃO] CEP retornado: 15130-010", log);
-        Assert.Contains("[APLICAÇÃO] Logradouro novo: 'Rua Coronel Paulino'", log);
-        Assert.Contains("[APLICAÇÃO] Cidade nova: 'Mirassol'", log);
-        Assert.Contains("[APLICAÇÃO] UF nova: 'SP'", log);
-        Assert.Contains("[APLICAÇÃO] Endereço aplicado ao formulário via propriedades.", log);
-    }
-
-    [Fact]
-    public async Task Clientes_Lupa_CepInexistente_DeveRegistrarFalhaEInvalidarCampo()
-    {
-        var service = new ContadorCepService(); // sem CEPs configurados → falha
-        var vm = CriarCliente(service);
-        vm.NovoCommand.Execute(null);
-
-        vm.FormCep = "15130-010";
-        await Task.Delay(25);
-
-        vm.ConsultarCepCommand.Execute(null);
-        await Aguardar(() => service.NumeroConsultas >= 1);
-
-        Assert.True(vm.CepTemErro, "Falha da lupa deve deixar o CEP em estado inválido (borda vermelha).");
-        Assert.Contains("Não foi possível localizar o CEP", vm.CepMensagemErro, StringComparison.OrdinalIgnoreCase);
-        Assert.True(vm.TemResumoValidacao);
-
-        var log = AguardarConteudoLog("[APLICAÇÃO] Success = false");
-        Assert.Contains("[APLICAÇÃO] Success = false", log);
-        Assert.Contains("[APLICAÇÃO] Erro registrado na infraestrutura de validação", log);
-    }
-
-    /// <summary>Lê logcep.txt (ao lado do executável de testes) com pequenas novas tentativas.</summary>
-    private static string AguardarConteudoLog(string marcador, int timeoutMs = 3000)
-    {
-        var caminho = Path.Combine(AppContext.BaseDirectory, "logcep.txt");
-        var fim = DateTime.Now.AddMilliseconds(timeoutMs);
-        string conteudo = string.Empty;
-
-        while (DateTime.Now < fim)
-        {
-            try
-            {
-                conteudo = File.ReadAllText(caminho);
-                if (conteudo.Contains(marcador, StringComparison.Ordinal))
-                    return conteudo;
-            }
-            catch (IOException)
-            {
-                // Escrita concorrente ou arquivo ainda não criado: tenta de novo.
-            }
-
-            Thread.Sleep(50);
-        }
-
-        return conteudo;
-    }
+    #region Helpers
 
     /// <summary>Aguarda (polling) até a condição ser verdadeira ou estourar o tempo.</summary>
     private static async Task Aguardar(Func<bool> condicao, int timeoutMs = 3000)

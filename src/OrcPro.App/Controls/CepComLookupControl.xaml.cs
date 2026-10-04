@@ -120,12 +120,7 @@ public partial class CepComLookupControl : UserControl
 
     private void OnLupaClick(object sender, RoutedEventArgs e)
     {
-        // Diagnóstico do fluxo de CEP: registra o clique no nível da UI, ANTES de
-        // chegar ao comando do ViewModel. Se esta linha não aparecer em logcep.txt,
-        // o problema está no clique/binding; se aparecer mas não chegar ao serviço,
-        // o problema está no comando — ver logcep.txt ao lado do executável.
-        OrcPro.Application.Services.CepDiagnosticLogger.Linha(
-            $"[CEP] BOTÃO LUPA CLICADO (UI) — campo: '{CepText}'");
+        // O comando será disparado via binding (CepCommand). Nenhum log adicional aqui.
     }
 
     /// <summary>Move o foco para o TextBox interno de CEP (usado pela navegação/foco do formulário).</summary>

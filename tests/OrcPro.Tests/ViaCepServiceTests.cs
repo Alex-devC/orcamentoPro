@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -258,60 +257,6 @@ public class ViaCepServiceTests
 
         Assert.False(result.Success);
         Assert.StartsWith("Erro ao processar resposta:", result.ErrorMessage);
-    }
-
-    #endregion
-
-    #region Diagnóstico (logcep.txt)
-
-    [Fact]
-    public async Task ConsultarAsync_DeveRegistrarSequenciaCompletaNoLogArquivo()
-    {
-        var handler = new StubHandler(_ => Task.FromResult(CriarResposta(Resposta15130010)));
-        var servico = new ViaCepService(new HttpClient(handler));
-
-        await servico.ConsultarAsync("15130-010");
-
-        var log = AguardarConteudoLog("INÍCIO DA CONSULTA CEP");
-
-        Assert.Contains("INÍCIO DA CONSULTA CEP", log);
-        Assert.Contains("CEP normalizado:", log);
-        Assert.Contains("15130010", log);
-        Assert.Contains("URL montada:", log);
-        Assert.Contains("https://viacep.com.br/ws/15130010/json/", log);
-        Assert.Contains("HTTP Status:", log);
-        Assert.Contains("Resposta bruta recebida:", log);
-        Assert.Contains("localidade", log); // JSON bruto registrado, não escondido
-        Assert.Contains("Campo erro encontrado:", log);
-        Assert.Contains("Resultado da consulta:", log);
-        Assert.Contains("SUCESSO", log);
-        Assert.Contains("FIM DA CONSULTA", log);
-    }
-
-    /// <summary>Lê logcep.txt (ao lado do executável de testes) com pequenas novas tentativas.</summary>
-    private static string AguardarConteudoLog(string marcador, int timeoutMs = 3000)
-    {
-        var caminho = Path.Combine(AppContext.BaseDirectory, "logcep.txt");
-        var fim = DateTime.Now.AddMilliseconds(timeoutMs);
-        string conteudo = string.Empty;
-
-        while (DateTime.Now < fim)
-        {
-            try
-            {
-                conteudo = File.ReadAllText(caminho);
-                if (conteudo.Contains(marcador, StringComparison.Ordinal))
-                    return conteudo;
-            }
-            catch (IOException)
-            {
-                // Escrita concorrente ou arquivo ainda não criado: tenta de novo.
-            }
-
-            Thread.Sleep(50);
-        }
-
-        return conteudo;
     }
 
     #endregion

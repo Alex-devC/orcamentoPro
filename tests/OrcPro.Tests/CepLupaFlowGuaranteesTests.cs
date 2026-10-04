@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +21,6 @@ namespace OrcPro.Tests;
 /// Garantias do fluxo de CEP: NENHUMA consulta é disparada automaticamente.
 /// A única porta de entrada é o clique na lupa.
 /// </summary>
-[Collection("CEP Log Serial")]
 public class CepLupaFlowGuaranteesTests
 {
     private static readonly UsuarioSessaoDto AdminSessao = new()
@@ -48,9 +46,6 @@ public class CepLupaFlowGuaranteesTests
 
     public CepLupaFlowGuaranteesTests()
     {
-        // Garante que o arquivo de log não interfere entre testes
-        if (File.Exists(CepDiagnosticLogger.CaminhoArquivo))
-            File.Delete(CepDiagnosticLogger.CaminhoArquivo);
     }
 
     #region Digitar / Apagar não dispara consulta

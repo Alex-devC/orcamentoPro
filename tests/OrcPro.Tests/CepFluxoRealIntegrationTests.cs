@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,7 +16,6 @@ using Xunit.Abstractions;
 namespace OrcPro.Tests;
 
 /// <summary> ... </summary>
-[Collection("CEP Log Serial")]
 public class CepFluxoRealIntegrationTests
 {
     private static readonly UsuarioSessaoDto AdminSessao = new()
@@ -50,8 +48,7 @@ public class CepFluxoRealIntegrationTests
 
         if (!preTeste.Success)
         {
-            Assert.Fail($"Provedor falhou sem conectividade no CEP 15085-520: {preTeste.ErrorMessage}. " +
-                        $"Veja {CepDiagnosticLogger.CaminhoArquivo}");
+            Assert.Fail($"Provedor falhou sem conectividade no CEP 15085-520: {preTeste.ErrorMessage}.");
         }
 
         var vm = new ClientesViewModel(new StubClienteService(), AdminSessao, servico, null);
@@ -75,15 +72,13 @@ public class CepFluxoRealIntegrationTests
         if (!await ExecutarLupaEConcluir(vm, "15130-010 volta (lupa)"))
             return;
         ValidarRespostaDe15130_010(vm);
-
-        RegistrarUltimaSequenciaDoLog();
     }
 
     /// <summary>
     /// Valida o tratamento do CEP 15130-010 de acordo com a RESPOSTA OFICIAL do provedor:
     /// - endereço aplicado (se o provedor encontrar); ou
     /// - estado inválido na infraestrutura de validação + endereço antigo descartado
-    ///   (se o provedor responder o campo "erro" — JSON bruto registrado em logcep.txt).
+    ///   (se o provedor responder o campo "erro" — estado inválido na UI).
     /// </summary>
     private void ValidarRespostaDe15130_010(ClientesViewModel vm)
     {
@@ -135,11 +130,9 @@ public class CepFluxoRealIntegrationTests
         }
 
         if (!diagnostico.Success)
-            Assert.Fail($"Provedor falhou sem conectividade durante o teste: {diagnostico.ErrorMessage}. " +
-                        $"Veja {CepDiagnosticLogger.CaminhoArquivo}");
+            Assert.Fail($"Provedor falhou sem conectividade durante o teste: {diagnostico.ErrorMessage}.");
 
-        Assert.Fail($"Fluxo '{contexto}' não concluiu com a rede disponível. " +
-                    $"Veja {CepDiagnosticLogger.CaminhoArquivo} para a sequência exata.");
+        Assert.Fail($"Fluxo '{contexto}' não concluiu com a rede disponível.");
         return false; // inalcançável — Assert.Fail lança
     }
 
@@ -168,29 +161,6 @@ public class CepFluxoRealIntegrationTests
         return erro.Contains("Erro de rede", StringComparison.OrdinalIgnoreCase)
             || erro.Contains("Timeout", StringComparison.OrdinalIgnoreCase)
             || erro.Contains("cancelada", StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>Imprime a última sequência registrada em logcep.txt (HTTP, JSON, resultado).</summary>
-    private void RegistrarUltimaSequenciaDoLog()
-    {
-        try
-        {
-            var conteudo = File.ReadAllText(CepDiagnosticLogger.CaminhoArquivo);
-            var indice = conteudo.LastIndexOf("INÍCIO DA CONSULTA CEP", StringComparison.Ordinal);
-            if (indice < 0)
-                return;
-
-            var trecho = conteudo[indice..];
-            if (trecho.Length > 2500)
-                trecho = trecho[..2500] + "\n... (truncado)";
-
-            _output.WriteLine("--- logcep.txt (última sequência) ---");
-            _output.WriteLine(trecho);
-        }
-        catch (Exception ex)
-        {
-            _output.WriteLine($"Não foi possível ler o logcep.txt: {ex.Message}");
-        }
     }
 
     #endregion
