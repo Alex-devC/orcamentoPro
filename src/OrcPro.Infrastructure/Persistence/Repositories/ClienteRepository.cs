@@ -10,10 +10,15 @@ public class EmpresaRepository : BaseRepository<Empresa>, IEmpresaRepository
 {
     public EmpresaRepository(OrcProDbContext context) : base(context) { }
 
+    /// <summary>
+    /// Emitente da instalação. Existe no máximo um registro; o mais antigo vence para que
+    /// uma eventual duplicidade legada não troque os dados do emitente já em uso.
+    /// </summary>
     public async Task<Empresa?> GetEmitentePrincipalAsync(CancellationToken cancellationToken = default)
     {
         return await DbSet
             .AsNoTracking()
+            .OrderBy(e => e.Id)
             .FirstOrDefaultAsync(e => e.Ativo, cancellationToken);
     }
 }

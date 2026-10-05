@@ -13,6 +13,7 @@ public class Empresa : BaseEntity
     public string? Telefone { get; set; }
     public string? Celular { get; set; }
     public string? Email { get; set; }
+    public string? EmailFinanceiro { get; set; }
     public string? Website { get; set; }
 
     // Endereço
@@ -24,8 +25,14 @@ public class Empresa : BaseEntity
     public string? Uf { get; set; }
     public string? Cep { get; set; }
 
-    // Caminho / referência do logotipo da empresa
+    // Caminho / referência do logotipo da empresa.
+    // Persiste apenas o NOME do arquivo mantido pela aplicação (ver
+    // IEmpresaLogoStorage); nunca o caminho absoluto da origem escolhida pelo usuário,
+    // para que a logo sobreviva à mudança de pasta do executável e à exclusão do
+    // arquivo original.
     public string? LogoPath { get; set; }
+
+    public string? Observacoes { get; set; }
 
     public bool Ativo { get; set; } = true;
 

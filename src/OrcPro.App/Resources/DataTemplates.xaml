@@ -28,6 +28,11 @@
         <views:ServicosView />
     </DataTemplate>
 
+    <!-- Configurações: Minha Empresa / Emitente -->
+    <DataTemplate DataType="{x:Type vm:MinhaEmpresaViewModel}">
+        <views:MinhaEmpresaView />
+    </DataTemplate>
+
     <!-- Cadastro de Usuários e Perfis (abas Usuários / Perfis) -->
     <DataTemplate DataType="{x:Type vm:UsuariosPerfisViewModel}">
         <views:UsuariosPerfisView />

@@ -24,6 +24,7 @@ public class EmpresaConfiguration : IEntityTypeConfiguration<Empresa>
         builder.Property(e => e.Telefone).HasMaxLength(25);
         builder.Property(e => e.Celular).HasMaxLength(25);
         builder.Property(e => e.Email).HasMaxLength(120);
+        builder.Property(e => e.EmailFinanceiro).HasMaxLength(120);
         builder.Property(e => e.Website).HasMaxLength(150);
         builder.Property(e => e.LogoPath).HasMaxLength(350);
 
@@ -34,6 +35,7 @@ public class EmpresaConfiguration : IEntityTypeConfiguration<Empresa>
         builder.Property(e => e.Cidade).HasMaxLength(80);
         builder.Property(e => e.Uf).HasMaxLength(2);
         builder.Property(e => e.Cep).HasMaxLength(10);
+        builder.Property(e => e.Observacoes).HasMaxLength(1000);
     }
 }
 

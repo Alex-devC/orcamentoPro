@@ -33,6 +33,12 @@ internal static class SchemaUpgrade
                 ["Marca"] = "TEXT NULL",
                 ["Modelo"] = "TEXT NULL",
                 ["CodigoBarras"] = "TEXT NULL"
+            },
+            // Emitente: campos adicionados ao cadastro de Minha Empresa.
+            ["Empresas"] = new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["EmailFinanceiro"] = "TEXT NULL",
+                ["Observacoes"] = "TEXT NULL"
             }
         };
 

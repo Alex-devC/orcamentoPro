@@ -78,6 +78,12 @@ public static class PermissaoCatalogo
             public const string Excluir = "SERVICOS.EXCLUIR";
             public const string AtivarInativar = "SERVICOS.ATIVAR_INATIVAR";
         }
+
+        public static class Emitente
+        {
+            public const string Visualizar = "EMITENTE.VISUALIZAR";
+            public const string Editar = "EMITENTE.EDITAR";
+        }
     }
 
     public const string ModuloDashboard = "DASHBOARD";
@@ -86,6 +92,7 @@ public static class PermissaoCatalogo
     public const string ModuloTecnicos = "TECNICOS";
     public const string ModuloPecas = "PECAS";
     public const string ModuloServicos = "SERVICOS";
+    public const string ModuloEmitente = "EMITENTE";
 
     /// <summary>Nome do perfil que recebe todas as permissões do catálogo.</summary>
     public const string PerfilAdministrador = "Administrador";
@@ -123,7 +130,10 @@ public static class PermissaoCatalogo
         new PermissaoDefinicao(Codigos.Servicos.Criar, ModuloServicos, "Cadastrar serviços"),
         new PermissaoDefinicao(Codigos.Servicos.Editar, ModuloServicos, "Editar serviços"),
         new PermissaoDefinicao(Codigos.Servicos.Excluir, ModuloServicos, "Excluir serviços"),
-        new PermissaoDefinicao(Codigos.Servicos.AtivarInativar, ModuloServicos, "Ativar / inativar serviços")
+        new PermissaoDefinicao(Codigos.Servicos.AtivarInativar, ModuloServicos, "Ativar / inativar serviços"),
+
+        new PermissaoDefinicao(Codigos.Emitente.Visualizar, ModuloEmitente, "Visualizar minha empresa"),
+        new PermissaoDefinicao(Codigos.Emitente.Editar, ModuloEmitente, "Editar minha empresa")
     };
 
     private static readonly IReadOnlyDictionary<string, string> RotulosModulo =
@@ -134,7 +144,8 @@ public static class PermissaoCatalogo
             [ModuloUsuariosPerfis] = "Usuários e Perfis",
             [ModuloTecnicos] = "Técnicos",
             [ModuloPecas] = "Peças e Itens",
-            [ModuloServicos] = "Serviços"
+            [ModuloServicos] = "Serviços",
+            [ModuloEmitente] = "Minha Empresa"
         };
 
     /// <summary>Rótulo amigável do módulo (fallback: o próprio código do módulo).</summary>

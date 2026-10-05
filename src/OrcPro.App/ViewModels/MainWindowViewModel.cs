@@ -19,6 +19,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private const string TecnicosModuleTitle = "Técnicos";
     private const string PecasModuleTitle = "Peças / Itens";
     private const string ServicosModuleTitle = "Serviços";
+    private const string EmitenteModuleTitle = "Minha Empresa";
     private const string ProductName = "OrcPro";
     private const string CompanyName = "ALEX T.I. Tecnologia e Assistência";
     private const string DatabaseProfileName = "[Base de Dados: Produção]";
@@ -36,6 +37,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly ITecnicoService _tecnicoService;
     private readonly IPecaService _pecaService;
     private readonly IServicoService _servicoService;
+    private readonly IEmpresaService _empresaService;
     private readonly IPermissaoService _permissaoService;
     private readonly ICepService _cepService;
     private ViewModelBase _currentView;
@@ -59,6 +61,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _tecnicoService = _moduloScope.ServiceProvider.GetRequiredService<ITecnicoService>();
         _pecaService = _moduloScope.ServiceProvider.GetRequiredService<IPecaService>();
         _servicoService = _moduloScope.ServiceProvider.GetRequiredService<IServicoService>();
+        _empresaService = _moduloScope.ServiceProvider.GetRequiredService<IEmpresaService>();
         _permissaoService = _moduloScope.ServiceProvider.GetRequiredService<IPermissaoService>();
         _cepService = _moduloScope.ServiceProvider.GetRequiredService<ICepService>();
 
@@ -68,6 +71,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         OpenTecnicosCommand = new RelayCommand(_ => OpenTecnicos());
         OpenPecasCommand = new RelayCommand(_ => OpenPecas());
         OpenServicosCommand = new RelayCommand(_ => OpenServicos());
+        OpenMinhaEmpresaCommand = new RelayCommand(_ => OpenMinhaEmpresa());
 
         NavigationItems = new ObservableCollection<NavigationItemViewModel>
         {
@@ -120,6 +124,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Abre o módulo de Serviços / Mão de Obra (Ribbon Cadastros → Serviços).</summary>
     public ICommand OpenServicosCommand { get; }
+
+    /// <summary>Abre o módulo Minha Empresa / Emitente (Ribbon Configurações).</summary>
+    public ICommand OpenMinhaEmpresaCommand { get; }
 
     /// <summary>Itens do menu lateral "Navegação do Módulo".</summary>
     public ObservableCollection<NavigationItemViewModel> NavigationItems { get; }
@@ -180,6 +187,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Acesso ao módulo Serviços (SERVICOS.VISUALIZAR).</summary>
     public bool PodeAcessarServicos => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Servicos.Visualizar);
+
+    /// <summary>Acesso ao módulo Minha Empresa (EMITENTE.VISUALIZAR).</summary>
+    public bool PodeAcessarEmitente => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Emitente.Visualizar);
 
     /// <summary>Acesso ao módulo Usuários e Perfis (USUARIOS_PERFIS.VISUALIZAR).</summary>
     public bool PodeAcessarUsuariosPerfis => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.UsuariosPerfis.Visualizar);
@@ -315,6 +325,22 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         var modulo = new ServicosViewModel(_servicoService, _sessao, UpdateStatus);
         Navigate(ServicosModuleTitle, modulo, "Módulo de serviços carregado.");
+    }
+
+    /// <summary>
+    /// Módulo Minha Empresa / Emitente (Ribbon Configurações). Nova instância a cada abertura,
+    /// seguindo o mesmo padrão dos demais módulos do shell.
+    /// </summary>
+    private void OpenMinhaEmpresa()
+    {
+        if (!PodeAcessarEmitente)
+        {
+            UpdateStatus("Você não possui a permissão EMITENTE.VISUALIZAR.");
+            return;
+        }
+
+        var modulo = new MinhaEmpresaViewModel(_empresaService, _sessao, _cepService, UpdateStatus);
+        Navigate(EmitenteModuleTitle, modulo, "Módulo de minha empresa carregado.");
     }
 
     private void UpdateStatus(string? message)

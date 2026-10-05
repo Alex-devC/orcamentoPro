@@ -1,0 +1,475 @@
+﻿<UserControl x:Class="OrcPro.App.Views.MinhaEmpresaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:b="clr-namespace:OrcPro.App.Behaviors"
+             xmlns:uc="clr-namespace:OrcPro.App.Controls">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OrcPro.App;component/Resources/CadastroModuleStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- ===== Cabeçalho da página ===== -->
+        <Border Grid.Row="0" Style="{StaticResource PanelCardStyle}" Padding="12,8" Margin="0,0,0,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Path Grid.Column="0" Data="{StaticResource IconDocument}" Stroke="{StaticResource AccentBrush}"
+                      Style="{StaticResource IconPathStyle}" Width="18" Height="18" />
+                <TextBlock Grid.Column="1" Text="Minha Empresa" Style="{StaticResource PageTitleStyle}" Margin="10,0,0,0" />
+                <TextBlock Grid.Column="2" Text="|" Margin="10,0"
+                           Foreground="{StaticResource BorderStrongBrush}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="3" Text="Emitente usado nos orçamentos e documentos"
+                           Style="{StaticResource PageSubtitleStyle}" />
+            </Grid>
+        </Border>
+
+        <!-- ===== Formulário ===== -->
+        <Border Grid.Row="1" Style="{StaticResource PanelCardStyle}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12">
+                <StackPanel>
+
+                    <!-- Resumo de validação (topo do formulário) -->
+                    <ItemsControl ItemsSource="{Binding ResumoValidacao}"
+                                  AutomationProperties.AutomationId="EmpresaResumoValidacao">
+                        <ItemsControl.Style>
+                            <Style TargetType="ItemsControl" BasedOn="{StaticResource ValidationSummaryStyle}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TemResumoValidacao}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.Style>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Style="{StaticResource ValidationErrorTextStyle}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel IsEnabled="{Binding PodeEditar}">
+
+                        <!-- ===== 1) Dados da Empresa ===== -->
+                        <TextBlock Text="DADOS DA EMPRESA" Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,6" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0">
+                                <TextBlock Text="RAZÃO SOCIAL" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="1"
+                                         Tag="RazaoSocial"
+                                         AutomationProperties.AutomationId="EmpresaRazaoSocialInput"
+                                         b:TextFormattingBehavior.CampoInvalido="{Binding RazaoSocialTemErro}"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormRazaoSocial, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="2">
+                                <TextBlock Text="NOME FANTASIA" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="2"
+                                         Tag="NomeFantasia"
+                                         AutomationProperties.AutomationId="EmpresaNomeFantasiaInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormNomeFantasia, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,12,0,0">
+                                <TextBlock Text="SITE" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="3"
+                                         Tag="Website"
+                                         AutomationProperties.AutomationId="EmpresaWebsiteInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormWebsite, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- ===== 2) Dados Fiscais ===== -->
+                        <TextBlock Text="DADOS FISCAIS" Style="{StaticResource SectionLabelStyle}" Margin="0,16,0,6" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0">
+                                <TextBlock Text="CNPJ" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="4"
+                                         Tag="Cnpj"
+                                         AutomationProperties.AutomationId="EmpresaCnpjInput"
+                                         b:TextFormattingBehavior.CampoInvalido="{Binding CnpjTemErro}"
+                                         b:TextFormattingBehavior.FormatMode="CpfCnpj"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormCnpj, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="2">
+                                <TextBlock Text="INSCRIÇÃO ESTADUAL" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="5"
+                                         Tag="InscricaoEstadual"
+                                         AutomationProperties.AutomationId="EmpresaInscricaoEstadualInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormInscricaoEstadual, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,0,0">
+                                <TextBlock Text="INSCRIÇÃO MUNICIPAL" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="6"
+                                         Tag="InscricaoMunicipal"
+                                         AutomationProperties.AutomationId="EmpresaInscricaoMunicipalInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormInscricaoMunicipal, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- ===== 3) Contato ===== -->
+                        <TextBlock Text="CONTATO" Style="{StaticResource SectionLabelStyle}" Margin="0,16,0,6" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0">
+                                <TextBlock Text="TELEFONE" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="7"
+                                         Tag="Telefone"
+                                         AutomationProperties.AutomationId="EmpresaTelefoneInput"
+                                         b:TextFormattingBehavior.FormatMode="Phone"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormTelefone, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="2">
+                                <TextBlock Text="CELULAR" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="8"
+                                         Tag="Celular"
+                                         AutomationProperties.AutomationId="EmpresaCelularInput"
+                                         b:TextFormattingBehavior.FormatMode="Phone"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormCelular, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,0,0">
+                                <TextBlock Text="E-MAIL" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="9"
+                                         Tag="Email"
+                                         AutomationProperties.AutomationId="EmpresaEmailInput"
+                                         b:TextFormattingBehavior.CampoInvalido="{Binding EmailTemErro}"
+                                         b:TextFormattingBehavior.FormatMode="Email"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormEmail, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,12,0,0">
+                                <TextBlock Text="E-MAIL FINANCEIRO" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="10"
+                                         Tag="EmailFinanceiro"
+                                         AutomationProperties.AutomationId="EmpresaEmailFinanceiroInput"
+                                         b:TextFormattingBehavior.CampoInvalido="{Binding EmailFinanceiroTemErro}"
+                                         b:TextFormattingBehavior.FormatMode="Email"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormEmailFinanceiro, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </Grid>
+                        <!-- ===== 4) Endereço ===== -->
+                        <TextBlock Text="ENDEREÇO" Style="{StaticResource SectionLabelStyle}" Margin="0,16,0,6" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="100" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0">
+                                <TextBlock Text="CEP" Style="{StaticResource FormLabelStyle}" />
+                                <!-- A lupa é a única porta de consulta; o controle não consulta ao perder foco. -->
+                                <uc:CepComLookupControl
+                                    CepText="{Binding FormCep, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    CepCommand="{Binding ConsultarCepCommand}"
+                                    CanLookup="{Binding CepPodeConsultarManualmente}"
+                                    TemErro="{Binding CepTemErro}"
+                                    MensagemErro="{Binding CepMensagemErro}"
+                                    Tag="CEP"
+                                    TabIndex="11"
+                                    AutomationId="EmpresaCepInput"
+                                    LupaAutomationId="EmpresaCepLupa" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="2">
+                                <TextBlock Text="ENDEREÇO" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="12"
+                                         Tag="Logradouro"
+                                         AutomationProperties.AutomationId="EmpresaLogradouroInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormLogradouro, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="0" Grid.Column="4">
+                                <TextBlock Text="NÚMERO" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="13"
+                                         Tag="Numero"
+                                         AutomationProperties.AutomationId="EmpresaNumeroInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormNumero, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,12,0,0">
+                                <TextBlock Text="COMPLEMENTO" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="14"
+                                         Tag="Complemento"
+                                         AutomationProperties.AutomationId="EmpresaComplementoInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormComplemento, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="1" Grid.Column="4" Margin="0,12,0,0">
+                                <TextBlock Text="BAIRRO" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="15"
+                                         Tag="Bairro"
+                                         AutomationProperties.AutomationId="EmpresaBairroInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormBairro, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,12,0,0">
+                                <TextBlock Text="CIDADE" Style="{StaticResource FormLabelStyle}" />
+                                <TextBox Style="{StaticResource FormInputStyle}"
+                                         TabIndex="16"
+                                         Tag="Cidade"
+                                         AutomationProperties.AutomationId="EmpresaCidadeInput"
+                                         b:TextFormattingBehavior.FormatMode="UpperCase"
+                                         b:TextFormattingBehavior.EnterNavigation="True"
+                                         Text="{Binding FormCidade, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Row="2" Grid.Column="4" Margin="0,12,0,0">
+                                <TextBlock Text="UF" Style="{StaticResource FormLabelStyle}" />
+                                <ComboBox Style="{StaticResource FormComboBoxStyle}"
+                                          TabIndex="17"
+                                          Tag="Uf"
+                                          AutomationProperties.AutomationId="EmpresaUfCombo"
+                                          ItemContainerStyle="{StaticResource FormComboBoxItemStyle}"
+                                          SelectedValuePath="Tag"
+                                          IsEditable="True"
+                                          SelectedValue="{Binding FormUf, Mode=TwoWay}">
+                                    <ComboBoxItem Content="AC" Tag="AC" />
+                                    <ComboBoxItem Content="AL" Tag="AL" />
+                                    <ComboBoxItem Content="AP" Tag="AP" />
+                                    <ComboBoxItem Content="AM" Tag="AM" />
+                                    <ComboBoxItem Content="BA" Tag="BA" />
+                                    <ComboBoxItem Content="CE" Tag="CE" />
+                                    <ComboBoxItem Content="DF" Tag="DF" />
+                                    <ComboBoxItem Content="ES" Tag="ES" />
+                                    <ComboBoxItem Content="GO" Tag="GO" />
+                                    <ComboBoxItem Content="MA" Tag="MA" />
+                                    <ComboBoxItem Content="MT" Tag="MT" />
+                                    <ComboBoxItem Content="MS" Tag="MS" />
+                                    <ComboBoxItem Content="MG" Tag="MG" />
+                                    <ComboBoxItem Content="PA" Tag="PA" />
+                                    <ComboBoxItem Content="PB" Tag="PB" />
+                                    <ComboBoxItem Content="PR" Tag="PR" />
+                                    <ComboBoxItem Content="PE" Tag="PE" />
+                                    <ComboBoxItem Content="PI" Tag="PI" />
+                                    <ComboBoxItem Content="RJ" Tag="RJ" />
+                                    <ComboBoxItem Content="RN" Tag="RN" />
+                                    <ComboBoxItem Content="RS" Tag="RS" />
+                                    <ComboBoxItem Content="RO" Tag="RO" />
+                                    <ComboBoxItem Content="RR" Tag="RR" />
+                                    <ComboBoxItem Content="SC" Tag="SC" />
+                                    <ComboBoxItem Content="SP" Tag="SP" />
+                                    <ComboBoxItem Content="SE" Tag="SE" />
+                                    <ComboBoxItem Content="TO" Tag="TO" />
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- ===== 5) Logo ===== -->
+                        <TextBlock Text="LOGO" Style="{StaticResource SectionLabelStyle}" Margin="0,16,0,6" />
+                        <Border Style="{StaticResource PanelCardStyle}" Padding="12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0"
+                                        Background="{StaticResource SurfaceHighBrush}"
+                                        BorderBrush="{StaticResource BorderStrongBrush}"
+                                        BorderThickness="1"
+                                        Height="110">
+                                    <Grid>
+                                        <Image Source="{Binding LogoPreview}"
+                                               Stretch="Uniform"
+                                               Margin="6"
+                                               AutomationProperties.AutomationId="EmpresaLogoPreview" />
+                                        <TextBlock Text="SEM LOGO"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource FormHintStyle}">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding LogoSelecionada}" Value="True">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+                                </Border>
+
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding LogoNome}"
+                                               Style="{StaticResource FormHintStyle}"
+                                               AutomationProperties.AutomationId="EmpresaLogoNome" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <Button Style="{StaticResource GhostButtonStyle}" MinWidth="130"
+                                                Content="Selecionar logo..."
+                                                Command="{Binding SelecionarLogoCommand}"
+                                                AutomationProperties.AutomationId="EmpresaSelecionarLogo" />
+                                        <Button Style="{StaticResource GhostButtonStyle}" MinWidth="110" Margin="8,0,0,0"
+                                                Content="Remover logo"
+                                                Command="{Binding RemoverLogoCommand}"
+                                                AutomationProperties.AutomationId="EmpresaRemoverLogo" />
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource FormHintStyle}" Margin="0,8,0,0"
+                                               Text="A imagem é copiada para a pasta de dados do OrcPro e continua disponível se o programa for movido de diretório." />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- ===== 6) Observações ===== -->
+                        <TextBlock Text="OBSERVAÇÕES" Style="{StaticResource SectionLabelStyle}" Margin="0,16,0,6" />
+                        <TextBox Style="{StaticResource FormMultilineInputStyle}" Height="70"
+                                 TabIndex="18"
+                                 Tag="Observacoes"
+                                 AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                                 AutomationProperties.AutomationId="EmpresaObservacoesInput"
+                                 b:TextFormattingBehavior.FormatMode="UpperCase"
+                                 Text="{Binding FormObservacoes, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <!-- Erro de operação (falha ao salvar) -->
+                    <Border Margin="0,14,0,0">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource FormErrorBadgeStyle}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding EditorMensagemVisivel}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconInfo}" Stroke="{StaticResource DangerBrush}"
+                                  Style="{StaticResource FormErrorIconStyle}" Width="14" Height="14" />
+                            <TextBlock Text="{Binding EditorMensagem}" Style="{StaticResource FormErrorMessageStyle}"
+                                       TextWrapping="Wrap" Margin="6,0,0,0" VerticalAlignment="Center"
+                                       AutomationProperties.AutomationId="EmpresaMensagemErro" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ===== Rodapé: ações ===== -->
+        <Border Grid.Row="2" Style="{StaticResource PanelFooterBarStyle}" Margin="0,8,0,0">
+            <Grid>
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Left"
+                           FontSize="11" Foreground="{StaticResource TextMutedBrush}"
+                           AutomationProperties.AutomationId="EmpresaSituacao">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="Emitente não configurado — preencha e salve." />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding EstaConfigurado}" Value="True">
+                                    <Setter Property="Text" Value="Emitente configurado." />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource GhostButtonStyle}" MinWidth="100"
+                            Content="Cancelar"
+                            Command="{Binding CancelarCommand}"
+                            AutomationProperties.AutomationId="EmpresaCancelar" />
+                    <Button Style="{StaticResource PrimaryButtonStyle}" MinWidth="120" Margin="8,0,0,0"
+                            Content="Salvar"
+                            Command="{Binding SalvarCommand}"
+                            AutomationProperties.AutomationId="EmpresaSalvar" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

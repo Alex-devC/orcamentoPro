@@ -56,6 +56,7 @@ public static class InfrastructureServiceExtensions
 
         // External services
         services.AddSingleton<ICepService, ViaCepService>();
+        services.AddSingleton<IEmpresaLogoStorage, EmpresaLogoStorage>();
 
         return services;
     }

@@ -19,7 +19,7 @@ public class PermissaoTests
     {
         var definicoes = PermissaoCatalogo.Definicoes;
 
-        Assert.Equal(26, definicoes.Count);
+        Assert.Equal(28, definicoes.Count);
 
         var esperados = new[]
         {
@@ -29,7 +29,8 @@ public class PermissaoTests
             "USUARIOS_PERFIS.GERENCIAR_PERMISSOES",
              "TECNICOS.VISUALIZAR", "TECNICOS.CRIAR", "TECNICOS.EDITAR", "TECNICOS.EXCLUIR", "TECNICOS.ATIVAR_INATIVAR",
              "PECAS.VISUALIZAR", "PECAS.CRIAR", "PECAS.EDITAR", "PECAS.EXCLUIR", "PECAS.ATIVAR_INATIVAR",
-            "SERVICOS.VISUALIZAR", "SERVICOS.CRIAR", "SERVICOS.EDITAR", "SERVICOS.EXCLUIR", "SERVICOS.ATIVAR_INATIVAR"
+            "SERVICOS.VISUALIZAR", "SERVICOS.CRIAR", "SERVICOS.EDITAR", "SERVICOS.EXCLUIR", "SERVICOS.ATIVAR_INATIVAR",
+            "EMITENTE.VISUALIZAR", "EMITENTE.EDITAR"
         };
 
         Assert.Equal(esperados.OrderBy(c => c), definicoes.Select(d => d.Codigo).OrderBy(c => c));
@@ -65,6 +66,7 @@ public class PermissaoTests
         Assert.Equal(5, PermissaoCatalogo.CodigosDoModulo(PermissaoCatalogo.ModuloTecnicos).Count);
         Assert.Equal(5, PermissaoCatalogo.CodigosDoModulo(PermissaoCatalogo.ModuloPecas).Count);
         Assert.Equal(5, PermissaoCatalogo.CodigosDoModulo(PermissaoCatalogo.ModuloServicos).Count);
+        Assert.Equal(2, PermissaoCatalogo.CodigosDoModulo(PermissaoCatalogo.ModuloEmitente).Count);
         Assert.Single(PermissaoCatalogo.CodigosDoModulo(PermissaoCatalogo.ModuloDashboard));
         Assert.Contains(PermissaoCatalogo.Codigos.Clientes.Criar, PermissaoCatalogo.CodigosDoModulo(PermissaoCatalogo.ModuloClientes));
 
@@ -72,6 +74,7 @@ public class PermissaoTests
         Assert.Equal("Usuários e Perfis", PermissaoCatalogo.RotuloModulo(PermissaoCatalogo.ModuloUsuariosPerfis));
         Assert.Equal("Peças e Itens", PermissaoCatalogo.RotuloModulo(PermissaoCatalogo.ModuloPecas));
         Assert.Equal("Serviços", PermissaoCatalogo.RotuloModulo(PermissaoCatalogo.ModuloServicos));
+        Assert.Equal("Minha Empresa", PermissaoCatalogo.RotuloModulo(PermissaoCatalogo.ModuloEmitente));
         Assert.Equal("MODULO_X", PermissaoCatalogo.RotuloModulo("MODULO_X"));
     }
 

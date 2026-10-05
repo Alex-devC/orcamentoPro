@@ -502,6 +502,38 @@
                     </StackPanel>
                 </Border>
             </TabItem>
+            <!-- ============ Aba: Configurações ============ -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="{StaticResource IconSettings}" Width="14" Height="14" StrokeThickness="1.5"
+                              Stroke="{Binding RelativeSource={RelativeSource AncestorType=TabItem}, Path=Foreground}"
+                              Style="{StaticResource IconPathStyle}" />
+                        <!-- Nome de automação em ASCII (o rótulo tem acento) para o smoke/UIA. -->
+                        <TextBlock Text="CONFIGURAÇÕES" Margin="6,0,0,0" VerticalAlignment="Center"
+                                   AutomationProperties.Name="CONFIGURACOES" />
+                    </StackPanel>
+                </TabItem.Header>
+                <Border Style="{StaticResource RibbonDeckStyle}">
+                    <StackPanel Orientation="Horizontal" Margin="4,0">
+                        <Border Style="{StaticResource RibbonGroupStyle}">
+                            <StackPanel Orientation="Horizontal">
+                                <!-- Módulo implementado: Minha Empresa / Emitente -->
+                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding OpenMinhaEmpresaCommand}"
+                                        IsEnabled="{Binding PodeAcessarEmitente}"
+                                        AutomationProperties.AutomationId="OpenMinhaEmpresaRibbon"
+                                        AutomationProperties.Name="Minha Empresa"
+                                        ToolTip="Dados da empresa emitente">
+                                    <StackPanel>
+                                        <Path Data="{StaticResource IconDocument}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
+                                        <TextBlock Text="Minha Empresa" Style="{StaticResource RibbonButtonLabelStyle}" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </TabItem>
         </TabControl>
         <!-- ============ Corpo: navegação do módulo + conteúdo ============ -->
         <Grid Grid.Row="2">
