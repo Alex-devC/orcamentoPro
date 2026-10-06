@@ -37,6 +37,7 @@ public class OrcamentoMaoDeObraDto
 {
     public int Id { get; set; }
     public int OrcamentoId { get; set; }
+    public int? ServicoId { get; set; }
     public int NumeroItem { get; set; }
     public string Descricao { get; set; } = string.Empty;
     public decimal QuantidadeHoras { get; set; }
@@ -182,6 +183,8 @@ public class AdicionarItemDto
 
 public class AdicionarMaoDeObraDto
 {
+    /// <summary>Serviço do cadastro usado como origem da linha (opcional).</summary>
+    public int? ServicoId { get; set; }
     public string Descricao { get; set; } = string.Empty;
     public decimal QuantidadeHoras { get; set; } = 1;
     public decimal ValorUnitario { get; set; }
@@ -203,4 +206,10 @@ public class AlterarStatusOrcamentoDto
     public int NovoStatusId { get; set; }
     public int UsuarioId { get; set; }
     public string? ObservacaoMotivo { get; set; }
+}
+
+public class ExcluirOrcamentoDto
+{
+    public int OrcamentoId { get; set; }
+    public int UsuarioId { get; set; }
 }

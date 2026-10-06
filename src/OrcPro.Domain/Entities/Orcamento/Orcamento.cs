@@ -52,8 +52,11 @@ public class Orcamento : BaseEntity
     {
         ValorTotalItens = Itens.Sum(i => i.CalcularTotal());
         ValorTotalMaoDeObra = MaosDeObra.Sum(m => m.CalcularTotal());
-        
-        var subtotal = ValorTotalItens + ValorTotalMaoDeObra + ValorAcrescimo;
-        ValorTotal = subtotal >= ValorDesconto ? subtotal - ValorDesconto : 0m;
+
+        ValorTotal = Common.Calculos.OrcamentoCalculo.TotalGeral(
+            ValorTotalItens,
+            ValorTotalMaoDeObra,
+            ValorAcrescimo,
+            ValorDesconto);
     }
 }

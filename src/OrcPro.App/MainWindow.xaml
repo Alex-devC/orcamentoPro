@@ -1,4 +1,4 @@
-<Window x:Class="OrcPro.App.MainWindow"
+﻿<Window x:Class="OrcPro.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Icon="Assets/favicon.ico"
@@ -243,13 +243,21 @@
                     <StackPanel Orientation="Horizontal" Margin="4,0">
                         <Border Style="{StaticResource RibbonGroupStyle}">
                             <StackPanel Orientation="Horizontal">
-                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding RibbonActionCommand}" CommandParameter="Novo orçamento (módulo em desenvolvimento).">
+<Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding NovoOrcamentoCommand}"
+                                        IsEnabled="{Binding PodeAcessarOrcamentos}"
+                                        AutomationProperties.AutomationId="NovoOrcamentoRibbon"
+                                        AutomationProperties.Name="Novo orcamento"
+                                        ToolTip="Criar novo orcamento">
                                     <StackPanel>
                                         <Path Data="{StaticResource IconNewDocument}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
                                         <TextBlock Text="Novo" Style="{StaticResource RibbonButtonLabelStyle}" />
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding RibbonActionCommand}" CommandParameter="Abrir orçamento (módulo em desenvolvimento).">
+<Button Style="{StaticResource RibbonLargeButtonStyle}" Command="{Binding OpenOrcamentosCommand}"
+                                        IsEnabled="{Binding PodeAcessarOrcamentos}"
+                                        AutomationProperties.AutomationId="OpenOrcamentosRibbon"
+                                        AutomationProperties.Name="Abrir orcamentos"
+                                        ToolTip="Abrir o modulo de orcamentos">
                                     <StackPanel>
                                         <Path Data="{StaticResource IconFolder}" Stroke="{StaticResource TextBrush}" Style="{StaticResource IconPathStyle}" Width="22" Height="22" />
                                         <TextBlock Text="Abrir" Style="{StaticResource RibbonButtonLabelStyle}" />

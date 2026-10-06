@@ -35,4 +35,70 @@ public class OrcamentoStatus : BaseEntity
             new() { Id = 7, Codigo = CodigoRecusado, Nome = "Recusado", CorHex = "#FFDAD6", Ordem = 7 }
         };
     }
+
+    /// <summary>
+    /// Transições permitidas entre status, por código.
+    /// </summary>
+    /// <remarks>
+    /// Regras de negócio do fluxo do orçamento:
+    /// <list type="bullet">
+    /// <item>Finalizado e cancelado são TERMINAIS — não voltam a outro estado.</item>
+    /// <item>Rascunho e Aguardando aprovação podem ser cancelados ou recusados.</item>
+    /// <item>Um orçamento recusado ou cancelado não pode ser reativado.</item>
+    /// <item>Não é permitido "desfazer" a aprovação voltando para rascunho.</item>
+    /// </list>
+    /// Fluxo normal: RASCUNHO → AGUARDANDO_APROVACAO → APROVADO → EM_EXECUCAO → FINALIZADO,
+    /// com CANCELADO/RECUSADO disponíveis enquanto o orçamento não for final.
+    /// </remarks>
+    private static readonly Dictionary<string, HashSet<string>> TransicoesPermitidas = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [CodigoRascunho] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            CodigoAguardandoAprovacao, CodigoCancelado
+        },
+        [CodigoAguardandoAprovacao] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            CodigoAprovado, CodigoRecusado, CodigoCancelado
+        },
+        [CodigoAprovado] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            CodigoEmExecucao, CodigoCancelado
+        },
+        [CodigoEmExecucao] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            CodigoFinalizado, CodigoCancelado
+        },
+        [CodigoFinalizado] = new(StringComparer.OrdinalIgnoreCase),
+        [CodigoCancelado] = new(StringComparer.OrdinalIgnoreCase),
+        [CodigoRecusado] = new(StringComparer.OrdinalIgnoreCase)
+    };
+
+    /// <summary>
+    /// Indica se o orçamento pode sair de <paramref name="codigoAtual"/> para
+    /// <paramref name="codigoNovo"/>.
+    /// </summary>
+    public static bool PodeTransicionarPara(string? codigoAtual, string? codigoNovo)
+    {
+        if (string.IsNullOrWhiteSpace(codigoAtual) || string.IsNullOrWhiteSpace(codigoNovo))
+            return false;
+
+        if (string.Equals(codigoAtual, codigoNovo, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return TransicoesPermitidas.TryGetValue(codigoAtual, out var destinos)
+            && destinos.Contains(codigoNovo);
+    }
+
+    /// <summary>Mensagem explicativa para a transição recusada.</summary>
+    public static string MensagemTransicaoInvalida(string nomeAtual, string nomeNovo)
+        => $"Não é possível alterar o status de '{nomeAtual}' para '{nomeNovo}'.";
+
+    /// <summary>Indica se o orçamento está encerrado (não aceita mais alterações nem exclusão).</summary>
+    public static bool EhTerminal(string? codigo)
+        => string.Equals(codigo, CodigoFinalizado, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(codigo, CodigoCancelado, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Indica se o orçamento pode ser editado (exclui finalizados, cancelados e recusados).</summary>
+    public static bool PermiteEdicao(string? codigo)
+        => !EhTerminal(codigo) && !string.Equals(codigo, CodigoRecusado, StringComparison.OrdinalIgnoreCase);
 }

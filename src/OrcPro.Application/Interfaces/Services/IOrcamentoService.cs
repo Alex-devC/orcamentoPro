@@ -16,6 +16,12 @@ public interface IOrcamentoService
     Task<OrcamentoDto> AlterarStatusAsync(AlterarStatusOrcamentoDto dto, CancellationToken cancellationToken = default);
     Task<OrcamentoDto> ClonarAsync(int orcamentoId, int usuarioId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Exclui o orçamento respeitando as regras: orçamento finalizado ou cancelado é
+    /// terminal e não pode ser excluído (use a inativação pelo status).
+    /// </summary>
+    Task ExcluirAsync(ExcluirOrcamentoDto dto, CancellationToken cancellationToken = default);
+
     // Itens (Peças/Materiais)
     Task<OrcamentoDto> AdicionarItemAsync(int orcamentoId, AdicionarItemDto dto, int usuarioId, CancellationToken cancellationToken = default);
     Task<OrcamentoDto> RemoverItemAsync(int orcamentoId, int itemId, int usuarioId, CancellationToken cancellationToken = default);

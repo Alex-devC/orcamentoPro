@@ -90,6 +90,8 @@ public class InMemoryOrcamentoRepository : InMemoryRepository<Orcamento>, IOrcam
 {
     private int _seq = 1;
 
+    public IReadOnlyList<Orcamento> ItemsList => Items.ToList();
+
     public Task<Orcamento?> GetWithDetailsByIdAsync(int id, CancellationToken cancellationToken = default)
         => GetByIdAsync(id, cancellationToken);
 
@@ -113,6 +115,10 @@ public class InMemoryOrcamentoRepository : InMemoryRepository<Orcamento>, IOrcam
 
     public Task<int> CountByClienteIdAsync(int clienteId, CancellationToken cancellationToken = default)
         => Task.FromResult(Items.Count(o => o.ClienteId == clienteId));
+
+    /// <summary>Sem transação em memória: a operação já é atômica neste fake.</summary>
+    public async Task ExecutarEmTransacaoAsync(Func<Task> operacao, CancellationToken cancellationToken = default)
+        => await operacao();
 }
 
 public class InMemoryOrcamentoStatusRepository : InMemoryRepository<OrcamentoStatus>, IOrcamentoStatusRepository
@@ -126,6 +132,8 @@ public class InMemoryOrcamentoStatusRepository : InMemoryRepository<OrcamentoSta
 
 public class InMemoryOrcamentoHistoricoRepository : InMemoryRepository<OrcamentoHistorico>, IOrcamentoHistoricoRepository
 {
+    public IReadOnlyList<OrcamentoHistorico> ItemsList => Items.ToList();
+
     public Task<IReadOnlyList<OrcamentoHistorico>> GetByOrcamentoIdAsync(int orcamentoId, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyList<OrcamentoHistorico>>(Items.Where(h => h.OrcamentoId == orcamentoId).ToList());
 }
@@ -254,6 +262,22 @@ public class ApplicationServiceTests
         var clienteRepo = new InMemoryClienteRepository();
         var tecnicoRepo = new InMemoryTecnicoRepository();
         var userRepo = new InMemoryUsuarioRepository();
+        var empresaRepo = new InMemoryEmpresaRepository();
+        var pecaRepo = new InMemoryPecaRepository();
+        var servicoRepo = new InMemoryServicoRepository();
+
+        var empresaService = new EmpresaService(empresaRepo, new FakeEmpresaLogoStorage());
+        var pecaService = new PecaService(pecaRepo);
+        var servicoService = new ServicoService(servicoRepo);
+
+        // O orçamento exige um Emitente configurado (Minha Empresa).
+        await empresaRepo.AddAsync(new OrcPro.Domain.Entities.Empresa.Empresa
+        {
+            Id = 1,
+            RazaoSocial = "ALEX T.I. TECNOLOGIA E ASSISTENCIA LTDA",
+            Cnpj = "11222333000181",
+            Ativo = true
+        });
 
         foreach (var st in OrcamentoStatus.CriarStatusIniciais())
             await statusRepo.AddAsync(st);
@@ -281,7 +305,10 @@ public class ApplicationServiceTests
             historicoRepo,
             clienteRepo,
             tecnicoRepo,
-            userRepo);
+            userRepo,
+            empresaService,
+            servicoService,
+            pecaService);
 
         // Act 1: Criar orçamento
         var criado = await orcamentoService.CriarAsync(new CriarOrcamentoDto

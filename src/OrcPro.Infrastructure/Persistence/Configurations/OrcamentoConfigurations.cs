@@ -105,6 +105,11 @@ public class OrcamentoMaoDeObraConfiguration : IEntityTypeConfiguration<Orcament
         builder.Property(m => m.ValorTotal).HasPrecision(18, 2);
         builder.Property(m => m.Observacoes).HasMaxLength(1000);
 
+        builder.HasOne(m => m.Servico)
+            .WithMany()
+            .HasForeignKey(m => m.ServicoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(m => m.Tecnicos)
             .WithOne(t => t.OrcamentoMaoDeObra)
             .HasForeignKey(t => t.OrcamentoMaoDeObraId)

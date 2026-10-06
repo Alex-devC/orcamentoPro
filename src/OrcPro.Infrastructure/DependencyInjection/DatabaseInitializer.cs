@@ -1,4 +1,5 @@
-using OrcPro.Application.Interfaces.Services;
+﻿using OrcPro.Application.Interfaces.Services;
+using OrcPro.Domain.Entities.Orcamento;
 using OrcPro.Domain.Entities.Seguranca;
 using OrcPro.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -39,8 +40,31 @@ internal static class SchemaUpgrade
             {
                 ["EmailFinanceiro"] = "TEXT NULL",
                 ["Observacoes"] = "TEXT NULL"
+            },
+            // Orçamentos: vínculo da linha de serviço com o cadastro de Serviços.
+            ["OrcamentoMaosDeObra"] = new(StringComparer.OrdinalIgnoreCase)
+            {
+                ["ServicoId"] = "INTEGER NULL"
             }
         };
+
+        /// <summary>
+        /// Status de orçamento, garantidos em instalações que já existiam antes do seed do EF.
+        /// O <c>HasData</c> do EF só roda em bases novas: sem esta etapa, um banco antigo
+        /// ficaria sem nenhum status e o módulo de Orçamentos não conseguiria criar nada.
+        /// A operação é idempotente (INSERT ... SELECT ... WHERE NOT EXISTS).
+        /// </summary>
+        private static readonly IReadOnlyList<(string Codigo, string Nome, string Cor, int Ordem)> StatusIniciais =
+            new List<(string, string, string, int)>
+            {
+                (OrcamentoStatus.CodigoRascunho, "Rascunho", "#ECEFF3", 1),
+                (OrcamentoStatus.CodigoAguardandoAprovacao, "Aguardando aprovação", "#FEF3C7", 2),
+                (OrcamentoStatus.CodigoAprovado, "Aprovado", "#E0F2FE", 3),
+                (OrcamentoStatus.CodigoEmExecucao, "Em execução", "#E0F7FF", 4),
+                (OrcamentoStatus.CodigoFinalizado, "Finalizado", "#DCFCE7", 5),
+                (OrcamentoStatus.CodigoCancelado, "Cancelado", "#FEE2E2", 6),
+                (OrcamentoStatus.CodigoRecusado, "Recusado", "#FFDAD6", 7)
+            };
 
     /// <summary>
     /// Tabelas introduzidas depois da criação inicial da base.
@@ -113,6 +137,41 @@ internal static class SchemaUpgrade
             // Tabela ausente em uma base já existente: EnsureCreated não a criaria.
             await context.Database.ExecuteSqlRawAsync(criarTabela, cancellationToken);
             await context.Database.ExecuteSqlRawAsync(criarIndice, cancellationToken);
+        }
+
+        await GarantirStatusDeOrcamentoAsync(context, cancellationToken);
+    }
+
+    /// <summary>
+    /// Garante os status de orçamento em bases criadas antes do seed do EF. Sem status
+    /// nenhum o módulo de Orçamentos não consegue criar orçamento (não há para onde ir).
+    /// Idempotente: só insere os códigos que ainda não existirem.
+    /// </summary>
+    private static async Task GarantirStatusDeOrcamentoAsync(
+        OrcProDbContext context,
+        CancellationToken cancellationToken)
+    {
+        var statusDb = await context.Database
+            .SqlQueryRaw<int>("SELECT 1 AS Value FROM sqlite_master WHERE type = 'table' AND name = 'OrcamentoStatus'")
+            .ToListAsync(cancellationToken);
+
+        if (statusDb.Count == 0)
+            return;
+
+        foreach (var status in StatusIniciais)
+        {
+            var agoraSql = $"'{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}'";
+
+            // Os valores vêm da lista fixa acima (nunca entrada do usuário).
+            var sql = $"""
+                INSERT INTO "OrcamentoStatus" ("Codigo", "Nome", "CorHex", "Ordem", "Ativo", "DataCriacao")
+                SELECT '{status.Codigo}', '{status.Nome}', '{status.Cor}', {status.Ordem}, 1, {agoraSql}
+                WHERE NOT EXISTS (SELECT 1 FROM "OrcamentoStatus" WHERE "Codigo" = '{status.Codigo}')
+                """;
+
+#pragma warning disable EF1002
+            await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
+#pragma warning restore EF1002
         }
     }
 

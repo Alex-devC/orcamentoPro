@@ -25,8 +25,7 @@ public class OrcamentoItem : BaseEntity
 
     public decimal CalcularTotal()
     {
-        var bruto = Quantidade * PrecoUnitario;
-        ValorTotal = bruto >= ValorDesconto ? bruto - ValorDesconto : 0m;
+        ValorTotal = Common.Calculos.OrcamentoCalculo.TotalItem(Quantidade, PrecoUnitario, ValorDesconto);
         return ValorTotal;
     }
 }

@@ -86,6 +86,31 @@ public class OrcamentoRepository : BaseRepository<Orcamento>, IOrcamentoReposito
     public Task<int> CountByClienteIdAsync(int clienteId, CancellationToken cancellationToken = default)
         => DbSet.CountAsync(o => o.ClienteId == clienteId, cancellationToken);
 
+    /// <summary>
+    /// Executa a operação em uma transação. Qualquer exceção provoca rollback, garantindo
+    /// que cabeçalho + itens + mão de obra + técnicos + histórico não fiquem pela metade.
+    /// </summary>
+    public async Task ExecutarEmTransacaoAsync(Func<Task> operacao, CancellationToken cancellationToken = default)
+    {
+        // SQLite (e os demais providers suportados) exigem transação explícita.
+        var transacao = await Context.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            await operacao();
+            await transacao.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transacao.RollbackAsync(CancellationToken.None);
+            throw;
+        }
+        finally
+        {
+            await transacao.DisposeAsync();
+        }
+    }
+
     protected override IQueryable<Orcamento> ApplyCustomFilters(IQueryable<Orcamento> query, PagedRequest request)
     {
         query = query
@@ -117,6 +142,18 @@ public class OrcamentoRepository : BaseRepository<Orcamento>, IOrcamentoReposito
             {
                 query = query.Where(o => o.Ano == ano);
             }
+            else if (filter.PropertyName.Equals("DataInicial", StringComparison.OrdinalIgnoreCase)
+                && DateTime.TryParse(filter.Value, out var dataInicial))
+            {
+                query = query.Where(o => o.DataEmissao >= dataInicial);
+            }
+            else if (filter.PropertyName.Equals("DataFinal", StringComparison.OrdinalIgnoreCase)
+                && DateTime.TryParse(filter.Value, out var dataFinal))
+            {
+                // Fim do dia informado: o filtro por período é inclusivo.
+                var fim = dataFinal.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(o => o.DataEmissao <= fim);
+            }
         }
 
         return query;
@@ -127,10 +164,16 @@ public class OrcamentoStatusRepository : BaseRepository<OrcamentoStatus>, IOrcam
 {
     public OrcamentoStatusRepository(OrcProDbContext context) : base(context) { }
 
+    /// <summary>
+    /// Busca um status pelo código.
+    ///
+    /// <para>RETORNO RASTREADO de propósito: quando o status é atribuído à navegação de um
+    /// orçamento ainda não gravado, um objeto desacoplado faria o EF tentar INSERT de uma
+    /// linha de status já existente ("UNIQUE constraint failed: OrcamentoStatus.Id").</para>
+    /// </summary>
     public async Task<OrcamentoStatus?> GetByCodigoAsync(string codigo, CancellationToken cancellationToken = default)
     {
         return await DbSet
-            .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Codigo == codigo, cancellationToken);
     }
 

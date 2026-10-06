@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +20,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private const string PecasModuleTitle = "Peças / Itens";
     private const string ServicosModuleTitle = "Serviços";
     private const string EmitenteModuleTitle = "Minha Empresa";
+    private const string OrcamentosModuleTitle = "Orçamentos";
     private const string ProductName = "OrcPro";
     private const string CompanyName = "ALEX T.I. Tecnologia e Assistência";
     private const string DatabaseProfileName = "[Base de Dados: Produção]";
@@ -38,6 +39,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly IPecaService _pecaService;
     private readonly IServicoService _servicoService;
     private readonly IEmpresaService _empresaService;
+    private readonly IOrcamentoService _orcamentoService;
     private readonly IPermissaoService _permissaoService;
     private readonly ICepService _cepService;
     private ViewModelBase _currentView;
@@ -62,6 +64,11 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _pecaService = _moduloScope.ServiceProvider.GetRequiredService<IPecaService>();
         _servicoService = _moduloScope.ServiceProvider.GetRequiredService<IServicoService>();
         _empresaService = _moduloScope.ServiceProvider.GetRequiredService<IEmpresaService>();
+        _orcamentoService = _moduloScope.ServiceProvider.GetRequiredService<IOrcamentoService>();
+        _clienteService = _moduloScope.ServiceProvider.GetRequiredService<IClienteService>();
+        _pecaService = _moduloScope.ServiceProvider.GetRequiredService<IPecaService>();
+        _servicoService = _moduloScope.ServiceProvider.GetRequiredService<IServicoService>();
+        _tecnicoService = _moduloScope.ServiceProvider.GetRequiredService<ITecnicoService>();
         _permissaoService = _moduloScope.ServiceProvider.GetRequiredService<IPermissaoService>();
         _cepService = _moduloScope.ServiceProvider.GetRequiredService<ICepService>();
 
@@ -72,6 +79,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         OpenPecasCommand = new RelayCommand(_ => OpenPecas());
         OpenServicosCommand = new RelayCommand(_ => OpenServicos());
         OpenMinhaEmpresaCommand = new RelayCommand(_ => OpenMinhaEmpresa());
+        OpenOrcamentosCommand = new RelayCommand(_ => OpenOrcamentos());
+        NovoOrcamentoCommand = new RelayCommand(_ => OpenNovoOrcamento());
 
         NavigationItems = new ObservableCollection<NavigationItemViewModel>
         {
@@ -79,10 +88,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
                 new RelayCommand(_ => Navigate(ModuleOverviewTitle, CreateDashboard(),
                     "Painel principal carregado."))),
             new("Orçamentos Ativos", "Orcamentos",
-                new RelayCommand(_ => Navigate("Orçamentos Ativos",
-                    new PlaceholderViewModel("Orçamentos Ativos",
-                        "Acompanhe e gerencie os orçamentos em andamento."),
-                    "Módulo de orçamentos em desenvolvimento."))),
+                new RelayCommand(_ => OpenOrcamentos())),
             new("Bases Cadastrais", "Cadastros",
                 new RelayCommand(_ => Navigate("Bases Cadastrais",
                     new PlaceholderViewModel("Bases Cadastrais",
@@ -127,6 +133,12 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Abre o módulo Minha Empresa / Emitente (Ribbon Configurações).</summary>
     public ICommand OpenMinhaEmpresaCommand { get; }
+
+    /// <summary>Abre o módulo de Orçamentos (Ribbon Orçamentos → Abrir).</summary>
+    public ICommand OpenOrcamentosCommand { get; }
+
+    /// <summary>Abre o módulo de Orçamentos já com um novo orçamento em edição.</summary>
+    public ICommand NovoOrcamentoCommand { get; }
 
     /// <summary>Itens do menu lateral "Navegação do Módulo".</summary>
     public ObservableCollection<NavigationItemViewModel> NavigationItems { get; }
@@ -190,6 +202,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>Acesso ao módulo Minha Empresa (EMITENTE.VISUALIZAR).</summary>
     public bool PodeAcessarEmitente => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Emitente.Visualizar);
+
+    /// <summary>Acesso ao módulo Orçamentos (ORCAMENTOS.VISUALIZAR).</summary>
+    public bool PodeAcessarOrcamentos => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.Orcamentos.Visualizar);
 
     /// <summary>Acesso ao módulo Usuários e Perfis (USUARIOS_PERFIS.VISUALIZAR).</summary>
     public bool PodeAcessarUsuariosPerfis => _sessao.PossuiPermissao(PermissaoCatalogo.Codigos.UsuariosPerfis.Visualizar);
@@ -342,6 +357,47 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         var modulo = new MinhaEmpresaViewModel(_empresaService, _sessao, _cepService, UpdateStatus);
         Navigate(EmitenteModuleTitle, modulo, "Módulo de minha empresa carregado.");
     }
+
+    /// <summary>
+    /// Módulo de Orçamentos (Ribbon Orçamentos). Nova instância a cada abertura, seguindo
+    /// o padrão dos demais módulos do shell.
+    /// </summary>
+    private void OpenOrcamentos()
+    {
+        if (!PodeAcessarOrcamentos)
+        {
+            UpdateStatus("Você não possui a permissão ORCAMENTOS.VISUALIZAR.");
+            return;
+        }
+
+        var modulo = CriarModuloOrcamentos();
+        Navigate(OrcamentosModuleTitle, modulo, "Módulo de orçamentos carregado.");
+    }
+
+    /// <summary>Mesmo módulo, porém já abrindo o formulário de novo orçamento.</summary>
+    private void OpenNovoOrcamento()
+    {
+        if (!PodeAcessarOrcamentos)
+        {
+            UpdateStatus("Você não possui a permissão ORCAMENTOS.VISUALIZAR.");
+            return;
+        }
+
+        var modulo = CriarModuloOrcamentos();
+        Navigate(OrcamentosModuleTitle, modulo, "Novo orçamento.");
+        _ = modulo.AbrirNovoOrcamentoAsync();
+    }
+
+    private OrcamentosViewModel CriarModuloOrcamentos()
+        => new(
+            _orcamentoService,
+            _clienteService,
+            _pecaService,
+            _servicoService,
+            _tecnicoService,
+            _empresaService,
+            _sessao,
+            UpdateStatus);
 
     private void UpdateStatus(string? message)
     {

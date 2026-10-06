@@ -84,6 +84,15 @@ public static class PermissaoCatalogo
             public const string Visualizar = "EMITENTE.VISUALIZAR";
             public const string Editar = "EMITENTE.EDITAR";
         }
+
+        public static class Orcamentos
+        {
+            public const string Visualizar = "ORCAMENTOS.VISUALIZAR";
+            public const string Criar = "ORCAMENTOS.CRIAR";
+            public const string Editar = "ORCAMENTOS.EDITAR";
+            public const string Excluir = "ORCAMENTOS.EXCLUIR";
+            public const string AlterarStatus = "ORCAMENTOS.ALTERAR_STATUS";
+        }
     }
 
     public const string ModuloDashboard = "DASHBOARD";
@@ -93,6 +102,7 @@ public static class PermissaoCatalogo
     public const string ModuloPecas = "PECAS";
     public const string ModuloServicos = "SERVICOS";
     public const string ModuloEmitente = "EMITENTE";
+    public const string ModuloOrcamentos = "ORCAMENTOS";
 
     /// <summary>Nome do perfil que recebe todas as permissões do catálogo.</summary>
     public const string PerfilAdministrador = "Administrador";
@@ -133,7 +143,13 @@ public static class PermissaoCatalogo
         new PermissaoDefinicao(Codigos.Servicos.AtivarInativar, ModuloServicos, "Ativar / inativar serviços"),
 
         new PermissaoDefinicao(Codigos.Emitente.Visualizar, ModuloEmitente, "Visualizar minha empresa"),
-        new PermissaoDefinicao(Codigos.Emitente.Editar, ModuloEmitente, "Editar minha empresa")
+        new PermissaoDefinicao(Codigos.Emitente.Editar, ModuloEmitente, "Editar minha empresa"),
+
+        new PermissaoDefinicao(Codigos.Orcamentos.Visualizar, ModuloOrcamentos, "Visualizar orçamentos"),
+        new PermissaoDefinicao(Codigos.Orcamentos.Criar, ModuloOrcamentos, "Criar orçamentos"),
+        new PermissaoDefinicao(Codigos.Orcamentos.Editar, ModuloOrcamentos, "Editar orçamentos"),
+        new PermissaoDefinicao(Codigos.Orcamentos.Excluir, ModuloOrcamentos, "Excluir orçamentos"),
+        new PermissaoDefinicao(Codigos.Orcamentos.AlterarStatus, ModuloOrcamentos, "Alterar status do orçamento")
     };
 
     private static readonly IReadOnlyDictionary<string, string> RotulosModulo =
@@ -145,7 +161,8 @@ public static class PermissaoCatalogo
             [ModuloTecnicos] = "Técnicos",
             [ModuloPecas] = "Peças e Itens",
             [ModuloServicos] = "Serviços",
-            [ModuloEmitente] = "Minha Empresa"
+            [ModuloEmitente] = "Minha Empresa",
+            [ModuloOrcamentos] = "Orçamentos"
         };
 
     /// <summary>Rótulo amigável do módulo (fallback: o próprio código do módulo).</summary>

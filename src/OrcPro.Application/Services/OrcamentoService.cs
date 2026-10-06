@@ -15,6 +15,9 @@ public class OrcamentoService : IOrcamentoService
     private readonly IClienteRepository _clienteRepository;
     private readonly ITecnicoRepository _tecnicoRepository;
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IEmpresaService _empresaService;
+    private readonly IServicoService _servicoService;
+    private readonly IPecaService _pecaService;
 
     public OrcamentoService(
         IOrcamentoRepository orcamentoRepository,
@@ -22,7 +25,10 @@ public class OrcamentoService : IOrcamentoService
         IOrcamentoHistoricoRepository historicoRepository,
         IClienteRepository clienteRepository,
         ITecnicoRepository tecnicoRepository,
-        IUsuarioRepository usuarioRepository)
+        IUsuarioRepository usuarioRepository,
+        IEmpresaService empresaService,
+        IServicoService servicoService,
+        IPecaService pecaService)
     {
         _orcamentoRepository = orcamentoRepository;
         _statusRepository = statusRepository;
@@ -30,6 +36,9 @@ public class OrcamentoService : IOrcamentoService
         _clienteRepository = clienteRepository;
         _tecnicoRepository = tecnicoRepository;
         _usuarioRepository = usuarioRepository;
+        _empresaService = empresaService;
+        _servicoService = servicoService;
+        _pecaService = pecaService;
     }
 
     public async Task<OrcamentoDto> ObterPorIdAsync(int id, CancellationToken cancellationToken = default)
@@ -72,15 +81,24 @@ public class OrcamentoService : IOrcamentoService
 
     public async Task<OrcamentoDto> CriarAsync(CriarOrcamentoDto dto, CancellationToken cancellationToken = default)
     {
+        ValidarCabecalho(dto);
+
         var cliente = await _clienteRepository.GetByIdAsync(dto.ClienteId, cancellationToken);
         if (cliente == null)
             throw new NotFoundException("Cliente", dto.ClienteId);
+
+        // O emitente vem do cadastro Minha Empresa: o usuário nunca o digita no orçamento.
+        var emitente = await _empresaService.ObterAsync(cancellationToken)
+            ?? throw new BusinessException(
+                "Minha Empresa não está configurada. Acesse Configurações → Minha Empresa antes de criar um orçamento.");
 
         var statusRascunho = await _statusRepository.GetByCodigoAsync(OrcamentoStatus.CodigoRascunho, cancellationToken)
             ?? (await _statusRepository.GetAllAtivosAsync(cancellationToken)).FirstOrDefault();
 
         if (statusRascunho == null)
             throw new BusinessException("Nenhum status padrão de orçamento configurado no sistema.");
+
+        await ValidarItensAsync(dto.ItensIniciais, dto.MaosDeObraIniciais, dto.TecnicosIniciais, cancellationToken);
 
         var anoAtual = DateTime.UtcNow.Year;
         var sequencial = await _orcamentoRepository.ObterProximoSequencialAsync(anoAtual, cancellationToken);
@@ -96,7 +114,7 @@ public class OrcamentoService : IOrcamentoService
             DiasValidade = diasValidade,
             DataValidade = DateTime.UtcNow.AddDays(diasValidade),
             ClienteId = dto.ClienteId,
-            EmpresaId = dto.EmpresaId,
+            EmpresaId = emitente.Id,
             UsuarioId = dto.UsuarioId,
             StatusId = statusRascunho.Id,
             Status = statusRascunho,
@@ -129,13 +147,14 @@ public class OrcamentoService : IOrcamentoService
             orcamento.Itens.Add(item);
         }
 
-        // Adicionar mão de obra inicial
+        // Adicionar mão de obra inicial (serviços)
         var numMo = 1;
         foreach (var moDto in dto.MaosDeObraIniciais)
         {
             var mo = new OrcamentoMaoDeObra
             {
                 NumeroItem = numMo++,
+                ServicoId = moDto.ServicoId,
                 Descricao = moDto.Descricao.Trim(),
                 QuantidadeHoras = moDto.QuantidadeHoras,
                 ValorUnitario = moDto.ValorUnitario,
@@ -183,8 +202,17 @@ public class OrcamentoService : IOrcamentoService
             Descricao = $"Orçamento {orcamento.Numero} criado com status {statusRascunho.Nome}."
         });
 
-        var criado = await _orcamentoRepository.AddAsync(orcamento, cancellationToken);
-        return await ObterPorIdAsync(criado.Id, cancellationToken);
+        // Cabeçalho + itens + mão de obra + técnicos + histórico são gravados na mesma
+        // transação: um erro em qualquer etapa não deixa o orçamento pela metade.
+        int idCriado = 0;
+
+        await _orcamentoRepository.ExecutarEmTransacaoAsync(async () =>
+        {
+            var criado = await _orcamentoRepository.AddAsync(orcamento, cancellationToken);
+            idCriado = criado.Id;
+        }, cancellationToken);
+
+        return await ObterPorIdAsync(idCriado, cancellationToken);
     }
 
     public async Task<OrcamentoDto> EditarAsync(AtualizarOrcamentoDto dto, int usuarioId, CancellationToken cancellationToken = default)
@@ -192,6 +220,9 @@ public class OrcamentoService : IOrcamentoService
         var orcamento = await _orcamentoRepository.GetWithDetailsByIdAsync(dto.Id, cancellationToken);
         if (orcamento == null)
             throw new NotFoundException("Orçamento", dto.Id);
+
+
+        GarantirEditavel(orcamento);
 
         if (orcamento.ClienteId != dto.ClienteId)
         {
@@ -231,6 +262,14 @@ public class OrcamentoService : IOrcamentoService
             throw new NotFoundException("Status de Orçamento", dto.NovoStatusId);
 
         var statusAnteriorNome = orcamento.Status?.Nome ?? "Indefinido";
+        var statusAnteriorCodigo = orcamento.Status?.Codigo;
+
+        // Transições controladas: não é possível, por exemplo, voltar um orçamento
+        // aprovado para rascunho nem reativar um orçamento cancelado.
+        if (!OrcamentoStatus.PodeTransicionarPara(statusAnteriorCodigo, novoStatus.Codigo))
+            throw new BusinessException(
+                OrcamentoStatus.MensagemTransicaoInvalida(statusAnteriorNome, novoStatus.Nome));
+
         orcamento.StatusId = novoStatus.Id;
         orcamento.Status = novoStatus;
         orcamento.DataAtualizacao = DateTime.UtcNow;
@@ -256,6 +295,26 @@ public class OrcamentoService : IOrcamentoService
 
         await _orcamentoRepository.UpdateAsync(orcamento, cancellationToken);
         return await ObterPorIdAsync(orcamento.Id, cancellationToken);
+    }
+
+    /// <summary>
+    /// Exclui o orçamento. Orçamento finalizado ou cancelado é terminal e não pode ser
+    /// excluído — a regra é explícita e o motivo é informado ao usuário.
+    /// </summary>
+    public async Task ExcluirAsync(ExcluirOrcamentoDto dto, CancellationToken cancellationToken = default)
+    {
+        var orcamento = await _orcamentoRepository.GetWithDetailsByIdAsync(dto.OrcamentoId, cancellationToken);
+        if (orcamento == null)
+            throw new NotFoundException("Orçamento", dto.OrcamentoId);
+
+        if (OrcamentoStatus.EhTerminal(orcamento.Status?.Codigo))
+            throw new BusinessException(
+                $"O orçamento '{orcamento.Numero}' está {orcamento.Status!.Nome} e não pode ser excluído.");
+
+        await _orcamentoRepository.ExecutarEmTransacaoAsync(async () =>
+        {
+            await _orcamentoRepository.DeleteAsync(orcamento.Id, cancellationToken);
+        }, cancellationToken);
     }
 
     public async Task<OrcamentoDto> ClonarAsync(int orcamentoId, int usuarioId, CancellationToken cancellationToken = default)
@@ -372,9 +431,17 @@ public class OrcamentoService : IOrcamentoService
 
     public async Task<OrcamentoDto> AdicionarItemAsync(int orcamentoId, AdicionarItemDto dto, int usuarioId, CancellationToken cancellationToken = default)
     {
+        ValidarItem(dto);
+
         var orcamento = await _orcamentoRepository.GetWithDetailsByIdAsync(orcamentoId, cancellationToken);
         if (orcamento == null)
             throw new NotFoundException("Orçamento", orcamentoId);
+
+        GarantirEditavel(orcamento);
+
+        // Peça informada precisa existir no cadastro; não há digitação livre.
+        if (dto.PecaId.HasValue)
+            await _pecaService.ObterPorIdAsync(dto.PecaId.Value, cancellationToken);
 
         var proximoNumero = orcamento.Itens.Count > 0 ? orcamento.Itens.Max(i => i.NumeroItem) + 1 : 1;
 
@@ -412,6 +479,9 @@ public class OrcamentoService : IOrcamentoService
         if (item == null)
             throw new NotFoundException("Item do Orçamento", itemId);
 
+
+        GarantirEditavel(orcamento);
+
         orcamento.Itens.Remove(item);
         orcamento.RecalcularTotais();
         orcamento.DataAtualizacao = DateTime.UtcNow;
@@ -424,9 +494,26 @@ public class OrcamentoService : IOrcamentoService
 
     public async Task<OrcamentoDto> AdicionarMaoDeObraAsync(int orcamentoId, AdicionarMaoDeObraDto dto, int usuarioId, CancellationToken cancellationToken = default)
     {
+        ValidarMaoDeObra(dto);
+
         var orcamento = await _orcamentoRepository.GetWithDetailsByIdAsync(orcamentoId, cancellationToken);
         if (orcamento == null)
             throw new NotFoundException("Orçamento", orcamentoId);
+
+        GarantirEditavel(orcamento);
+
+        // Serviço informado precisa existir no cadastro de Serviços.
+        if (dto.ServicoId.HasValue)
+            await _servicoService.ObterPorIdAsync(dto.ServicoId.Value, cancellationToken);
+
+        if (dto.TecnicoIds is not null)
+        {
+            foreach (var tecId in dto.TecnicoIds)
+            {
+                if (!await _tecnicoRepository.ExistsAsync(tecId, cancellationToken))
+                    throw new NotFoundException("Técnico", tecId);
+            }
+        }
 
         var proximoNumero = orcamento.MaosDeObra.Count > 0 ? orcamento.MaosDeObra.Max(m => m.NumeroItem) + 1 : 1;
 
@@ -434,6 +521,7 @@ public class OrcamentoService : IOrcamentoService
         {
             OrcamentoId = orcamentoId,
             NumeroItem = proximoNumero,
+            ServicoId = dto.ServicoId,
             Descricao = dto.Descricao.Trim(),
             QuantidadeHoras = dto.QuantidadeHoras,
             ValorUnitario = dto.ValorUnitario,
@@ -472,6 +560,9 @@ public class OrcamentoService : IOrcamentoService
         var mo = orcamento.MaosDeObra.FirstOrDefault(m => m.Id == maoDeObraId);
         if (mo == null)
             throw new NotFoundException("Mão de Obra do Orçamento", maoDeObraId);
+
+
+        GarantirEditavel(orcamento);
 
         orcamento.MaosDeObra.Remove(mo);
         orcamento.RecalcularTotais();
@@ -522,6 +613,9 @@ public class OrcamentoService : IOrcamentoService
         if (associacao == null)
             throw new NotFoundException($"Técnico id '{tecnicoId}' não está associado a este orçamento.");
 
+
+        GarantirEditavel(orcamento);
+
         orcamento.Tecnicos.Remove(associacao);
         orcamento.DataAtualizacao = DateTime.UtcNow;
 
@@ -557,6 +651,121 @@ public class OrcamentoService : IOrcamentoService
 
         orcamento.RecalcularTotais();
         return orcamento.ValorTotal;
+    }
+
+        // ======================= Validações de negócio =======================
+    //
+    // Centralizadas aqui (e não na View/XAML) para que as mesmas regras valham para a
+    // tela, para os testes e para qualquer consumidor futuro do serviço.
+
+    private static void ValidarCabecalho(CriarOrcamentoDto dto)
+    {
+        if (dto.ClienteId <= 0)
+            throw new ValidationException("Selecione o cliente do orçamento.");
+
+        if (dto.UsuarioId <= 0)
+            throw new ValidationException("O orçamento deve ter um usuário responsável.");
+
+        if (dto.DiasValidade <= 0)
+            throw new ValidationException("A validade do orçamento deve ser maior que zero.");
+
+        if (dto.ValorDesconto < 0)
+            throw new ValidationException("O desconto não pode ser negativo.");
+
+        if (dto.ValorAcrescimo < 0)
+            throw new ValidationException("O acréscimo não pode ser negativo.");
+    }
+
+    private async Task ValidarItensAsync(
+        List<AdicionarItemDto> itens,
+        List<AdicionarMaoDeObraDto> maosDeObra,
+        List<AssociarTecnicoDto> tecnicos,
+        CancellationToken cancellationToken)
+    {
+        if (itens.Count == 0 && maosDeObra.Count == 0)
+            throw new ValidationException("Adicione ao menos um item de peça ou um serviço ao orçamento.");
+
+        foreach (var item in itens)
+        {
+            ValidarItem(item);
+
+            var bruto = item.Quantidade * item.PrecoUnitario;
+            if (item.ValorDesconto > bruto)
+                throw new ValidationException(
+                    $"O desconto do item '{item.Descricao}' é maior que o valor bruto ({bruto:N2}).");
+        }
+
+        foreach (var mo in maosDeObra)
+        {
+            ValidarMaoDeObra(mo);
+
+            var bruto = mo.QuantidadeHoras * mo.ValorUnitario;
+            if (mo.ValorDesconto > bruto)
+                throw new ValidationException(
+                    $"O desconto do serviço '{mo.Descricao}' é maior que o valor bruto ({bruto:N2}).");
+
+            // Serviço informado deve existir no cadastro (não há digitação livre).
+            if (mo.ServicoId.HasValue)
+            {
+                await _servicoService.ObterPorIdAsync(mo.ServicoId.Value, cancellationToken);
+            }
+        }
+
+        // Técnicos vêm exclusivamente do cadastro existente, sem duplicidade.
+        var tecnicosDoOrcamento = new HashSet<int>();
+
+        foreach (var tec in tecnicos)
+        {
+            if (!tecnicosDoOrcamento.Add(tec.TecnicoId))
+                throw new BusinessException("O mesmo técnico foi informado mais de uma vez.");
+        }
+
+        foreach (var tecId in tecnicosDoOrcamento)
+        {
+            if (!await _tecnicoRepository.ExistsAsync(tecId, cancellationToken))
+                throw new NotFoundException("Técnico", tecId);
+        }
+
+        foreach (var mo in maosDeObra.Where(m => m.TecnicoIds is not null))
+        {
+            foreach (var tecId in mo.TecnicoIds!)
+            {
+                if (!await _tecnicoRepository.ExistsAsync(tecId, cancellationToken))
+                    throw new NotFoundException("Técnico", tecId);
+            }
+        }
+    }
+
+    private static void ValidarItem(AdicionarItemDto dto)
+    {
+        if (dto.Quantidade <= 0)
+            throw new ValidationException("A quantidade do item deve ser maior que zero.");
+
+        if (dto.PrecoUnitario < 0)
+            throw new ValidationException("O valor unitário do item não pode ser negativo.");
+
+        if (dto.ValorDesconto < 0)
+            throw new ValidationException("O desconto do item não pode ser negativo.");
+    }
+
+    private static void ValidarMaoDeObra(AdicionarMaoDeObraDto dto)
+    {
+        if (dto.QuantidadeHoras <= 0)
+            throw new ValidationException("A quantidade de horas do serviço deve ser maior que zero.");
+
+        if (dto.ValorUnitario < 0)
+            throw new ValidationException("O valor do serviço não pode ser negativo.");
+
+        if (dto.ValorDesconto < 0)
+            throw new ValidationException("O desconto do serviço não pode ser negativo.");
+    }
+
+    /// <summary>Orçamento finalizado/cancelado/recusado não aceita alterações de conteúdo.</summary>
+    private static void GarantirEditavel(Orcamento orcamento)
+    {
+        if (!OrcamentoStatus.PermiteEdicao(orcamento.Status?.Codigo))
+            throw new BusinessException(
+                $"O orçamento '{orcamento.Numero}' está {orcamento.Status?.Nome} e não aceita alterações.");
     }
 
     private async Task RegistrarHistoricoAsync(int orcamentoId, int usuarioId, string acao, string descricao, CancellationToken cancellationToken)
@@ -651,6 +860,7 @@ public class OrcamentoService : IOrcamentoService
             {
                 Id = m.Id,
                 OrcamentoId = m.OrcamentoId,
+                ServicoId = m.ServicoId,
                 NumeroItem = m.NumeroItem,
                 Descricao = m.Descricao,
                 QuantidadeHoras = m.QuantidadeHoras,
